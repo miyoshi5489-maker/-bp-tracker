@@ -6,7 +6,7 @@ const SUPABASE_URL='https://nuqhddzwjknoxrykfcrb.supabase.co';
 const SUPABASE_KEY='sb_publishable_6nSJ-7MfHwr4e2p2Esgp8A_0BTGPODN';
 const SB_HEADERS={'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY};
 
-const {ROUND,RACE,PHASES,PACE,planFor,plannedKm,longRuns}=window.PLAN;
+const {ROUND,ROUNDS,nextRound,RACE,PHASES,PACE,planFor,plannedKm,longRuns}=window.PLAN;
 const {pad,ymd,parse,addDays,diffDays,mondayOf,today}=window.PLAN.util;
 const DOW=['日','月','火','水','木','金','土'];
 const $=id=>document.getElementById(id);
@@ -127,7 +127,7 @@ function show(p,opt){
 document.querySelectorAll('#tabs .tab').forEach(b=>b.addEventListener('click',()=>show(b.dataset.p)));
 
 function headerCount(){
-  const t=today();const r=diffDays(t,ROUND),m=diffDays(t,RACE);
+  const t=today();const nr=nextRound(t);const r=nr?diffDays(t,nr):-1,m=diffDays(t,RACE);
   $('hdr-count').textContent=(r>=0?`ラウンドまで${r}日　`:'')+(m>=0?`篠山まで${m}日`:'');
 }
 
@@ -164,13 +164,13 @@ async function renderToday(){
   el.innerHTML='<div class="text-sm text-muted">読み込み中…</div>';
   const recs=await getRecs();const bd=byDate(recs);
   const p=planFor(t);const a=dayActual(bd[t]);
-  const r=diffDays(t,ROUND),m=diffDays(t,RACE);
+  const nr=nextRound(t);const r=nr?diffDays(t,nr):-1,m=diffDays(t,RACE);
   const mon=mondayOf(t);const days=[...Array(7)].map((_,i)=>addDays(mon,i));
   const wPlan=plannedKm(mon,addDays(mon,6));const wAct=days.reduce((s,d)=>s+dayActual(bd[d]).run,0);
   const tm=addDays(t,1);
   el.innerHTML=`
   <div class="grid grid-cols-2 gap-3">
-    ${r>=0?`<div class="card p-4"><div class="lbl">ゴルフ 10/20（火）</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-accent">${r}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">目標 100切り（前回118）</div></div>`:''}
+    ${r>=0?`<div class="card p-4"><div class="lbl">次のゴルフ ${nr?md(nr):""}</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-accent">${r}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">${nr===ROUND?'目標 100切り（前回118）':'目標 100切り'}</div></div>`:''}
     ${m>=0?`<div class="card p-4"><div class="lbl">篠山マラソン 3/7（日）</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">目標 サブ4 → 3時間30分</div></div>`:''}
   </div>
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}

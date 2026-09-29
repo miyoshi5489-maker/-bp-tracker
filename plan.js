@@ -4,7 +4,8 @@
 //   マラソン：2027-03-07（日）篠山ABCマラソン　目標サブ4 → 3時間30分
 // ─────────────────────────────────────────────
 (function(){
-const ROUND='2026-10-20';
+const ROUNDS=['2026-10-20','2026-11-29'];
+const ROUND=ROUNDS[0];
 const RACE='2027-03-07';
 const pad=n=>String(n).padStart(2,'0');
 const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -22,7 +23,7 @@ const PHASES=[
 
 // 土曜ロング走（週の月曜日 → km）
 const LONG={
-  '2026-10-19':8,'2026-10-26':10,'2026-11-02':12,'2026-11-09':13,'2026-11-16':14,'2026-11-23':10,
+  '2026-10-19':8,'2026-10-26':10,'2026-11-02':12,'2026-11-09':13,'2026-11-16':14,'2026-11-23':0,
   '2026-11-30':15,'2026-12-07':16,'2026-12-14':18,'2026-12-21':12,
   '2026-12-28':18,'2027-01-04':20,'2027-01-11':22,'2027-01-18':16,'2027-01-25':24,
   '2027-02-01':26,'2027-02-08':30,'2027-02-15':20,'2027-02-22':16,'2027-03-01':3,
@@ -72,6 +73,9 @@ function planFor(s){
   const note=[];
 
   // ── 特別な日 ──
+  if(s==='2026-11-29')return{phase:ph,items:[it('event','ラウンド本番（11/29）',{detail:'朝：①可動域の3種＋骨盤分離 片足10回＋ヒップツイスト 10回。3ホールごとに補食。10/20の反省を1つだけ意識する'})]};
+  if(s==='2026-11-28')return{phase:ph,items:[it('prep','ラウンド前日の調整',{detail:'⓪ほぐし＋骨盤分離＋ヒップツイストだけ。練習場は60球まで',routine:'genie',part:'short'}),it('run','軽いジョグ',{km:4,detail:'ロング走はお休み。'+PACE.easy})]};
+  if(s==='2026-11-27')return{phase:ph,items:[it('genie','ジーニー ⑤⑥ジャンプ・回旋（15分）',{routine:'genie',part:'power'}),pplItem('base','pull',{extra:'ラウンド2日前。重さは控えめ、各2セットでOK'})]};
   if(s===ROUND)return{phase:ph,items:[it('event','ラウンド本番',{detail:'朝：①可動域の3種＋骨盤分離 片足10回＋ヒップツイスト 10回。3ホールごとに補食。目標100切り！'})]};
   if(s===RACE)return{phase:ph,items:[it('event','篠山マラソン',{detail:"目標サブ4（5'41/km）。前半はイーブン、30km以降で余裕があれば上げる",km:42.195})]};
   if(s==='2026-10-19')return{phase:ph,items:[it('prep','ラウンド前日の調整',{detail:'⓪ほぐし＋骨盤分離＋ヒップツイストだけ。練習場は60球まで',routine:'genie',part:'short'})]};
@@ -125,11 +129,12 @@ function planFor(s){
   return{phase:ph,items,note};
 }
 
+function nextRound(t){return ROUNDS.find(r=>r>=t)||null;}
 function plannedKm(from,to){let s=from,t=0;while(s<=to){planFor(s).items.forEach(i=>{if(i.km&&i.kind!=='event')t+=i.km;});s=addDays(s,1);}return t;}
 
 function longRuns(){
   return Object.keys(LONG).filter(m=>LONG[m]>0).map(m=>({date:addDays(m,5),km:LONG[m],note:LONG_NOTE[m]||''}));
 }
 
-window.PLAN={PPL,PPL_NAME,ROUND,RACE,PHASES,PACE,planFor,plannedKm,longRuns,phaseOf,util:{pad,ymd,parse,addDays,diffDays,mondayOf,today}};
+window.PLAN={PPL,PPL_NAME,ROUND,ROUNDS,nextRound,RACE,PHASES,PACE,planFor,plannedKm,longRuns,phaseOf,util:{pad,ymd,parse,addDays,diffDays,mondayOf,today}};
 })();
