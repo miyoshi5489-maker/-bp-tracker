@@ -64,6 +64,7 @@ async function sendRec(rec){
   try{
     let ok=await postRow(rowOf(rec));
     if(!ok&&rec.cat==='golf')ok=await postRow(rowOf({...rec,cat:'full',note:'[ゴルフ] '+(rec.note||'')}));
+    if(!ok&&rec.cat==='study')ok=await postRow(rowOf({...rec,cat:'full'}));
     return ok;
   }catch(e){return false;}
 }
@@ -86,7 +87,7 @@ const gymEx=r=>(r.exercises||[]).filter(e=>!e.kind&&(e.sets||[]).length);
 const isGolf=r=>r.cat==='golf'||(r.note||'').startsWith('[ゴルフ]');
 const byDate=recs=>{const m={};recs.forEach(r=>{(m[r.date]=m[r.date]||[]).push(r);});return m;};
 function dayActual(list){
-  list=list||[];
+  list=(list||[]).filter(r=>!(r.exercises||[]).some(e=>e.kind==='study'));
   const run=list.reduce((s,r)=>s+(r.runDist||0),0);
   const golf=list.filter(isGolf);
   const gym=list.filter(r=>!isGolf(r)&&gymEx(r).length>0);
@@ -113,7 +114,7 @@ const KIND_LABEL={genie:'ジーニー',goltore:'ゴルトレ',run:'ラン',gym:'
 const KIND_DOT={genie:'var(--accent)',goltore:'var(--sand)',run:'var(--sky)',gym:'var(--fg)',pilates:'var(--plum)',off:'var(--line)',event:'var(--warn)',prep:'var(--warn)'};
 
 // ── ルーター ──
-const PAGES=['today','golf','marathon','week','month','log','history','stats','import'];
+const PAGES=['today','golf','marathon','study','week','month','log','history','stats','import'];
 let CUR='today';
 function show(p,opt){
   if(!PAGES.includes(p))p='today';CUR=p;
@@ -122,7 +123,7 @@ function show(p,opt){
   const tb=document.querySelector(`#tabs .tab[data-p="${p}"]`);tb&&tb.scrollIntoView({inline:'center',block:'nearest'});
   if(history.replaceState)history.replaceState(null,'','#'+p);
   window.scrollTo({top:0});
-  ({today:renderToday,golf:()=>renderGolf(opt&&opt.routine),marathon:renderMarathon,week:renderWeek,month:renderMonth,history:renderHistory,stats:renderStats,log:()=>{}}[p]||(()=>{}))();
+  ({study:()=>window.renderStudy&&renderStudy(),today:renderToday,golf:()=>renderGolf(opt&&opt.routine),marathon:renderMarathon,week:renderWeek,month:renderMonth,history:renderHistory,stats:renderStats,log:()=>{}}[p]||(()=>{}))();
 }
 document.querySelectorAll('#tabs .tab').forEach(b=>b.addEventListener('click',()=>show(b.dataset.p)));
 
@@ -399,7 +400,7 @@ async function renderHistory(){
   const recs=await getRecs();
   const months=[...new Set(recs.map(r=>r.date.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
   $('month-bar').innerHTML=[`<button class="btn-sm ${curMonth===null?'!border-fg !text-fg':''}" onclick="curMonth=null;renderHistory()">すべて</button>`,...months.map(m=>`<button class="btn-sm shrink-0 ${curMonth===m?'!border-fg !text-fg':''}" onclick="curMonth='${m}';renderHistory()">${m.slice(2,4)}年${parseInt(m.slice(5))}月</button>`)].join('');
-  const list=curMonth?recs.filter(r=>r.date.startsWith(curMonth)):recs;
+  const list=(curMonth?recs.filter(r=>r.date.startsWith(curMonth)):recs).filter(r=>!(r.exercises||[]).some(e=>e.kind==='study'));
   $('log-list').innerHTML=list.length?list.map(r=>{
     const g=isGolf(r);const cat=g?'golf':r.cat;
     const kinds=(r.exercises||[]).filter(e=>e.kind&&e.kind!=='form').map(e=>{
