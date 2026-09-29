@@ -21,17 +21,38 @@ function toast(msg,err){const t=$('toast');t.textContent=msg;t.style.background=
 // ── データ ──
 let CACHE=null;
 function mapRow(row){return{id:Number(row.id),date:row.date,cat:row.cat,exercises:row.exercises||[],runDist:Number(row.run_dist)||0,runTime:row.run_time||0,runPaceMin:row.run_pace_min||0,runPaceSec:row.run_pace_sec||0,runHr:row.run_hr||0,runCal:row.run_cal||0,walkDist:Number(row.walk_dist)||0,walkTime:row.walk_time||0,note:row.note||''};}
+// 通信できない時は端末に保存し、つながった時に自動で送る
+const PKEY='yohei_pending';
+const pend=()=>{try{return JSON.parse(localStorage.getItem(PKEY)||'{"up":{},"del":[]}');}catch{return{up:{},del:[]};}};
+const savePend=p=>{try{localStorage.setItem(PKEY,JSON.stringify(p));}catch{}};
+const pendCount=()=>{const p=pend();return Object.keys(p.up).length+p.del.length;};
+function mergePend(list){const p=pend();const del=new Set(p.del.map(Number));const up=Object.values(p.up);const ids=new Set(up.map(r=>Number(r.id)));
+  return [...up,...list.filter(r=>!ids.has(Number(r.id))&&!del.has(Number(r.id)))].sort((a,b)=>b.date.localeCompare(a.date));}
+let SYNCING=false;
+async function flushPend(){
+  if(SYNCING)return;const p=pend();if(!Object.keys(p.up).length&&!p.del.length)return;SYNCING=true;let sent=0;
+  try{
+    for(const id of [...p.del]){const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?id=eq.'+id,{method:'DELETE',headers:SB_HEADERS});if(!r.ok)throw 0;p.del=p.del.filter(x=>x!==id);savePend(p);sent++;}
+    for(const [id,rec] of Object.entries(p.up)){if(!(await sendRec(rec)))throw 0;delete p.up[id];savePend(p);sent++;}
+  }catch(e){}
+  SYNCING=false;
+  if(sent){CACHE=null;toast(`端末に保存していた${sent}件を送信しました`);}
+  pendBadge();
+}
+function pendBadge(){const n=pendCount();const el=$('pend-badge');if(el){el.textContent=n?`未送信 ${n}件`:'';el.classList.toggle('hidden',!n);}}
 async function getRecs(force){
   if(CACHE&&!force)return CACHE;
+  let list;
   try{
     const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?order=date.desc',{headers:SB_HEADERS});
     if(!r.ok)throw new Error(r.status);
-    CACHE=(await r.json()).map(mapRow);
-    try{localStorage.setItem('yohei_bp_cache',JSON.stringify(CACHE));}catch(e){}
+    list=(await r.json()).map(mapRow);
+    try{localStorage.setItem('yohei_bp_cache',JSON.stringify(list));}catch(e){}
+    if(pendCount())setTimeout(flushPend,0);
   }catch(e){
-    try{CACHE=JSON.parse(localStorage.getItem('yohei_bp_cache')||localStorage.getItem('yohei_bp_v3')||'[]');}catch{CACHE=[];}
-    toast('通信できないため、保存済みの表示です',true);
+    try{list=JSON.parse(localStorage.getItem('yohei_bp_cache')||localStorage.getItem('yohei_bp_v3')||'[]');}catch{list=[];}
   }
+  CACHE=mergePend(list);pendBadge();
   return CACHE;
 }
 function rowOf(rec){return{id:rec.id,date:rec.date,cat:rec.cat,exercises:rec.exercises,run_dist:rec.runDist||0,run_time:rec.runTime||0,run_pace_min:rec.runPaceMin||0,run_pace_sec:rec.runPaceSec||0,run_hr:rec.runHr||0,run_cal:rec.runCal||0,walk_dist:rec.walkDist||0,walk_time:rec.walkTime||0,note:rec.note||''};}
@@ -39,20 +60,28 @@ async function postRow(row){
   const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs',{method:'POST',headers:{...SB_HEADERS,'Prefer':'resolution=merge-duplicates'},body:JSON.stringify(row)});
   return r.ok;
 }
-async function upsertRec(rec){
+async function sendRec(rec){
   try{
     let ok=await postRow(rowOf(rec));
-    if(!ok&&rec.cat==='golf'){ // カテゴリに golf が使えない場合の保険
-      ok=await postRow(rowOf({...rec,cat:'full',note:'[ゴルフ] '+(rec.note||'')}));
-    }
-    if(!ok)throw new Error('save failed');
-    CACHE=null;return true;
-  }catch(e){console.error(e);toast('保存できませんでした。通信を確認してください',true);return false;}
+    if(!ok&&rec.cat==='golf')ok=await postRow(rowOf({...rec,cat:'full',note:'[ゴルフ] '+(rec.note||'')}));
+    return ok;
+  }catch(e){return false;}
+}
+async function upsertRec(rec){
+  if(await sendRec(rec)){CACHE=null;return true;}
+  const p=pend();p.up[rec.id]=rec;p.del=p.del.filter(x=>Number(x)!==Number(rec.id));savePend(p);
+  CACHE=null;pendBadge();
+  toast('端末に保存しました（つながったら自動で送ります）');
+  return true;
 }
 async function deleteRec(id){
+  const p=pend();
+  if(p.up[id]){delete p.up[id];savePend(p);CACHE=null;pendBadge();return true;}
   try{const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?id=eq.'+id,{method:'DELETE',headers:SB_HEADERS});if(!r.ok)throw 0;CACHE=null;return true;}
-  catch(e){toast('削除できませんでした',true);return false;}
+  catch(e){p.del.push(Number(id));savePend(p);CACHE=null;pendBadge();toast('端末で削除しました（つながったら反映します）');return true;}
 }
+window.addEventListener('online',flushPend);
+setInterval(flushPend,60000);
 const gymEx=r=>(r.exercises||[]).filter(e=>!e.kind&&(e.sets||[]).length);
 const isGolf=r=>r.cat==='golf'||(r.note||'').startsWith('[ゴルフ]');
 const byDate=recs=>{const m={};recs.forEach(r=>{(m[r.date]=m[r.date]||[]).push(r);});return m;};

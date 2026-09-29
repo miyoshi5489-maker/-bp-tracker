@@ -30,7 +30,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 <header class="sticky top-0 z-20 border-b border-line bg-bg" style="padding-top:env(safe-area-inset-top,0px)">
   <div class="mx-auto flex max-w-3xl items-baseline justify-between px-4 pt-3">
     <div class="font-display text-lg">洋平トレーニング</div>
-    <div class="flex items-center gap-2"><div class="font-mono text-[11px] text-muted" id="hdr-count"></div><button onclick="openPalette()" class="grid h-7 w-7 place-items-center rounded-full border border-line bg-surface" aria-label="色を変える"><span class="block h-3.5 w-3.5 rounded-full bg-accent"></span></button></div>
+    <div class="flex items-center gap-2"><span id="pend-badge" class="hidden rounded-full bg-sand-soft px-2 py-0.5 text-[10px] font-bold text-sand"></span><div class="font-mono text-[11px] text-muted" id="hdr-count"></div><button onclick="openPalette()" class="grid h-7 w-7 place-items-center rounded-full border border-line bg-surface" aria-label="色を変える"><span class="block h-3.5 w-3.5 rounded-full bg-accent"></span></button></div>
   </div>
   <nav id="tabs" class="no-scrollbar mx-auto flex max-w-3xl gap-0.5 overflow-x-auto px-2">
     <button class="tab" data-p="today">今日</button>
