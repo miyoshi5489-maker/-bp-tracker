@@ -40,6 +40,28 @@ const PACE={
 function phaseOf(s){return PHASES.find(p=>s>=p.from&&s<=p.to)||(s<PHASES[0].from?null:{id:'after',name:'レース後',sub:'回復',from:RACE,to:'9999'});}
 
 function it(kind,label,extra){return Object.assign({kind,label},extra||{});}
+// PPL法（プッシュ・プル・レッグ）… [種目, セット, 回数, メモ]
+//   筋肥大は1部位あたり週10セット以上・余力1〜2回（RIR）が目安。ランとの両立は脚の量を控えめに。
+const PPL={
+  golf:{
+    legs:[['スクワット',3,6,'余力2〜3回'],['ルーマニアンデッドリフト',3,8],['カーフレイズ',2,15]],
+    push:[['ベンチプレス',4,5,'80〜85kg'],['DBインクラインプレス',3,10],['ケーブルサイドレイズ',3,15],['ケーブルトライセプスプッシュダウン',2,12]],
+    pull:[['デッドリフト',3,5,'余力2〜3回'],['ラットプルダウン',3,10],['シーテッドロウ（ケーブル）',3,10],['フェイスプル',2,15],['ハンマーカール',2,12]],
+  },
+  base:{
+    legs:[['スクワット',4,5],['ルーマニアンデッドリフト',3,8],['ブルガリアンスプリットスクワット',3,8,'片脚ずつ']],
+    push:[['ベンチプレス',5,4,'125kg計画の重さ'],['DBインクラインプレス',3,10],['ケーブルフライ（下から）',2,12],['DBサイドレイズ',4,15],['ケーブルオーバーヘッドトライセプス',3,12]],
+    pull:[['デッドリフト',3,5],['チンニング（懸垂）',3,8,'できなければラットプル'],['DBワンハンドロウ',3,10],['フェイスプル',2,15],['インクラインDBカール',3,12]],
+  },
+  marathon:{
+    legs:[['スクワット',3,5,'重すぎない'],['ルーマニアンデッドリフト',2,8]],
+    upper:[['ベンチプレス',3,5],['チンニング（懸垂）',3,8],['DBインクラインプレス',2,10],['DBサイドレイズ',3,15],['シーテッドロウ（ケーブル）',2,10]],
+  },
+};
+const PPL_NAME={legs:'PPL レッグ（脚・お尻）',push:'PPL プッシュ（胸・肩・三頭）',pull:'PPL プル（背中・二頭）',upper:'上半身（プッシュ＋プル）'};
+const CAT_OF={legs:'legs',push:'push',pull:'pull',upper:'full'};
+function pplItem(phase,day,extra){const ex=PPL[phase][day];return it('gym',PPL_NAME[day],Object.assign({cat:CAT_OF[day],ppl:day,ex,detail:ex.map(e=>`${e[0]} ${e[1]}×${e[2]}${e[3]?'（'+e[3]+'）':''}`).join('・')},extra||{}));}
+
 
 function planFor(s){
   const ph=phaseOf(s);
@@ -59,11 +81,11 @@ function planFor(s){
   if(ph.id==='golf'){
     const w=Math.min(3,Math.max(1,Math.floor(diffDays('2026-09-28',s)/7)+1));
     const day=w;
-    if(dow===1){items.push(it('genie','ジーニールーティン（⓪→⑥）',{routine:'genie',min:60}),it('gym','スクワット 3×6',{detail:'余力2〜3回残す',cat:'legs'}));}
+    if(dow===1){items.push(it('genie','ジーニールーティン（⓪→⑥）',{routine:'genie',min:60}),pplItem('golf','legs',{extra:'時間がなければ上の2種目だけ'}));}
     if(dow===2){items.push(it('goltore',`ゴルトレ Day${day}`,{routine:'y'+day,extra:w===2?'最後にDay1のケーブル2種目':''}),it('run','イージーラン',{km:5,detail:'会話できるペース '+PACE.easy}));}
-    if(dow===3){items.push(it('genie','ジーニー ⓪ほぐし・②肩胸椎',{routine:'genie',part:'upper'}),it('gym','上半身',{detail:'ベンチ 4×5（80〜85kg）・ワンアームDBロウ 3×10・フェイスプル 3×15',cat:'push'}),it('pilates','ピラティスチェア 10分'));}
+    if(dow===3){items.push(it('genie','ジーニー ⓪ほぐし・②肩胸椎',{routine:'genie',part:'upper'}),pplItem('golf','push'),it('pilates','ピラティスチェア 10分'));}
     if(dow===4){items.push(it('goltore',`ゴルトレ Day${day}`,{routine:'y'+day}),it('pilates','ピラティスチェア 10分'),it('run','軽いラン',{km:3}));}
-    if(dow===5){items.push(it('genie','ジーニールーティン（⓪→⑥）',{routine:'genie',min:60,extra:s==='2026-10-16'?'ジャンプ・VBTはこの日が最後':''}),it('gym','デッドリフト 3×5',{detail:'余力2〜3回残す',cat:'pull'}));}
+    if(dow===5){items.push(it('genie','ジーニールーティン（⓪→⑥）',{routine:'genie',min:60,extra:s==='2026-10-16'?'ジャンプ・VBTはこの日が最後':''}),pplItem('golf','pull',{extra:'時間がなければ上の2種目だけ'}));}
     if(dow===6){const km=s==='2026-10-17'?6:9;items.push(it('run','ロングラン',{km,detail:(s==='2026-10-17'?'ラウンド前なので短縮。':'8〜10km。')+PACE.long}),it('goltore','ゴルトレ ストレッチ 約10分',{routine:'y1',part:'stretch'}));}
     if(dow===0){items.push(it('off','完全OFF',{detail:'ストレッチと散歩のみ'}));}
     note.push('練習場は毎日OK（100球まで、脚の日は70球）');
@@ -73,11 +95,11 @@ function planFor(s){
     const wk=Math.floor(diffDays('2026-10-26',s)/7);
     const day=((wk%3)+3)%3+1;
     const easy=s<'2026-11-09'?6:8;
-    if(dow===1){items.push(it('genie','ジーニールーティン（⓪→⑥）',{routine:'genie',min:60}),it('gym','脚の筋力',{detail:'スクワット 4×5・ブルガリアン 3×8',cat:'legs'}));}
+    if(dow===1){items.push(it('genie','ジーニー ⓪〜③（30分版）',{routine:'genie',part:'short'}),pplItem('base','legs'));}
     if(dow===2){items.push(it('run','イージーラン',{km:easy,detail:PACE.easy}));}
-    if(dow===3){items.push(it('genie','ジーニー ⓪ほぐし・②肩胸椎',{routine:'genie',part:'upper'}),it('gym','上半身（ベンチ強化）',{detail:'ベンチ 5×3〜5・ロウ・フェイスプル',cat:'push'}));}
+    if(dow===3){items.push(it('genie','ジーニー ⓪ほぐし・②肩胸椎',{routine:'genie',part:'upper'}),pplItem('base','push'));}
     if(dow===4){items.push(it('goltore',`ゴルトレ Day${day}`,{routine:'y'+day}),it('run','イージーラン',{km:5,detail:PACE.easy}));}
-    if(dow===5){items.push(it('genie','ジーニールーティン（⓪→⑥）',{routine:'genie',min:60}),it('gym','デッドリフト 3×5',{cat:'pull'}));}
+    if(dow===5){items.push(it('genie','ジーニー ⑤⑥ジャンプ・回旋（15分）',{routine:'genie',part:'power'}),pplItem('base','pull'));}
     if(dow===6){const km=LONG[mon]!=null?LONG[mon]:8;items.push(it('run','ロング走',{km,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+PACE.long}),it('pilates','ピラティスチェア 10分'));}
     if(dow===0){items.push(it('off','完全OFF',{detail:'ストレッチと散歩のみ'}));}
   }
@@ -86,13 +108,13 @@ function planFor(s){
     const wk=Math.floor(diffDays('2026-12-28',s)/7);
     const taper=s>='2027-02-22';
     const race=s>='2027-03-01';
-    if(dow===1){items.push(it('genie','ジーニー ⓪〜③（30分版）',{routine:'genie',part:'short'}),it('gym','脚の筋力維持',{detail:race?'お休み':'スクワット 3×5（重すぎない）',cat:'legs'}));}
+    if(dow===1){items.push(it('genie','ジーニー ⓪〜③（30分版）',{routine:'genie',part:'short'}),(race?it('off','筋トレお休み',{detail:'レース週'}):pplItem('marathon','legs')));}
     if(dow===2){
       if(race)items.push(it('run','刺激走',{km:6,detail:"うち3kmを5'35/km"}));
       else if(wk%2===0)items.push(it('run','インターバル',{km:taper?6:8,detail:`1km×${taper?3:5}本 ${PACE.interval}（つなぎ400mジョグ）。アップ・ダウン込み`}));
       else items.push(it('run','テンポ走',{km:taper?6:8,detail:`${taper?4:5}kmを ${PACE.tempo}。アップ・ダウン込み`}));
     }
-    if(dow===3){items.push(it('gym','上半身',{detail:'ベンチ維持・ロウ',cat:'push'}),it('pilates','ピラティスチェア 10分'));}
+    if(dow===3){items.push(pplItem('marathon','upper'),it('pilates','ピラティスチェア 10分'));}
     if(dow===4){items.push(it('run','イージーラン',{km:race?5:(taper?5:(s<'2027-01-25'?6:8)),detail:PACE.easy}),it('goltore','骨盤分離＋ヒップツイスト',{routine:'y2',part:'short'}));}
     if(dow===5){items.push(it('off','OFF',{detail:race?'レース2日前。よく寝る':'ストレッチのみ'}));}
     if(dow===6){const km=LONG[mon]!=null?LONG[mon]:16;items.push(it('run',race?'前日刺激走':'ロング走',{km,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+(race?'':PACE.long)}));}
@@ -109,5 +131,5 @@ function longRuns(){
   return Object.keys(LONG).filter(m=>LONG[m]>0).map(m=>({date:addDays(m,5),km:LONG[m],note:LONG_NOTE[m]||''}));
 }
 
-window.PLAN={ROUND,RACE,PHASES,PACE,planFor,plannedKm,longRuns,phaseOf,util:{pad,ymd,parse,addDays,diffDays,mondayOf,today}};
+window.PLAN={PPL,PPL_NAME,ROUND,RACE,PHASES,PACE,planFor,plannedKm,longRuns,phaseOf,util:{pad,ymd,parse,addDays,diffDays,mondayOf,today}};
 })();

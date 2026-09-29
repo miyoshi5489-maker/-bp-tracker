@@ -20,7 +20,7 @@ function actInit(d,recs,items){
   const form=rec&&(rec.exercises||[]).find(e=>e.kind==='form');
   if(form&&form.data)return JSON.parse(JSON.stringify(form.data));
   return{items:items.map(it=>({st:'',km:'',min:'',sec:'',hr:'',pmin:it.kind==='pilates'?10:'',score:'',putts:'',note:'',
-    rows:(GYM_DEFAULTS[it.label]||[]).map(([n,s,r])=>({n,w:lastWeight(recs,n),r,s}))})),balls:'',walk:'',memo:''};
+    rows:(it.ex||GYM_DEFAULTS[it.label]||[]).map(([n,s,r])=>({n,w:lastWeight(recs,n),r,s}))})),balls:'',walk:'',memo:''};
 }
 function actRead(){
   const S=ACT[ACT_DATE];if(!S)return;

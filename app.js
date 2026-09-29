@@ -201,11 +201,12 @@ function renderGolf(req){
   let blocks=golfData(r);
   if(r==='genie'&&GOLF_PART==='short')blocks=blocks.slice(0,4);
   if(r==='genie'&&GOLF_PART==='upper')blocks=[blocks[0],blocks[2]];
+  if(r==='genie'&&GOLF_PART==='power')blocks=blocks.slice(5,7);
   if(r.startsWith('y')&&GOLF_PART==='stretch')blocks=[{...blocks[0],ex:blocks[0].ex.filter(e=>e.id==='y1f')}];
   if(r.startsWith('y')&&GOLF_PART==='short')blocks=[{b:'骨盤の2種目',t:'毎日OK',ex:[...window.EX_Y[1].ex.filter(e=>e.id==='y2a'),...window.EX_Y[2].ex.filter(e=>e.id==='y3a')]}];
   const chk=getChk(d,r);const all=blocks.flatMap(b=>b.ex);let n=0;
   const img=window.EX_IMG;
-  const parts=r==='genie'?`<div class="flex flex-wrap gap-1.5">${[['','全部（60分）'],['short','⓪〜③（30分版）'],['upper','⓪＋②（水曜）']].map(([k,l])=>`<button class="btn-sm ${GOLF_PART===k?'!border-accent !text-accent':''}" onclick="GOLF_PART='${k}';renderGolf()">${l}</button>`).join('')}</div>`
+  const parts=r==='genie'?`<div class="flex flex-wrap gap-1.5">${[['','全部（60分）'],['short','⓪〜③（30分）'],['upper','⓪＋②（水曜）'],['power','⑤⑥ジャンプ（15分）']].map(([k,l])=>`<button class="btn-sm ${GOLF_PART===k?'!border-accent !text-accent':''}" onclick="GOLF_PART='${k}';renderGolf()">${l}</button>`).join('')}</div>`
     :(r.startsWith('y')&&GOLF_PART?`<div><button class="btn-sm" onclick="GOLF_PART='';renderGolf()">Dayの全種目を表示</button></div>`:'');
   const src=r==='genie'?'香妻陣一朗プロ（ジーニーゴルフ）「飛距離アップする為のトレーニングルーティン」':r==='check'?'ニューヨーク屋敷さん #72 ゴルフボディチェック':'ニューヨーク屋敷さん #72 ゴルフ専門ジムの3日間';
   $('golf-body').innerHTML=`
