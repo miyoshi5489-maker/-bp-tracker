@@ -210,11 +210,11 @@ function renderGolf(req){
     :(r.startsWith('y')&&GOLF_PART?`<div><button class="btn-sm" onclick="GOLF_PART='';renderGolf()">Dayの全種目を表示</button></div>`:'');
   const src=r==='genie'?'香妻陣一朗プロ（ジーニーゴルフ）「飛距離アップする為のトレーニングルーティン」':r==='check'?'ニューヨーク屋敷さん #72 ゴルフボディチェック':'ニューヨーク屋敷さん #72 ゴルフ専門ジムの3日間';
   $('golf-body').innerHTML=`
-   <div class="grid gap-2"><div class="font-display text-2xl">${GOLF_NAME[r]}</div><div class="text-[12px] text-muted">出典：${src}。動画の順番どおり。写真は横にスワイプ。</div>${parts}</div>
+   <div class="grid gap-2"><div class="font-display text-2xl">${GOLF_NAME[r]}</div><div class="text-[12px] text-muted">出典：${src}。動画の順番どおり。写真はタップすると次の写真に切り替わります。</div>${parts}</div>
    ${blocks.map(b=>`<div class="grid gap-3"><div class="flex flex-wrap items-baseline gap-x-3 border-b-2 border-fg pb-1"><h3 class="h2">${esc(b.b)}</h3><span class="font-mono text-xs text-muted">${esc(b.t)}</span>${b.p?`<p class="basis-full text-[13px] text-muted">${esc(b.p)}</p>`:''}</div>
     <div class="grid gap-3 sm:grid-cols-2">${b.ex.map(e=>{const c=img[e.id]||0;const on=chk.includes(e.id);const no=r==='check'?'':String(++n).padStart(2,'0');return `
      <article class="card overflow-hidden ${on?'ring-2 ring-accent':''}">
-      <div class="relative"><div class="no-scrollbar flex h-56 snap-x snap-mandatory gap-1 overflow-x-auto bg-photo">${[...Array(c)].map((_,k)=>`<img src="img/${e.id}_${k}.jpg" alt="${esc(e.n)} ${k+1}" loading="lazy" class="block h-full w-auto max-w-none flex-none snap-start">`).join('')}</div>${c>1?`<span class="pointer-events-none absolute bottom-2 right-2 rounded-full bg-black px-2 py-0.5 font-mono text-[11px] text-white opacity-70">写真 ${c}枚 →</span>`:''}</div>
+      <div class="relative select-none"><div class="strip no-scrollbar flex h-56 cursor-pointer snap-x snap-mandatory overflow-x-auto bg-photo" onclick="stripGo(this,1)" onscroll="stripSync(this)">${[...Array(c)].map((_,k)=>`<img src="img/${e.id}_${k}.jpg" alt="${esc(e.n)} ${k+1}" loading="lazy" class="block h-full w-full flex-none snap-center object-contain">`).join('')}</div>${c>1?`<button type="button" aria-label="前の写真" onclick="stripGo(this.parentElement.querySelector('.strip'),-1)" class="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black text-xl text-white opacity-60 hover:opacity-90">‹</button><button type="button" aria-label="次の写真" onclick="stripGo(this.parentElement.querySelector('.strip'),1)" class="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black text-xl text-white opacity-60 hover:opacity-90">›</button><span class="strip-n pointer-events-none absolute bottom-2 right-2 rounded-full bg-black px-2 py-0.5 font-mono text-[11px] text-white opacity-70">1 / ${c}</span>`:''}</div>
       <div class="grid gap-2 p-3.5">
        <div class="flex flex-wrap items-center gap-2">${no?`<span class="rounded bg-fg px-1.5 font-mono text-xs font-semibold text-bg">${no}</span>`:''}<span class="font-mono text-[11px] text-muted">動画 ${esc(e.tm)}</span>${e.g?'<span class="rounded border border-line px-1 text-[10px] text-muted">推定</span>':''}${e.r?`<span class="ml-auto font-mono text-[13px] font-semibold text-accent">${esc(e.r)}</span>`:''}</div>
        <h4 class="text-base font-bold leading-snug">${esc(e.n)}</h4>
@@ -228,6 +228,9 @@ function renderGolf(req){
      <button class="btn-main py-2.5" onclick="saveGolf()">今日の記録として保存</button></div>`:''}`;
 }
 document.querySelectorAll('#golf-seg button').forEach(b=>b.addEventListener('click',()=>{GOLF_R=b.dataset.r;GOLF_PART='';renderGolf();}));
+// 写真：タップで次へ（最後まで行ったら最初に戻る）
+function stripGo(el,dir){const w=el.clientWidth;const n=el.children.length;if(n<2)return;let i=Math.round(el.scrollLeft/w)+dir;if(i>=n)i=0;if(i<0)i=n-1;el.scrollTo({left:i*w,behavior:'smooth'});}
+function stripSync(el){const lab=el.parentElement.querySelector('.strip-n');if(!lab)return;const i=Math.round(el.scrollLeft/el.clientWidth)+1;lab.textContent=`${i} / ${el.children.length}`;}
 function toggleChk(id){const d=today();const a=getChk(d,GOLF_R);const i=a.indexOf(id);if(i<0)a.push(id);else a.splice(i,1);setChk(d,GOLF_R,a);renderGolf();}
 async function saveGolf(){
   const d=today();const r=GOLF_R;const chk=getChk(d,r);
