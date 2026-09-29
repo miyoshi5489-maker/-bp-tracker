@@ -53,16 +53,26 @@ async function deleteRec(id){
   try{const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?id=eq.'+id,{method:'DELETE',headers:SB_HEADERS});if(!r.ok)throw 0;CACHE=null;return true;}
   catch(e){toast('削除できませんでした',true);return false;}
 }
+const gymEx=r=>(r.exercises||[]).filter(e=>!e.kind&&(e.sets||[]).length);
 const isGolf=r=>r.cat==='golf'||(r.note||'').startsWith('[ゴルフ]');
 const byDate=recs=>{const m={};recs.forEach(r=>{(m[r.date]=m[r.date]||[]).push(r);});return m;};
 function dayActual(list){
   list=list||[];
   const run=list.reduce((s,r)=>s+(r.runDist||0),0);
   const golf=list.filter(isGolf);
-  const gym=list.filter(r=>!isGolf(r)&&(r.exercises||[]).length>0);
-  return{run,golf,gym,genie:golf.some(r=>(r.note||'').includes('ジーニー')),goltore:golf.some(r=>(r.note||'').includes('ゴルトレ')),any:list.length>0};
+  const gym=list.filter(r=>!isGolf(r)&&gymEx(r).length>0);
+  const kx=list.flatMap(r=>(r.exercises||[]).filter(e=>e.kind&&e.kind!=='form'));
+  const gdone=kx.filter(e=>e.kind==='golf'&&e.status!=='skip');
+  return{run,golf,gym,kx,
+    genie:golf.some(r=>(r.note||'').includes('ジーニー'))||gdone.some(e=>e.routine==='genie'),
+    goltore:golf.some(r=>(r.note||'').includes('ゴルトレ'))||gdone.some(e=>(e.routine||'').startsWith('y')),
+    skips:new Set(kx.filter(e=>e.status==='skip').map(e=>e.name)),
+    pilates:kx.some(e=>e.kind==='pilates'&&e.status!=='skip'),
+    any:list.length>0};
 }
 function itemDone(it,a){
+  if(a.skips&&a.skips.has(it.label))return 'skip';
+  if(it.kind==='pilates')return a.pilates?'done':null;
   if(it.kind==='run')return a.run>0?(a.run>=(it.km||0)*0.8?'done':'part'):null;
   if(it.kind==='genie')return a.genie?'done':null;
   if(it.kind==='goltore')return a.goltore?'done':null;
@@ -94,7 +104,7 @@ function headerCount(){
 
 // ── 共通パーツ ──
 function chip(kind,text){return `<span class="chip k-${kind}">${esc(text||KIND_LABEL[kind]||kind)}</span>`;}
-function statusMark(st){return st==='done'?'<span class="num text-sm font-bold text-accent">✓</span>':st==='part'?'<span class="num text-xs font-bold text-sand">途中</span>':'';}
+function statusMark(st){if(st==='skip')return '<span class="text-xs font-bold text-muted">休み</span>';return st==='done'?'<span class="num text-sm font-bold text-accent">✓</span>':st==='part'?'<span class="num text-xs font-bold text-sand">途中</span>':'';}
 function itemRow(it,a,withAction){
   const st=a?itemDone(it,a):null;
   let act='';
@@ -135,14 +145,16 @@ async function renderToday(){
     ${m>=0?`<div class="card p-4"><div class="lbl">篠山マラソン 3/7（日）</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">目標 サブ4 → 3時間30分</div></div>`:''}
   </div>
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}
-  <div class="grid gap-2"><h2 class="h2">今日のメニュー</h2>${dayCard(t,a,{action:true})}
+  <div class="grid gap-2"><h2 class="h2">今日のメニュー（予定）</h2>${dayCard(t,a,{action:true})}
     ${(p.note||[]).map(n=>`<p class="text-[13px] text-muted">・${esc(n)}</p>`).join('')}</div>
+  <div id="act-box" class="grid gap-2"></div>
   <div class="grid gap-2"><div class="flex items-baseline justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('week')">週間を見る</button></div>
     <div class="card grid gap-3 p-4">
       <div class="grid grid-cols-7 gap-1 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=pp.items.some(i=>itemDone(i,aa)==='done')||aa.any;return `<div class="grid gap-1 rounded-lg py-1.5 ${d===t?'bg-accent-soft':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold text-accent">${done?'✓':''}</div></div>`;}).join('')}</div>
       <div><div class="mb-1 flex justify-between text-[13px]"><span class="text-muted">今週のラン</span><span class="num"><b>${km1(wAct)}</b> / ${wPlan}km</span></div>${bar(wAct,wPlan,'var(--sky)')}</div>
     </div></div>
   <div class="grid gap-2"><h2 class="h2">明日</h2>${dayCard(tm,null)}</div>`;
+  if(window.renderActual)renderActual(ACT_DATE||t);
 }
 
 // ── ゴルフ ──
@@ -262,7 +274,7 @@ async function renderMonth(){
   if(!MSEL||!MSEL.startsWith(MONTH))MSEL=t.startsWith(MONTH)?t:first;
   const plan=monthTarget(MONTH);const run=recs.filter(r=>r.date.startsWith(MONTH)).reduce((a,r)=>a+(r.runDist||0),0);
   const golfN=recs.filter(r=>r.date.startsWith(MONTH)&&isGolf(r)).length;
-  const gymN=new Set(recs.filter(r=>r.date.startsWith(MONTH)&&!isGolf(r)&&(r.exercises||[]).length).map(r=>r.date)).size;
+  const gymN=new Set(recs.filter(r=>r.date.startsWith(MONTH)&&!isGolf(r)&&gymEx(r).length).map(r=>r.date)).size;
   const prev=ymd(new Date(y,mo-2,1)).slice(0,7),next=ymd(new Date(y,mo,1)).slice(0,7);
   el.innerHTML=`
   <div class="flex items-center justify-between gap-2"><button class="btn-sub px-3 py-2" onclick="MONTH='${prev}';renderMonth()">←</button><div class="text-center"><div class="font-display text-xl">${y}年${mo}月</div><button class="text-[12px] font-bold text-accent" onclick="MONTH=today().slice(0,7);MSEL=null;renderMonth()">今月にもどる</button></div><button class="btn-sub px-3 py-2" onclick="MONTH='${next}';renderMonth()">→</button></div>
@@ -357,14 +369,18 @@ async function renderHistory(){
   const list=curMonth?recs.filter(r=>r.date.startsWith(curMonth)):recs;
   $('log-list').innerHTML=list.length?list.map(r=>{
     const g=isGolf(r);const cat=g?'golf':r.cat;
-    const ex=(r.exercises||[]).map(e=>{
+    const kinds=(r.exercises||[]).filter(e=>e.kind&&e.kind!=='form').map(e=>{
+      const lab=e.kind==='range'?`練習場 ${e.balls}球`:e.kind==='round'?`${e.name}${e.score?' スコア'+e.score:''}${e.putts?'（'+e.putts+'パット）':''}`:e.kind==='pilates'?`ピラティス ${e.min||''}分`:e.name;
+      const k=e.kind==='golf'?((e.routine||'').startsWith('y')?'goltore':'genie'):e.kind==='range'||e.kind==='round'?'event':e.kind==='pilates'?'pilates':e.kind;
+      return e.status==='skip'?`<span class="chip k-off">${esc(e.name)} 休み</span>`:`<span class="chip k-${k==='event'?'prep':k}">${esc(lab)}${e.status==='change'?'（変更）':' ✓'}</span>`;}).join('');
+    const ex=(r.exercises||[]).filter(e=>!e.kind).map(e=>{
       if(g)return `<span class="chip k-genie">${esc(e.name)} ✓</span>`;
       const mx=Math.max(0,...e.sets.map(s=>s.weight));
       return `<div class="border-b border-line py-1.5 last:border-0"><div class="flex justify-between gap-2"><span class="font-bold">${esc(e.name)}</span><span class="num text-[12px] text-muted">${e.sets.length}セット${mx?' · 最大'+mx+'kg':''}</span></div><div class="num flex flex-wrap gap-x-3 text-[12px] text-muted">${e.sets.map((s,i)=>`<span>${i+1}. ${s.weight?s.weight+'kg':''}${s.weight&&s.reps?'×':''}${s.reps?s.reps+'回':''}${s.done?' <b class="text-accent">✓</b>':''}</span>`).join('')}</div></div>`;}).join('');
     const run=r.runDist>0?`<div class="num flex flex-wrap gap-x-4 text-sm"><span class="text-sky">ラン</span><span><b>${km1(r.runDist)}</b>km</span>${r.runTime?`<span>${Math.floor(r.runTime/60)}'${pad(r.runTime%60)}"</span>`:''}${r.runPaceMin?`<span>${r.runPaceMin}'${pad(r.runPaceSec||0)}"/km</span>`:''}${r.runHr?`<span>${r.runHr}bpm</span>`:''}${r.runCal?`<span>${r.runCal}kcal</span>`:''}</div>`:'';
     const walk=r.walkDist>0?`<div class="num flex gap-x-4 text-sm text-muted"><span>ウォーク</span><span>${km1(r.walkDist)}km</span>${r.walkTime?`<span>${Math.floor(r.walkTime/60)}'${pad(r.walkTime%60)}"</span>`:''}</div>`:'';
     return `<div class="card grid gap-2 p-4"><div class="flex items-start justify-between gap-2"><div><div class="font-bold">${md(r.date)}</div><div class="mt-0.5">${chip(CATK[cat]||'gym',CAT[cat]||cat)}</div></div><div class="flex gap-1.5"><button class="btn-sm !text-accent" onclick="editRec(${r.id})">編集</button><button class="btn-sm !text-warn" onclick="delRec(${r.id})">削除</button></div></div>
-      ${ex?(g?`<div class="flex flex-wrap gap-1">${ex}</div>`:`<div>${ex}</div>`):''}${run}${walk}${r.note?`<div class="text-[13px] text-muted">${esc(r.note.replace(/^\[ゴルフ\]\s*/,''))}</div>`:''}</div>`;
+      ${kinds?`<div class="flex flex-wrap gap-1">${kinds}</div>`:''}${ex?(g?`<div class="flex flex-wrap gap-1">${ex}</div>`:`<div>${ex}</div>`):''}${run}${walk}${r.note&&r.note.replace(/^\[(ゴルフ|実績)\]\s*/,'')?`<div class="text-[13px] text-muted">${esc(r.note.replace(/^\[(ゴルフ|実績)\]\s*/,''))}</div>`:''}</div>`;
   }).join(''):'<div class="py-10 text-center text-sm text-muted">記録がありません</div>';
 }
 
@@ -374,7 +390,7 @@ async function renderStats(){
   const mRecs=recs.filter(r=>r.date.startsWith(thisM));
   const run=mRecs.reduce((s,r)=>s+(r.runDist||0),0);
   const plan=monthTarget(thisM);
-  const gymDays=new Set(mRecs.filter(r=>!isGolf(r)&&(r.exercises||[]).length).map(r=>r.date)).size;
+  const gymDays=new Set(mRecs.filter(r=>!isGolf(r)&&gymEx(r).length).map(r=>r.date)).size;
   const golfN=mRecs.filter(isGolf).length;
   const allBench=recs.flatMap(r=>(r.exercises||[]).filter(e=>e.name.includes('ベンチ')).flatMap(e=>e.sets.map(s=>({date:r.date,w:s.weight})))).filter(b=>b.w>0);
   const maxBench=allBench.length?Math.max(...allBench.map(b=>b.w)):0;
@@ -406,6 +422,16 @@ async function importRecords(){
   }
   $('import-result').textContent=`✓ ${ok}件インポートしました`+(err?`（${err}件は失敗）`:'');$('import-text').value='';
 }
+
+// ── カラーパレット ──
+function openPalette(){
+  const T=window.THEME;const cur=T.current();const dk=document.documentElement.style.colorScheme==='dark';
+  $('pal-grid').innerHTML=T.THEMES.map(([n],i)=>{const t=T.tokens(i,dk);return `<button onclick="THEME.pick(${i});openPalette()" class="grid justify-items-center gap-1 rounded-xl p-1.5 ${cur.i===i?'ring-2 ring-fg':''}" aria-label="${n}">
+    <span class="relative block h-10 w-10 overflow-hidden rounded-full border border-line" style="background:${t['--bg']}"><span class="absolute inset-x-0 bottom-0 h-1/2" style="background:${t['--accent']}"></span></span><span class="text-[10px] leading-tight text-muted">${n}</span></button>`;}).join('');
+  document.querySelectorAll('#pal-mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===cur.mode));
+  $('palette').classList.remove('hidden');$('palette').classList.add('flex');
+}
+function closePalette(){$('palette').classList.add('hidden');$('palette').classList.remove('flex');}
 
 // ── 起動 ──
 headerCount();

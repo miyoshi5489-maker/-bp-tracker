@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <link rel="stylesheet" href="app.css">
+<script src="theme.js"></script>
 <style>
 :root{--bg:#F2F4EF;--surface:#FFFFFF;--field:#FFFFFF;--fg:#18221C;--muted:#5E6A62;--line:#D8DED6;--accent:#1D6A47;--accent-soft:#E1EEE6;--sand:#9A7322;--sand-soft:#F5ECD8;--sky:#1F5F8F;--sky-soft:#E0ECF5;--plum:#6B4A86;--plum-soft:#EEE7F3;--warn:#A6452E;--warn-soft:#F6E4DF;--photo:#0D100E;color-scheme:light}
 @media (prefers-color-scheme: dark){:root{--bg:#111714;--surface:#19211C;--field:#212A24;--fg:#E4EBE6;--muted:#9AA69F;--line:#2B362F;--accent:#62C394;--accent-soft:#1D3228;--sand:#D8B46A;--sand-soft:#2E2818;--sky:#7DB6E3;--sky-soft:#1A2A36;--plum:#C0A2DA;--plum-soft:#2A2233;--warn:#E08A72;--warn-soft:#3A221C;--photo:#070908;color-scheme:dark}}
@@ -29,7 +30,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 <header class="sticky top-0 z-20 border-b border-line bg-bg" style="padding-top:env(safe-area-inset-top,0px)">
   <div class="mx-auto flex max-w-3xl items-baseline justify-between px-4 pt-3">
     <div class="font-display text-lg">洋平トレーニング</div>
-    <div class="font-mono text-[11px] text-muted" id="hdr-count"></div>
+    <div class="flex items-center gap-2"><div class="font-mono text-[11px] text-muted" id="hdr-count"></div><button onclick="openPalette()" class="grid h-7 w-7 place-items-center rounded-full border border-line bg-surface" aria-label="色を変える"><span class="block h-3.5 w-3.5 rounded-full bg-accent"></span></button></div>
   </div>
   <nav id="tabs" class="no-scrollbar mx-auto flex max-w-3xl gap-0.5 overflow-x-auto px-2">
     <button class="tab" data-p="today">今日</button>
@@ -140,10 +141,19 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 
 </main>
 
+<div id="palette" class="fixed inset-0 z-40 hidden items-end justify-center bg-black/40 sm:items-center" onclick="if(event.target===this)closePalette()">
+  <div class="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-surface p-5 sm:rounded-3xl" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px)">
+    <div class="mb-3 flex items-center justify-between"><div class="font-display text-lg">カラーを選ぶ</div><button class="btn-sm" onclick="closePalette()">閉じる</button></div>
+    <div class="seg mb-4 grid grid-cols-3" id="pal-mode"><button data-m="auto" onclick="THEME.mode('auto');openPalette()">自動</button><button data-m="light" onclick="THEME.mode('light');openPalette()">ライト</button><button data-m="dark" onclick="THEME.mode('dark');openPalette()">ダーク</button></div>
+    <div id="pal-grid" class="grid grid-cols-5 gap-1.5 sm:grid-cols-6"></div>
+    <p class="mt-3 text-[12px] text-muted">押すとすぐに全体の色が変わります。この端末に保存されます。</p>
+  </div>
+</div>
 <div id="toast" class="pointer-events-none fixed left-1/2 z-50 -translate-x-1/2 translate-y-2 rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-bg opacity-0 transition" style="bottom:calc(env(safe-area-inset-bottom,0px) + 20px)"></div>
 
 <script src="exercises.js"></script>
 <script src="plan.js"></script>
 <script src="app.js"></script>
+<script src="actual.js"></script>
 </body>
 </html>
