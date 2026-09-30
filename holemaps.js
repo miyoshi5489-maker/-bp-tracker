@@ -181,7 +181,7 @@ function illusView(I,hi,m,opt){
     const right=q[0]<I.w/2;const bx=right?q[0]+7:q[0]-7-54;
     v+=`<circle cx="${q[0]}" cy="${q[1]}" r="5.5" fill="#ffb300" fill-opacity=".35" stroke="#e65100" stroke-width="1.2"/><text x="${q[0]}" y="${q[1]+2.2}" font-size="6" font-weight="bold" fill="#111" text-anchor="middle">${i+1}</text>`;
     v+=`<rect x="${bx}" y="${q[1]-7}" width="54" height="14" rx="2" fill="#111" fill-opacity=".78"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#ffd54a">${i+1}打目 ${esc(t[2]||'')}</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">${d}y・ピン${rest}y</text>`;});
-  if(opt&&opt.sides){const sd=opt.sides;const L=r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-r[i-1][0],q[1]-r[i-1][1]):0,0);const a=routeAt(r,L*0.45);
+  if(opt&&opt.sides){const sd=opt.sides;const L=r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-r[i-1][0],q[1]-r[i-1][1]):0,0);const a=routeAt(r,L*0.2);
     const bad=t=>/OB|池|谷|危険|トラブル|禁物/.test(t);const lab=t=>t.replace(/（.*/,'');
     [['L',2,'start','← 左'],['R',I.w-2,'end','右 →']].forEach(([k,xx,an,hd])=>{const t=sd[k];if(!t||/情報なし/.test(t))return;const c=bad(t)?'#c62828':/セーフ/.test(t)?'#2e7d32':'#555';const w=Math.max(30,lab(t).length*5.4+6);const bx=an==='start'?xx:xx-w;
       v+=`<rect x="${bx}" y="${a.p[1]-9}" width="${w}" height="17" rx="2.5" fill="#fff" fill-opacity=".92" stroke="${c}" stroke-width=".8"/><text x="${bx+3}" y="${a.p[1]-2.2}" font-size="5" font-weight="bold" fill="${c}">${hd}</text><text x="${bx+3}" y="${a.p[1]+5.2}" font-size="5.6" font-weight="bold" fill="${c}">${bad(t)?'✕ ':'◯ '}${esc(lab(t))}</text>`;});
