@@ -8,7 +8,7 @@ const ROUND_DEFS=[
  {date:'2026-09-22',course:'三田ゴルフクラブ',time:'',tee:'レギュラー 6,261y・Par72',members:'',plan:'',result:{score:118,putts:0},
   diff:{stars:4,cr:71.6,par:72,yards:6261,bunkers:76,water:5,green:'高麗グリーン（秋は8フィート前後）',terrain:'丘陵（坂あり）',why:['コースレートがParに近い（3つの中で一番難しい）','バンカー76個','高麗グリーンは芝目が強く、読みにくい']},
  },
- {date:'2026-10-20',course:'東条湖カントリー倶楽部',time:'',tee:'レギュラー 6,198y・Par72',members:'',plan:'',
+ {date:'2026-10-20',course:'東条湖カントリー倶楽部',time:'OUT 7:08',tee:'レギュラー 6,198y・Par72',members:'3名',plan:'セルフ・4人乗りカート付き（昼食は別料金）　1人 5,100円',
   target:95,limit:99,link:'https://claude.ai/artifact/Cq7XPSVNLmbx1azX5LmUY4',
   diff:{stars:3,cr:69.2,par:72,yards:6198,bunkers:65,water:9,green:'ベントグリーン（秋は8.5フィート前後）',terrain:'丘陵（見えないホールが多い）',why:['コースレートはやさしめ','池が絡むホールが9つ','フェアウェイが狭く、ブラインドが多い']},
   summary:'全ホールをボギーで回ると90。難しい4ホールはダブルボギーでよしとして、目標は95。予備が4打あるので、大叩きが1〜2回あっても100を切れる計算です。',
