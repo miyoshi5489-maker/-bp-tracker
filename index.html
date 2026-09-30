@@ -28,25 +28,14 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 <body class="font-body text-[15px] leading-relaxed">
 
 <header class="sticky top-0 z-20 border-b border-line bg-bg" style="padding-top:env(safe-area-inset-top,0px)">
-  <div class="mx-auto flex max-w-3xl items-baseline justify-between px-4 pt-3">
+  <div class="mx-auto flex max-w-3xl items-center justify-between px-4 py-2.5">
     <div class="font-display text-lg">洋平トレーニング</div>
-    <div class="flex items-center gap-2"><span id="pend-badge" class="hidden rounded-full bg-sand-soft px-2 py-0.5 text-[10px] font-bold text-sand"></span><div class="font-mono text-[11px] text-muted" id="hdr-count"></div><button onclick="openPalette()" class="grid h-7 w-7 place-items-center rounded-full border border-line bg-surface" aria-label="色を変える"><span class="block h-3.5 w-3.5 rounded-full bg-accent"></span></button></div>
+    <div class="flex items-center gap-2"><span id="pend-badge" class="hidden rounded-full bg-sand-soft px-2 py-0.5 text-[11px] font-bold text-sand"></span><button onclick="openPalette()" class="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface" aria-label="色を変える"><span class="block h-4 w-4 rounded-full bg-accent"></span></button></div>
   </div>
-  <nav id="tabs" class="no-scrollbar mx-auto flex max-w-3xl gap-0.5 overflow-x-auto px-2">
-    <button class="tab" data-p="today">今日</button>
-    <button class="tab" data-p="golf">ゴルフ</button>
-    <button class="tab" data-p="marathon">マラソン</button>
-    <button class="tab" data-p="study">学習</button>
-    <button class="tab" data-p="week">週間</button>
-    <button class="tab" data-p="month">月間</button>
-    <button class="tab" data-p="log">記録</button>
-    <button class="tab" data-p="history">履歴</button>
-    <button class="tab" data-p="stats">進捗</button>
-    <button class="tab" data-p="import">取込</button>
-  </nav>
+  <nav id="subnav" class="mx-auto hidden max-w-3xl px-4 pb-2.5" aria-label="ページ内の切り替え"></nav>
 </header>
 
-<main class="mx-auto max-w-3xl px-4 pb-24 pt-4">
+<main class="mx-auto max-w-3xl px-4 pt-4" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 150px)">
 
 <!-- 今日 -->
 <section id="p-today" class="page hidden grid gap-5"></section>
@@ -107,7 +96,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 
   <div class="grid gap-3">
     <h2 class="h2">ランニング</h2>
-    <p class="rounded-lg bg-sky-soft px-3 py-2 text-[13px] text-sky">Garminの画面をClaudeに貼ると数値を読み取ってくれます。</p>
+    
     <div class="grid grid-cols-2 gap-3">
       <label class="grid gap-1"><span class="lbl">距離 (km)</span><input type="number" id="run-dist" step="0.01" min="0" placeholder="0.00" inputmode="decimal" class="inp"></label>
       <div class="grid gap-1"><span class="lbl">平均ペース（分・秒/km）</span><div class="flex items-center gap-1.5"><input type="number" id="run-pace-min" min="0" max="20" placeholder="6" inputmode="numeric" class="inp"><span class="text-muted">'</span><input type="number" id="run-pace-sec" min="0" max="59" placeholder="30" inputmode="numeric" class="inp"><span class="text-muted">"</span></div></div>
@@ -141,7 +130,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 
 <!-- 取込 -->
 <section id="p-import" class="page hidden grid gap-4">
-  <h2 class="h2">一括インポート</h2>
+  <h2 class="h2">まとめて入力</h2>
   <div class="rounded-xl bg-line px-3.5 py-3 text-[13px] leading-7 text-muted">1行に1件、次の順で入力します。<br><b class="text-fg">日付,カテゴリ,ラン距離,ランタイム分,ランタイム秒,ペース分,ペース秒,心拍,カロリー,ウォーク距離,ウォーク時間分,ウォーク時間秒,メモ</b><br>カテゴリ：run / push / pull / legs / golf / full<br>例：2026-06-01,run,3.73,23,10,6,13,0,0,0.91,19,5,今日のラン</div>
   <textarea id="import-text" rows="9" class="inp font-mono text-xs" placeholder="2026-06-01,run,3.73,23,10,6,13,0,0,0.91,19,5,今日のラン"></textarea>
   <button class="btn-main" onclick="busy(this,importRecords)">一括インポート</button>
@@ -151,6 +140,15 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 
 </main>
 
+<nav id="bottomnav" class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface" style="padding-bottom:env(safe-area-inset-bottom,0px)" aria-label="メインメニュー">
+  <div class="mx-auto grid max-w-3xl grid-cols-5">
+    <button class="bn" data-g="today"><svg class="bn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>今日</button>
+    <button class="bn" data-g="plan"><svg class="bn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>予定</button>
+    <button class="bn" data-g="golf"><svg class="bn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V3l11 4-11 4"/><path d="M3 21h8"/></svg>ゴルフ</button>
+    <button class="bn" data-g="study"><svg class="bn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 7h6"/></svg>学習</button>
+    <button class="bn" data-g="record"><svg class="bn-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>記録</button>
+  </div>
+</nav>
 <div id="palette" class="fixed inset-0 z-40 hidden items-end justify-center bg-black/40 sm:items-center" onclick="if(event.target===this)closePalette()">
   <div class="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-surface p-5 sm:rounded-3xl" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px)">
     <div class="mb-3 flex items-center justify-between"><div class="font-display text-lg">カラーを選ぶ</div><button class="btn-sm" onclick="closePalette()">閉じる</button></div>
@@ -159,7 +157,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
     <p class="mt-3 text-[12px] text-muted">押すとすぐに全体の色が変わります。この端末に保存されます。</p>
   </div>
 </div>
-<div id="toast" class="pointer-events-none fixed left-1/2 z-50 -translate-x-1/2 translate-y-2 rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-bg opacity-0 transition" style="bottom:calc(env(safe-area-inset-bottom,0px) + 20px)"></div>
+<div id="toast" class="pointer-events-none fixed left-1/2 z-50 -translate-x-1/2 translate-y-2 rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-bg opacity-0 transition" style="bottom:calc(env(safe-area-inset-bottom,0px) + 140px)"></div>
 
 <script src="exercises.js"></script>
 <script src="plan.js"></script>

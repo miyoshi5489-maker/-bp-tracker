@@ -13,7 +13,7 @@ const THEMES=[
 const hsl=(h,s,l)=>`hsl(${h} ${s}% ${l}%)`;
 function tokens(i,dark){
   const[,h,s]=THEMES[i];const ns=Math.min(s,14)*(s<10?0.4:1); // 背景に少しだけ色味
-  const acc=s<10?(dark?72:28):(dark?66:34);
+  const acc=s<10?(dark?72:26):(dark?66:28);
   return dark?{
     '--bg':hsl(h,ns*0.9,7),'--surface':hsl(h,ns*0.9,11),'--field':hsl(h,ns*0.9,14),'--fg':hsl(h,ns*0.6,91),'--muted':hsl(h,ns*0.6,64),'--line':hsl(h,ns*0.8,20),
     '--accent':hsl(h,Math.max(s,8),acc),'--accent-soft':hsl(h,Math.min(s,45)*0.7,17),'--photo':'#070908',

@@ -142,35 +142,37 @@ function itemDone(it,a){
 const KIND_LABEL={genie:'ジーニー',goltore:'ゴルトレ',run:'ラン',gym:'筋トレ',pilates:'ピラティス',off:'休み',event:'本番',prep:'調整'};
 const KIND_DOT={genie:'var(--accent)',goltore:'var(--sand)',run:'var(--sky)',gym:'var(--fg)',pilates:'var(--plum)',off:'var(--line)',event:'var(--warn)',prep:'var(--warn)'};
 
-// ── ルーター ──
+// ── ルーター（下のメニュー5つ＋ページ内の切り替え） ──
 const PAGES=['today','golf','marathon','study','week','month','log','history','stats','import'];
+const GROUPS={today:[['today','今日']],plan:[['week','週間'],['month','月間'],['marathon','マラソン']],golf:[['golf','ゴルフ図鑑']],study:[['study','学習']],record:[['log','入力'],['history','履歴'],['stats','進捗'],['import','まとめて入力']]};
+const groupOf=p=>Object.keys(GROUPS).find(g=>GROUPS[g].some(([k])=>k===p))||'today';
+const LAST_IN={};
 let CUR='today';
 function show(p,opt){
-  if(!PAGES.includes(p))p='today';CUR=p;
-  document.querySelectorAll('#tabs .tab').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  if(!PAGES.includes(p))p='today';CUR=p;const g=groupOf(p);LAST_IN[g]=p;
+  document.querySelectorAll('#bottomnav .bn').forEach(b=>{const on=b.dataset.g===g;b.classList.toggle('on',on);b.setAttribute('aria-current',on?'page':'false');});
+  const sub=$('subnav');const items=GROUPS[g];
+  if(items.length>1){sub.classList.remove('hidden');sub.innerHTML=`<div class="seg grid" style="grid-template-columns:repeat(${items.length},1fr)">${items.map(([k,l])=>`<button class="${k===p?'on':''}" onclick="show('${k}')">${l}</button>`).join('')}</div>`;}
+  else{sub.classList.add('hidden');sub.innerHTML='';}
   document.querySelectorAll('.page').forEach(s=>s.classList.toggle('hidden',s.id!=='p-'+p));
-  const tb=document.querySelector(`#tabs .tab[data-p="${p}"]`);tb&&tb.scrollIntoView({inline:'center',block:'nearest'});
   if(history.replaceState)history.replaceState(null,'','#'+p);
   window.scrollTo({top:0});
   ({study:()=>window.renderStudy&&renderStudy(),today:renderToday,golf:()=>renderGolf(opt&&opt.routine),marathon:renderMarathon,week:renderWeek,month:renderMonth,history:renderHistory,stats:renderStats,log:()=>{}}[p]||(()=>{}))();
 }
-document.querySelectorAll('#tabs .tab').forEach(b=>b.addEventListener('click',()=>show(b.dataset.p)));
+document.querySelectorAll('#bottomnav .bn').forEach(b=>b.addEventListener('click',()=>show(LAST_IN[b.dataset.g]||GROUPS[b.dataset.g][0][0])));
 
-function headerCount(){
-  const t=today();const nr=nextRound(t);const r=nr?diffDays(t,nr):-1,m=diffDays(t,RACE);
-  $('hdr-count').textContent=(r>=0?`ラウンドまで${r}日　`:'')+(m>=0?`篠山まで${m}日`:'');
-}
+function headerCount(){}
 
 // ── 共通パーツ ──
 function chip(kind,text){return `<span class="chip k-${kind}">${esc(text||KIND_LABEL[kind]||kind)}</span>`;}
 function statusMark(st){if(st==='skip')return '<span class="text-xs font-bold text-muted">休み</span>';return st==='done'?'<span class="num text-sm font-bold text-accent">✓</span>':st==='part'?'<span class="num text-xs font-bold text-sand">途中</span>':'';}
-function itemRow(it,a,withAction){
+function actOpen(d){ACT_DATE=d;show('today');setTimeout(()=>{const b=$('act-box');b&&b.scrollIntoView({behavior:'smooth',block:'start'});},350);}
+function itemRow(it,a,withAction,d){
   const st=a?itemDone(it,a):null;
   let act='';
   if(withAction){
     if(it.routine)act=`<button class="btn-sm" onclick="show('golf',{routine:'${it.routine}${it.part?':'+it.part:''}'})">メニュー</button>`;
-    else if(it.kind==='run')act=`<button class="btn-sm" onclick="openLog('run')">記録</button>`;
-    else if(it.kind==='gym')act=`<button class="btn-sm" onclick="openLog('${it.cat||'full'}')">記録</button>`;
+    else if(['run','gym','pilates','event'].includes(it.kind)&&d&&d<=today())act=`<button class="btn-sm" onclick="actOpen('${d}')">記録</button>`;
   }
   return `<div class="flex items-start gap-3 py-2.5">
     <div class="pt-0.5">${chip(it.kind)}</div>
@@ -183,36 +185,41 @@ function dayCard(s,a,opts){
   const act=[];if(a&&a.run>0)act.push(`ラン ${km1(a.run)}km`);if(a&&a.gym.length)act.push(`筋トレ ${a.gym.reduce((n,r)=>n+r.exercises.length,0)}種目`);if(a&&a.golf.length)act.push(`ゴルフ ${a.golf.reduce((n,r)=>n+r.exercises.length,0)}種目`);
   return `<div class="card px-4 py-2 ${isToday?'ring-2 ring-accent':''}">
     <div class="flex items-baseline justify-between border-b border-line py-1.5"><div class="font-bold">${md(s)}${isToday?' <span class="chip k-genie ml-1">今日</span>':''}</div><div class="text-[11px] text-muted">${p.phase?esc(p.phase.name):''}</div></div>
-    <div class="divide-y divide-line">${p.items.map(it=>itemRow(it,a,opts&&opts.action)).join('')||'<div class="py-3 text-sm text-muted">予定なし</div>'}</div>
+    <div class="divide-y divide-line">${p.items.map(it=>itemRow(it,a,opts&&opts.action,s)).join('')||'<div class="py-3 text-sm text-muted">予定なし</div>'}</div>
     ${act.length?`<div class="border-t border-line py-2 text-[12px] text-muted">実績：${act.join('・')}</div>`:''}</div>`;
 }
 function bar(v,max,color){const w=max>0?Math.min(100,v/max*100):0;return `<div class="h-2 overflow-hidden rounded-full bg-line"><div class="h-full rounded-full" style="width:${w.toFixed(0)}%;background:${color||'var(--accent)'}"></div></div>`;}
 
 // ── 今日 ──
+// 連続日数（記録がある日が何日続いているか。今日まだなら昨日から数える）
+function streakDays(bd){let d=today(),n=0;const has=x=>dayActual(bd[x]).any;if(!has(d))d=addDays(d,-1);while(has(d)){n++;d=addDays(d,-1);}return n;}
+function weekDone(bd,mon){let plan=0,done=0;for(let i=0;i<7;i++){const d=addDays(mon,i);if(d>today())continue;const items=planFor(d).items.filter(x=>x.kind!=='off');if(!items.length)continue;plan++;const a=dayActual(bd[d]);if(a.any)done++;}return{plan,done};}
 async function renderToday(){
   const el=$('p-today');const t=today();
-  el.innerHTML='<div class="text-sm text-muted">読み込み中…</div>';
+  if(!el.innerHTML)el.innerHTML='<div class="text-sm text-muted">読み込み中…</div>';
   const recs=await getRecs();const bd=byDate(recs);
-  const p=planFor(t);const a=dayActual(bd[t]);
+  const p=planFor(t);
   const nr=nextRound(t);const r=nr?diffDays(t,nr):-1,m=diffDays(t,RACE);
   const mon=mondayOf(t);const days=[...Array(7)].map((_,i)=>addDays(mon,i));
   const wPlan=plannedKm(mon,addDays(mon,6));const wAct=days.reduce((s,d)=>s+dayActual(bd[d]).run,0);
+  const st=streakDays(bd);const wd=weekDone(bd,mon);
   const tm=addDays(t,1);
   el.innerHTML=`
   <div class="grid grid-cols-2 gap-3">
     ${r>=0?`<div class="card p-4"><div class="lbl">次のゴルフ ${nr?md(nr):""}</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-accent">${r}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">${nr===ROUND?'目標 100切り（前回118）':'目標 100切り'}</div></div>`:''}
     ${m>=0?`<div class="card p-4"><div class="lbl">篠山マラソン 3/7（日）</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">目標 サブ4 → 3時間30分</div></div>`:''}
   </div>
+  <div class="card grid grid-cols-3 divide-x divide-line py-3 text-center">
+    <div><div class="num text-xl font-semibold">${st}<span class="text-xs text-muted"> 日</span></div><div class="lbl">連続で記録</div></div>
+    <div><div class="num text-xl font-semibold">${wd.done}<span class="text-xs text-muted"> / ${wd.plan}日</span></div><div class="lbl">今週やった日</div></div>
+    <div><div class="num text-xl font-semibold">${km1(wAct)}<span class="text-xs text-muted"> / ${wPlan}km</span></div><div class="lbl">今週のラン</div></div>
+  </div>
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}
-  <div class="grid gap-2"><h2 class="h2">今日のメニュー（予定）</h2>${dayCard(t,a,{action:true})}
-    ${(p.note||[]).map(n=>`<p class="text-[13px] text-muted">・${esc(n)}</p>`).join('')}</div>
   <div id="act-box" class="grid gap-2"></div>
-  <div class="grid gap-2"><div class="flex items-baseline justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('week')">週間を見る</button></div>
-    <div class="card grid gap-3 p-4">
-      <div class="grid grid-cols-7 gap-1 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=pp.items.some(i=>itemDone(i,aa)==='done')||aa.any;return `<div class="grid gap-1 rounded-lg py-1.5 ${d===t?'bg-accent-soft':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold text-accent">${done?'✓':''}</div></div>`;}).join('')}</div>
-      <div><div class="mb-1 flex justify-between text-[13px]"><span class="text-muted">今週のラン</span><span class="num"><b>${km1(wAct)}</b> / ${wPlan}km</span></div>${bar(wAct,wPlan,'var(--sky)')}</div>
-    </div></div>
-  <div class="grid gap-2"><h2 class="h2">明日</h2>${dayCard(tm,null)}</div>`;
+  ${(p.note||[]).map(n=>`<p class="-mt-2 text-[13px] text-muted">・${esc(n)}</p>`).join('')}
+  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('week')">週間を見る</button></div>
+    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('week')" class="grid gap-1 rounded-lg py-1.5 ${d===t?'bg-accent-soft':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>
+  <div class="grid gap-2"><h2 class="h2">明日の予定</h2>${dayCard(tm,null)}</div>`;
   if(window.renderActual)renderActual(ACT_DATE||t);
 }
 
@@ -253,9 +260,9 @@ function renderGolf(req){
        ${e.alt?`<div class="text-[12px] text-muted">${esc(e.alt)}</div>`:''}
        ${r!=='check'?`<button class="btn ${on?'bg-accent text-surface':'border border-line text-fg'} w-full py-2" onclick="toggleChk('${e.id}')">${on?'✓ できた':'できたらタップ'}</button>`:''}
       </div></article>`;}).join('')}</div></div>`).join('')}
-   ${r!=='check'?`<div class="sticky z-10 grid gap-2 rounded-2xl border border-line bg-surface p-3 shadow-lg" style="bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
-     <div class="flex items-center justify-between text-sm"><span>今日 <b class="num">${all.filter(e=>chk.includes(e.id)).length}</b> / ${all.length} 種目</span><button class="btn-sm" onclick="setChk(today(),GOLF_R,[]);renderGolf()">リセット</button></div>
-     <button class="btn-main py-2.5" onclick="busy(this,saveGolf)">今日の記録として保存</button></div>`:''}`;
+   ${r!=='check'?`<div class="sticky z-10 flex items-center gap-2 rounded-2xl border border-line bg-surface p-2 pl-3 shadow-lg" style="bottom:calc(env(safe-area-inset-bottom,0px) + 70px)">
+     <span class="text-sm">できた <b class="num">${all.filter(e=>chk.includes(e.id)).length}</b> / ${all.length}</span><button class="btn-sm ml-auto" onclick="setChk(today(),GOLF_R,[]);renderGolf()">リセット</button>
+     <button class="btn min-h-[44px] bg-accent px-4 py-2 text-surface" onclick="busy(this,saveGolf)">保存</button></div>`:''}`;
 }
 document.querySelectorAll('#golf-seg button').forEach(b=>b.addEventListener('click',()=>{GOLF_R=b.dataset.r;GOLF_PART='';renderGolf();}));
 // 写真：タップで次へ（最後まで行ったら最初に戻る）
@@ -433,8 +440,8 @@ async function renderHistory(){
   $('log-list').innerHTML=list.length?list.map(r=>{
     const g=isGolf(r);const cat=g?'golf':r.cat;
     const kinds=(r.exercises||[]).filter(e=>e.kind&&e.kind!=='form').map(e=>{
-      const lab=e.kind==='range'?`練習場 ${e.balls}球`:e.kind==='round'?`${e.name}${e.score?' スコア'+e.score:''}${e.putts?'（'+e.putts+'パット）':''}`:e.kind==='pilates'?`ピラティス ${e.min||''}分`:e.name;
-      const k=e.kind==='golf'?((e.routine||'').startsWith('y')?'goltore':'genie'):e.kind==='range'||e.kind==='round'?'event':e.kind==='pilates'?'pilates':e.kind;
+      const lab=e.kind==='body'?`体重 ${num(e.weight)}kg`:e.kind==='range'?`練習場 ${num(e.balls)}球`:e.kind==='round'?`${e.name}${e.score?' スコア'+e.score:''}${e.putts?'（'+e.putts+'パット）':''}`:e.kind==='pilates'?`ピラティス ${e.min||''}分`:e.name;
+      const k=e.kind==='body'?'off':e.kind==='golf'?((e.routine||'').startsWith('y')?'goltore':'genie'):e.kind==='range'||e.kind==='round'?'event':e.kind==='pilates'?'pilates':e.kind;
       return e.status==='skip'?`<span class="chip k-off">${esc(e.name)} 休み</span>`:`<span class="chip k-${k==='event'?'prep':k}">${esc(lab)}${e.status==='change'?'（変更）':' ✓'}</span>`;}).join('');
     const ex=(r.exercises||[]).filter(e=>!e.kind).map(e=>{
       if(g)return `<span class="chip k-genie">${esc(e.name)} ✓</span>`;
@@ -462,6 +469,10 @@ async function renderStats(){
   const runByM={};recs.forEach(r=>{if(r.runDist>0){const m=r.date.slice(0,7);runByM[m]=(runByM[m]||0)+r.runDist;}});
   const rmonths=Object.keys(runByM).sort().slice(-6).reverse();
   const card=(v,l,sub,prog)=>`<div class="card grid gap-1 p-4"><div class="num text-2xl font-semibold">${v}</div><div class="lbl">${l}</div>${prog||''}${sub?`<div class="text-[11px] text-muted">${sub}</div>`:''}</div>`;
+  const kx=recs.flatMap(r=>(r.exercises||[]).filter(e=>e.kind).map(e=>({...e,date:r.date})));
+  const weights=kx.filter(e=>e.kind==='body'&&num(e.weight)>0).sort((x,y)=>x.date.localeCompare(y.date)).slice(-10);
+  const rounds=kx.filter(e=>e.kind==='round'&&num(e.score)>0).sort((x,y)=>x.date.localeCompare(y.date));
+  const wMin=weights.length?Math.min(...weights.map(w=>num(w.weight)))-1:0,wMax=weights.length?Math.max(...weights.map(w=>num(w.weight)))+1:1;
   $('p-stats').innerHTML=`
    <div class="grid gap-2"><h2 class="h2">今月</h2><div class="grid grid-cols-2 gap-3">
     ${card(km1(run)+'<span class="text-sm text-muted"> km</span>','ラン距離',`計画 ${plan}km`,bar(run,plan,'var(--sky)'))}
@@ -470,7 +481,9 @@ async function renderStats(){
     ${card(golfN+'<span class="text-sm text-muted"> 回</span>','ゴルフ体づくり')}
    </div></div>
    <div class="grid gap-2"><h2 class="h2">ベンチプレス最大重量</h2><div class="card grid gap-2.5 p-4">${bdates.length?bdates.map(d=>`<div class="grid grid-cols-[72px_64px_1fr_40px] items-center gap-2 text-sm"><span class="text-[12px] text-muted">${md(d)}</span><b class="num">${bByDay[d]}kg</b>${bar(bByDay[d],125)}<span class="num text-right text-[11px] text-muted">${Math.round(bByDay[d]/125*100)}%</span></div>`).join(''):'<div class="text-sm text-muted">データなし</div>'}</div></div>
-   <div class="grid gap-2"><h2 class="h2">月間ラン距離</h2><div class="card grid gap-2.5 p-4">${rmonths.length?rmonths.map(m=>{const mm=Number(m.slice(5));const p=monthTarget(m);return `<div class="grid grid-cols-[48px_64px_1fr_60px] items-center gap-2 text-sm"><span class="text-[12px] text-muted">${mm}月</span><b class="num">${km1(runByM[m])}</b>${bar(runByM[m],p,'var(--sky)')}<span class="num text-right text-[11px] text-muted">/${p}km</span></div>`;}).join(''):'<div class="text-sm text-muted">データなし</div>'}</div><p class="text-[12px] text-muted">10月以降は計画の距離、それ以前は月70kmを目標として表示しています。</p></div>`;
+   <div class="grid gap-2"><h2 class="h2">月間ラン距離</h2><div class="card grid gap-2.5 p-4">${rmonths.length?rmonths.map(m=>{const mm=Number(m.slice(5));const p=monthTarget(m);return `<div class="grid grid-cols-[48px_64px_1fr_60px] items-center gap-2 text-sm"><span class="text-[12px] text-muted">${mm}月</span><b class="num">${km1(runByM[m])}</b>${bar(runByM[m],p,'var(--sky)')}<span class="num text-right text-[11px] text-muted">/${p}km</span></div>`;}).join(''):'<div class="text-sm text-muted">データなし</div>'}</div><p class="text-[12px] text-muted">10月以降は計画の距離、それ以前は月70kmを目標として表示しています。</p></div>
+   <div class="grid gap-2"><h2 class="h2">体重</h2><div class="card grid gap-2.5 p-4">${weights.length?weights.slice().reverse().map(w=>`<div class="grid grid-cols-[72px_64px_1fr] items-center gap-2 text-sm"><span class="text-[12px] text-muted">${md(w.date)}</span><b class="num">${num(w.weight)}kg</b>${bar(num(w.weight)-wMin,wMax-wMin,'var(--plum)')}</div>`).join(''):'<div class="text-sm text-muted">今日の画面の「体重」に入れると、ここに推移が出ます。</div>'}</div></div>
+   <div class="grid gap-2"><h2 class="h2">ゴルフのスコア</h2><div class="card divide-y divide-line px-4">${[{date:'2026-09',score:118,putts:0,past:1}].concat(rounds).map(x=>`<div class="flex items-center justify-between py-2.5 text-sm"><span>${x.past?'前回（9月）':md(x.date)}</span><span class="num"><b class="text-lg">${num(x.score)}</b>${num(x.putts)?`<span class="text-muted">（${num(x.putts)}パット）</span>`:''}${num(x.score)<100?' <span class="chip k-genie">100切り！</span>':''}</span></div>`).join('')}</div><p class="text-[12px] text-muted">ラウンドの日に、今日の画面でスコアとパット数を入れると追加されます。</p></div>`;
 }
 
 // ── 書き出し（バックアップ） ──

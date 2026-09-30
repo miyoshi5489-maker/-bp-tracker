@@ -3,18 +3,21 @@
 @tailwind utilities;
 
 @layer components{
+  .bn{@apply grid min-h-[58px] place-items-center content-center gap-0.5 pt-1.5 text-[11px] font-bold text-muted}
+  .bn.on{@apply text-accent}
+  .bn-i{@apply h-6 w-6}
   .tab{@apply whitespace-nowrap border-b-[3px] border-transparent px-3 pb-2 pt-2.5 text-sm font-bold text-muted}
   .tab.on{@apply border-accent text-fg}
   .h2{@apply font-display text-xl leading-snug}
   .card{@apply rounded-2xl border border-line bg-surface}
   .lbl{@apply text-xs font-medium text-muted}
-  .inp{@apply w-full rounded-lg border border-line bg-field px-3 py-2.5 text-[15px] text-fg outline-none focus:border-accent}
+  .inp{@apply w-full rounded-lg border border-line bg-field px-3 py-2.5 text-[16px] text-fg outline-none placeholder:text-muted focus:border-accent focus-visible:ring-2 focus-visible:ring-accent}
   .btn{@apply inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-sm font-bold active:scale-[.99]}
   .btn-main{@apply btn w-full bg-accent text-surface}
   .btn-sub{@apply btn border border-line bg-surface text-fg}
-  .btn-sm{@apply rounded-lg border border-line px-2.5 py-1 text-xs font-bold text-muted}
+  .btn-sm{@apply inline-flex min-h-[40px] items-center justify-center rounded-lg border border-line px-3 text-[13px] font-bold text-muted focus-visible:ring-2 focus-visible:ring-accent}
   .seg{@apply flex gap-1 rounded-xl bg-line p-1 text-sm font-bold}
-  .seg button{@apply flex-1 whitespace-nowrap rounded-lg px-1 py-1.5 text-muted}
+  .seg button{@apply min-h-[40px] flex-1 whitespace-nowrap rounded-lg px-1 py-2 text-muted}
   .seg button.on{@apply bg-surface text-fg shadow-sm}
   .chip{@apply inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold}
   .k-genie{@apply bg-accent-soft text-accent}
