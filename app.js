@@ -116,7 +116,7 @@ const gymEx=r=>(r.exercises||[]).filter(e=>!e.kind&&(e.sets||[]).length);
 const isGolf=r=>r.cat==='golf'||(r.note||'').startsWith('[ゴルフ]');
 const byDate=recs=>{const m={};recs.forEach(r=>{(m[r.date]=m[r.date]||[]).push(r);});return m;};
 function dayActual(list){
-  list=(list||[]).filter(r=>!(r.exercises||[]).some(e=>e.kind==='study'));
+  list=(list||[]).filter(r=>!(r.exercises||[]).some(e=>e.kind==='study'||e.kind==='roundplan'));
   const run=list.reduce((s,r)=>s+(r.runDist||0),0);
   const golf=list.filter(isGolf);
   const gym=list.filter(r=>!isGolf(r)&&gymEx(r).length>0);
@@ -197,7 +197,7 @@ function weekDone(bd,mon){let plan=0,done=0;for(let i=0;i<7;i++){const d=addDays
 async function renderToday(){
   const el=$('p-today');const t=today();
   if(!el.innerHTML)el.innerHTML='<div class="text-sm text-muted">読み込み中…</div>';
-  const recs=await getRecs();const bd=byDate(recs);
+  const recs=await getRecs();const bd=byDate(recs);if(window.syncRounds)syncRounds(recs);
   const p=planFor(t);
   const nr=nextRound(t);const r=nr?diffDays(t,nr):-1,m=diffDays(t,RACE);
   const mon=mondayOf(t);const days=[...Array(7)].map((_,i)=>addDays(mon,i));
@@ -206,7 +206,7 @@ async function renderToday(){
   const tm=addDays(t,1);
   el.innerHTML=`
   <div class="grid grid-cols-2 gap-3">
-    ${r>=0?`<div class="card p-4"><div class="lbl">次のゴルフ ${nr?md(nr):""}</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-accent">${r}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">${nr===ROUND?'目標 100切り（前回118）':'目標 100切り'}</div></div>`:''}
+    ${r>=0?`<div class="card cursor-pointer p-4" onclick="show('golf',{routine:'rounds'})"><div class="lbl">次のゴルフ ${nr?md(nr):""}</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-accent">${r}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">${esc(((typeof ROUND_BASE==='function'&&ROUND_BASE(nr))||{}).course||'')}</div><div class="text-[12px] text-muted">${nr===ROUND?'目標 100切り（前回118）':'目標 100切り'} ›</div></div>`:''}
     ${m>=0?`<div class="card p-4"><div class="lbl">篠山マラソン 3/7（日）</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">目標 サブ4 → 3時間30分</div></div>`:''}
   </div>
   <div class="card grid grid-cols-3 divide-x divide-line py-3 text-center">
@@ -232,6 +232,7 @@ function getChk(d,r){try{return JSON.parse(localStorage.getItem(chkKey(d,r))||'[
 function setChk(d,r,a){try{localStorage.setItem(chkKey(d,r),JSON.stringify(a));}catch{}}
 function renderGolf(req){
   if(req){const[r,part]=req.split(':');GOLF_R=r;GOLF_PART=part||'';}
+  if(GOLF_R==='rounds'||req==='rounds'){GOLF_R='rounds';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='rounds'));return renderRounds();}
   if(!GOLF_R){const it=planFor(today()).items.find(i=>i.routine);GOLF_R=it?it.routine:'genie';GOLF_PART=it&&it.part||'';}
   document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r===GOLF_R));
   const r=GOLF_R;const d=today();
@@ -436,7 +437,7 @@ async function renderHistory(){
   const recs=await getRecs();
   const months=[...new Set(recs.map(r=>r.date.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
   $('month-bar').innerHTML=[`<button class="btn-sm ${curMonth===null?'!border-fg !text-fg':''}" onclick="curMonth=null;renderHistory()">すべて</button>`,...months.map(m=>`<button class="btn-sm shrink-0 ${curMonth===m?'!border-fg !text-fg':''}" onclick="curMonth='${m}';renderHistory()">${m.slice(2,4)}年${parseInt(m.slice(5))}月</button>`)].join('');
-  const list=(curMonth?recs.filter(r=>r.date.startsWith(curMonth)):recs).filter(r=>!(r.exercises||[]).some(e=>e.kind==='study'));
+  const list=(curMonth?recs.filter(r=>r.date.startsWith(curMonth)):recs).filter(r=>!(r.exercises||[]).some(e=>e.kind==='study'||e.kind==='roundplan'));
   $('log-list').innerHTML=list.length?list.map(r=>{
     const g=isGolf(r);const cat=g?'golf':r.cat;
     const kinds=(r.exercises||[]).filter(e=>e.kind&&e.kind!=='form').map(e=>{

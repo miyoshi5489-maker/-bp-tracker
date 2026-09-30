@@ -73,10 +73,10 @@ function planFor(s){
   const note=[];
 
   // ── 特別な日 ──
-  if(s==='2026-11-29')return{phase:ph,items:[it('event','ラウンド本番（11/29）',{detail:'朝：①可動域の3種＋骨盤分離 片足10回＋ヒップツイスト 10回。3ホールごとに補食。10/20の反省を1つだけ意識する'})]};
+  if(s==='2026-11-29')return{phase:ph,items:[it('event','ラウンド本番（宝塚クラシックGC IN 7:32）',{detail:'朝：①可動域の3種＋骨盤分離 片足10回＋ヒップツイスト 10回。3ホールごとに補食。10/20の反省を1つだけ意識する'})]};
   if(s==='2026-11-28')return{phase:ph,items:[it('prep','ラウンド前日の調整',{detail:'⓪ほぐし＋骨盤分離＋ヒップツイストだけ。練習場は60球まで',routine:'genie',part:'short'}),it('run','軽いジョグ',{km:4,detail:'ロング走はお休み。'+PACE.easy})]};
   if(s==='2026-11-27')return{phase:ph,items:[it('genie','ジーニー ⑤⑥ジャンプ・回旋（15分）',{routine:'genie',part:'power'}),pplItem('base','pull',{extra:'ラウンド2日前。重さは控えめ、各2セットでOK'})]};
-  if(s===ROUND)return{phase:ph,items:[it('event','ラウンド本番',{detail:'朝：①可動域の3種＋骨盤分離 片足10回＋ヒップツイスト 10回。3ホールごとに補食。目標100切り！'})]};
+  if(s===ROUND)return{phase:ph,items:[it('event','ラウンド本番（東条湖CC）',{detail:'朝：①可動域の3種＋骨盤分離 片足10回＋ヒップツイスト 10回。3ホールごとに補食。目標100切り！'})]};
   if(s===RACE)return{phase:ph,items:[it('event','篠山マラソン',{detail:"目標サブ4（5'41/km）。前半はイーブン、30km以降で余裕があれば上げる",km:42.195})]};
   if(s==='2026-10-19')return{phase:ph,items:[it('prep','ラウンド前日の調整',{detail:'⓪ほぐし＋骨盤分離＋ヒップツイストだけ。練習場は60球まで',routine:'genie',part:'short'})]};
   if(s==='2026-10-18')return{phase:ph,items:[it('off','完全OFF',{detail:'ストレッチと散歩のみ'})]};
