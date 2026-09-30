@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>map tool</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>html,body,#m{margin:0;height:100%}.lb{background:#fff;padding:1px 4px;font:bold 12px sans-serif;border-radius:3px;white-space:nowrap}</style>
+</head><body><div id="m"></div><script>
+const map=L.map('m',{zoomControl:false,attributionControl:false}).setView([34.9330,135.1270],16);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:19}).addTo(map);
+const grp=L.layerGroup().addTo(map);
+window.go=(a,b,z)=>{map.setView([a,b],z||17,{animate:false});return 'ok'};
+window.ll=(x,y)=>{const p=map.containerPointToLatLng([x,y]);return [+p.lat.toFixed(6),+p.lng.toFixed(6)]};
+window.yd=(a,b)=>Math.round(map.distance(a,b)/0.9144);
+window.mark=(pts)=>{grp.clearLayers();pts.forEach(([a,b,t,c])=>{L.circleMarker([a,b],{radius:5,color:c||'#ff0',weight:2}).addTo(grp);if(t)L.marker([a,b],{icon:L.divIcon({className:'',html:`<span class="lb">${t}</span>`,iconAnchor:[-6,8]})}).addTo(grp);});return 'ok'};
+window.line=(pts,c)=>{L.polyline(pts,{color:c||'#0ff',weight:2}).addTo(grp);return 'ok'};
+window.fit=(pts)=>{map.fitBounds(pts,{padding:[40,40],animate:false});return map.getZoom()};
+</script></body></html>
