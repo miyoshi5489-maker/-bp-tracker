@@ -159,6 +159,31 @@ function caddie(x,h,m){
   return out;
 }
 
+// ── 公式のホールイラスト（東条湖CC公式サイト）… r=ティー→公式の攻略ルートの点→グリーン（画像の座標）、s=1ヤードあたりの画像の長さ
+const ILLUS={tojo:{base:'https://www.tojoko-cc.com/course/images/',w:161,h:350,credit:'イラスト：東条湖カントリー倶楽部 公式サイト',holes:{"1": {"r": [[79.7, 321.9], [79.7, 113.9], [68.1, 58.5]], "s": 0.8619}, "2": {"r": [[125.3, 323.2], [85.4, 200.8], [68.0, 64.9], [74.4, 31.4]], "s": 0.6183}, "3": {"r": [[60.1, 316.1], [103.9, 134.5], [65.2, 50.8]], "s": 0.8455}, "4": {"r": [[97.9, 318.1], [50.2, 158.3], [67.6, 28.2]], "s": 0.713}, "5": {"r": [[72.0, 321.3], [60.4, 142.9], [70.0, 41.1]], "s": 0.8146}, "6": {"r": [[82.1, 302.0], [67.9, 78.4]], "s": 1.1855}, "7": {"r": [[77.2, 321.9], [66.9, 175.1], [66.9, 41.1]], "s": 0.6539}, "8": {"r": [[111.1, 320.0], [116.3, 183.4], [80.9, 64.3], [55.7, 31.4]], "s": 0.6209}, "9": {"r": [[101.9, 273.6], [114.8, 67.5]], "s": 1.5073}, "10": {"r": [[85.7, 308.4], [90.2, 126.8], [52.8, 39.2]], "s": 0.7692}, "11": {"r": [[105.5, 318.1], [70.7, 162.2], [97.1, 61.1]], "s": 0.7141}, "12": {"r": [[64.1, 323.2], [122.7, 181.5], [57.0, 69.4], [59.6, 38.5]], "s": 0.6453}, "13": {"r": [[102.3, 318.1], [55.3, 141.6], [86.8, 50.8]], "s": 0.7965}, "14": {"r": [[86.6, 296.8], [60.2, 97.8]], "s": 1.3294}, "15": {"r": [[48.5, 316.1], [99.4, 178.9], [56.2, 59.1], [45.9, 39.8]], "s": 0.6158}, "16": {"r": [[63.1, 300.0], [87.6, 115.8], [85.0, 45.0]], "s": 0.8253}, "17": {"r": [[96.4, 291.0], [91.3, 57.2]], "s": 1.5909}, "18": {"r": [[79.5, 325.8], [94.3, 168.6], [65.3, 33.4]], "s": 0.7154}}}};
+// 宝塚クラシックGC 公式サイトのホール写真（1・3・5・7・8番）
+const PHOTOS={taka:{1:'https://www.takarazuka-cgc.com/_src/96801238/photo01.jpg',3:'https://www.takarazuka-cgc.com/_src/96801240/photo02.jpg',5:'https://www.takarazuka-cgc.com/_src/96801242/photo03.jpg',7:'https://www.takarazuka-cgc.com/_src/96801244/photo04.jpg',8:'https://www.takarazuka-cgc.com/_src/96801246/photo05.jpg'}};
+function routeAt(r,d){for(let i=1;i<r.length;i++){const L=Math.hypot(r[i][0]-r[i-1][0],r[i][1]-r[i-1][1]);if(d<=L||i===r.length-1){const k=Math.min(1,d/L);const ux=(r[i][0]-r[i-1][0])/L,uy=(r[i][1]-r[i-1][1])/L;return{p:[r[i-1][0]+(r[i][0]-r[i-1][0])*k,r[i-1][1]+(r[i][1]-r[i-1][1])*k],u:[ux,uy]};}d-=L;}}
+// 公式イラストの上に狙いを重ねる
+function illusView(I,hi,m,opt){
+  const r=hi.r,s=hi.s,G=r[r.length-1];const T=m.t||[];
+  const toPx=(x,y)=>{const a=routeAt(r,y*s);return [a.p[0]-a.u[1]*x*s,a.p[1]+a.u[0]*x*s];}; // 右＝進行方向の右
+  const last=routeAt(r,1e9).u;const pin=(opt&&opt.pin)||{x:0,y:0};const P=[G[0]-last[1]*pin.x*s+last[0]*pin.y*s,G[1]+last[0]*pin.x*s+last[1]*pin.y*s];
+  let v=`<svg viewBox="0 0 ${I.w} ${I.h}" class="absolute inset-0 h-full w-full" font-family="sans-serif">`;
+  const cl=opt&&opt.club;
+  if(cl&&cl.side!=null&&T[0]){const a=routeAt(r,(cl.total||cl.carry)*s);const c=[a.p[0]-a.u[1]*cl.side*s,a.p[1]+a.u[0]*cl.side*s];const ang=Math.atan2(a.u[0],-a.u[1])*180/Math.PI;
+    v+=`<ellipse cx="${c[0]}" cy="${c[1]}" rx="${Math.max(3,1.5*(cl.sdSide||10)*s)}" ry="${Math.max(3,1.5*(cl.sdCarry||8)*s)}" transform="rotate(${ang} ${c[0]} ${c[1]})" fill="#ffb300" fill-opacity=".22" stroke="#e65100" stroke-width=".7" stroke-dasharray="2 1.5"/>`;}
+  let prev=r[0];const pts=T.map(t=>toPx(t[0],t[1]));
+  [...pts,P].forEach(q=>{v+=`<line x1="${prev[0]}" y1="${prev[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#e65100" stroke-width="1" stroke-dasharray="2.5 1.5"/>`;prev=q;});
+  v+=`<line x1="${P[0]}" y1="${P[1]}" x2="${P[0]}" y2="${P[1]-9}" stroke="#111" stroke-width=".6"/><path d="M${P[0]} ${P[1]-9} l5 1.8 l-5 1.8z" fill="#e53935"/>`;
+  let pv=[0,0];
+  T.forEach((t,i)=>{const q=pts[i];const d=Math.round(Math.hypot(t[0]-pv[0],t[1]-pv[1]));pv=t;const rest=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);
+    const right=q[0]<I.w/2;const bx=right?q[0]+7:q[0]-7-54;
+    v+=`<circle cx="${q[0]}" cy="${q[1]}" r="5.5" fill="#ffb300" fill-opacity=".35" stroke="#e65100" stroke-width="1.2"/><text x="${q[0]}" y="${q[1]+2.2}" font-size="6" font-weight="bold" fill="#111" text-anchor="middle">${i+1}</text>`;
+    v+=`<rect x="${bx}" y="${q[1]-7}" width="54" height="14" rx="2" fill="#111" fill-opacity=".78"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#ffd54a">${i+1}打目 ${esc(t[2]||'')}</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">${d}y・ピン${rest}y</text>`;});
+  return v+'</svg>';
+}
+
 // ── 全画面で開く ──
 let HM=null;
 function openHoleMap(date,no){
@@ -182,6 +207,7 @@ function drawHoleMap(){
   const x=ROUND_BASE(HM.date);const h=x.holes.find(r=>r[0]===HM.no);const m=HOLE_MAPS[x.mapKey][HM.no];
   const g=greenOf(x.mapKey,h[0]),pin=pinOf(HM.date,h[0]);
   const code=m.t&&m.t[0]?(clubCode(m.t[0][2])||clubCode(h[5])):null;const club=typeof MYCLUBS!=='undefined'&&code&&MYCLUBS[code]&&MYCLUBS[code].src!=='仮'?MYCLUBS[code]:null;
+  const IL=ILLUS[x.mapKey]&&ILLUS[x.mapKey].holes[h[0]]?ILLUS[x.mapKey]:null;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}
   const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const gv=HM.view==='green';
@@ -197,7 +223,8 @@ function drawHoleMap(){
      ${gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>${greenSVG(g,pin)}
        <div class="text-center text-[12px] text-white">ピン：${pin.y===0?'真ん中':pin.y>0?`中心から奥へ${Math.round(pin.y)}y`:`中心から手前へ${Math.round(-pin.y)}y`}${pin.x?`・${pin.x>0?'右':'左'}${Math.abs(Math.round(pin.x))}y`:''}（手前から${Math.round(g.d/2+pin.y)}y）　大きさの目安 ${g.w}×${g.d}y</div>
        <div class="flex justify-center"><button class="btn-sm !border-white !text-white" onclick="setPin(HM.date,HM.no,{x:0,y:0});drawHoleMap()">ピンを真ん中に戻す</button></div></div>`
-      :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`}
+      :(IL?`<div id="hm-in" class="relative mx-auto bg-white" style="aspect-ratio:${IL.w}/${IL.h}"><img src="${IL.base}${String(h[0]).padStart(2,'0')}.gif" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{pin,club})}</div><div class="py-1 text-center text-[10px] text-white/80">${IL.credit}（線と丸はこのアプリの狙い）</div>`
+       :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
     ${gv?'':`<div class="absolute right-3 top-3 z-10 grid gap-2">
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
@@ -206,6 +233,7 @@ function drawHoleMap(){
    </div>
    <div class="grid max-h-[42vh] gap-2 overflow-y-auto border-t border-line bg-surface p-3" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     <div class="rounded-lg bg-accent-soft px-2.5 py-2 text-[13px] leading-snug"><div class="mb-0.5 font-bold text-accent">🧢 キャディ</div><ul class="grid gap-1">${caddie(x,h,m).map(t=>`<li>${t}</li>`).join('')}</ul></div>
+    ${PH?`<figure class="grid gap-1"><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[10px] text-muted">写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`:''}
     <div class="text-[13px] leading-snug"><b class="text-accent">狙い</b>　${esc(h[6])}</div>
     ${m.n?`<div class="text-[12px] leading-snug text-muted"><b>コース</b>　${esc(m.n)}</div>`:''}
     <div class="flex flex-wrap gap-1">${hazList(m,h[2]).map(t=>`<span class="rounded-md bg-field px-1.5 py-0.5 text-[11px] ring-1 ring-line">${t}</span>`).join('')}</div>
@@ -213,7 +241,7 @@ function drawHoleMap(){
    </div>`;
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
-  const sc=$('hm-scroll');const vb=sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-8)*vb.width/vb.height);
+  const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IL.h+12}:sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-24)*vb.width/vb.height);
   $('hm-in').style.width=HM.base*HM.z+'px';
   requestAnimationFrame(()=>{sc.scrollTop=sc.scrollHeight;sc.scrollLeft=(sc.scrollWidth-sc.clientWidth)/2;});
 }
