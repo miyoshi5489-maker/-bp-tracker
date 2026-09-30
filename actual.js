@@ -80,7 +80,7 @@ async function renderActual(d){
      <div class="flex items-center justify-between border-b border-line py-2.5 text-sm"><span class="text-muted">終わったら「やった」を押して記入</span>${saved?'<span class="chip k-genie">保存済み</span>':'<span class="chip k-off">まだ保存していません</span>'}</div>
      <div class="divide-y divide-line">${items.length?items.map((it,i)=>actItem(it,i,S.items[i],d)).join(''):'<div class="py-4 text-sm text-muted">この日は休みの予定です。やったことがあれば下に書いてください。</div>'}</div>
      <div class="grid gap-2 border-t border-line py-3.5">
-       <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">${field('走った km（予定外）','g.0.run',S.run||'',{ph:'',mode:'decimal'})}${field('走った時間（分）','g.0.runmin',S.runmin||'',{ph:''})}${field('練習場（球）','g.0.balls',S.balls,{ph:''})}${field('歩いた km','g.0.walk',S.walk,{ph:'',mode:'decimal'})}${field('体重 kg','g.0.weight',S.weight||'',{ph:'',mode:'decimal'})}</div>
+       <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">${field('走った km','g.0.run',S.run||'',{ph:'',mode:'decimal'})}${field('走った時間（分）','g.0.runmin',S.runmin||'',{ph:''})}${field('練習場（球）','g.0.balls',S.balls,{ph:''})}${field('歩いた km','g.0.walk',S.walk,{ph:'',mode:'decimal'})}${field('体重 kg','g.0.weight',S.weight||'',{ph:'',mode:'decimal'})}</div>
        <label class="grid gap-0.5"><span class="lbl">予定外にやったこと・体調メモ</span><textarea data-f="g.0.memo" rows="2" class="inp text-[14px]" placeholder="例：寝不足。肩の張りは軽め">${esc(S.memo)}</textarea></label>
      </div>
    </div>
