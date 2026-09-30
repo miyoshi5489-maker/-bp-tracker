@@ -70,6 +70,10 @@ function holeSVG(m,par,yards){
   m.hz.filter(h=>h.t==='w').forEach(h=>{s+=`<ellipse cx="${h.x}" cy="${-h.y}" rx="${h.rx}" ry="${h.ry}" fill="#3d8fd6" stroke="#2a6fae" stroke-width="1.5"/>`;});
   // バンカー
   m.hz.filter(h=>h.t==='b').forEach(h=>{s+=`<ellipse cx="${h.x}" cy="${-h.y}" rx="8" ry="6" fill="#efe2b8" stroke="#cdb983" stroke-width="1"/>`;});
+  // 障害物までの距離（ティーから）
+  m.hz.filter(h=>h.t==='w'||h.t==='b').forEach(h=>{const ry=h.t==='w'?h.ry:6,rx=h.t==='w'?h.rx:8;const f=Math.round(h.y-ry),k=Math.round(h.y+ry);
+    const cx0=alongPt(c,h.y)[0];const left=h.x<cx0;const tx=left?h.x-rx-3:h.x+rx+3;
+    s+=`<text x="${tx}" y="${-h.y+3}" font-size="8.5" font-weight="bold" fill="#fff" stroke="#123" stroke-width="2.2" paint-order="stroke" text-anchor="${left?'end':'start'}">${h.t==='w'?`${f}〜${k}y`:`${f}y/越え${k}`}</text>`;});
   // 目印の木
   m.hz.filter(h=>h.t==='t').forEach(h=>{s+=`<circle cx="${h.x}" cy="${-h.y}" r="7" fill="#1d3f1e" stroke="#0f2a10"/><text x="${h.x+10}" y="${-h.y+4}" font-size="10" fill="#fff">目印の木</text>`;});
   // OB
@@ -92,6 +96,17 @@ function holeSVG(m,par,yards){
   s+='</svg>';return s;
 }
 
+// ティーからの距離の一覧
+function hazList(m,yards){const c=m.c,G=c[c.length-1];const len=Math.round(holeLen(c));const side=h=>{const x0=alongPt(c,h.y||0)[0];const d=(h.x||0)-x0;return d<-6?'左':d>6?'右':'正面';};
+  const L=[];
+  m.hz.slice().sort((a,b)=>(a.y||a.from||0)-(b.y||b.from||0)).forEach(h=>{
+    if(h.t==='b')L.push(`⛱ ${side(h)}バンカー <b>${Math.round(h.y-6)}y</b>（越え${Math.round(h.y+6)}）`);
+    else if(h.t==='w')L.push(`💧 ${side(h)}の池 <b>${Math.round(h.y-h.ry)}y</b>（越え${Math.round(h.y+h.ry)}）`);
+    else if(h.t==='v')L.push(`⛰ 谷 <b>${h.from}y</b>（越え${h.to}）`);
+    else if(h.t==='ob')L.push(`⚠ ${h.side==='L'?'左':'右'}OB ${h.from?h.from+'y〜':''}`);
+    else if(h.t==='t')L.push(`🌲 目印の木 <b>${h.y}y</b>`);});
+  L.push(`⛳ グリーン中央 <b>${yards||len}y</b>`);return L;}
+
 // ── 全画面で開く ──
 let HM=null;
 function openHoleMap(date,no){
@@ -110,9 +125,11 @@ function drawHoleMap(){
     <div class="min-w-0 flex-1"><div class="font-bold leading-tight">Par${h[1]}・${h[2]}y</div><div class="text-[12px] text-muted">目標 <b class="text-accent">${h[4]}</b>　ティー ${esc(h[5])}</div></div>
     <button class="btn-sm" onclick="closeHoleMap()">閉じる</button>
    </div>
-   <div id="hm-scroll" class="relative flex-1 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y">
-    <div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2])}</div>
-    <div class="fixed right-3 z-50 grid gap-2" style="bottom:calc(env(safe-area-inset-bottom,0px) + 150px)">
+   <div class="relative min-h-0 flex-1">
+    <div id="hm-scroll" class="absolute inset-0 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y">
+     <div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2])}</div>
+    </div>
+    <div class="absolute right-3 top-3 z-10 grid gap-2">
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>
@@ -120,6 +137,7 @@ function drawHoleMap(){
    <div class="grid gap-2 border-t border-line bg-surface p-3" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     <div class="text-[13px] leading-snug"><b class="text-accent">狙い</b>　${esc(h[6])}</div>
     ${m.n?`<div class="text-[12px] leading-snug text-muted"><b>コース</b>　${esc(m.n)}</div>`:''}
+    <div class="flex flex-wrap gap-1">${hazList(m,h[2]).map(t=>`<span class="rounded-md bg-field px-1.5 py-0.5 text-[11px] ring-1 ring-line">${t}</span>`).join('')}</div>
     <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
    </div>`;
   const sc=$('hm-scroll');const vb=sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-8)*vb.width/vb.height);
