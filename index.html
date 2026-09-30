@@ -127,7 +127,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
   </div>
 
   <label class="grid gap-1"><span class="lbl">メモ</span><textarea id="rec-note" rows="3" placeholder="体調・気づき・次回への改善点" class="inp"></textarea></label>
-  <button class="btn-main" id="save-btn" onclick="saveRecord()">記録する</button>
+  <button class="btn-main" id="save-btn" onclick="busy(this,saveRecord)">記録する</button>
 </section>
 
 <!-- 履歴 -->
@@ -144,8 +144,9 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
   <h2 class="h2">一括インポート</h2>
   <div class="rounded-xl bg-line px-3.5 py-3 text-[13px] leading-7 text-muted">1行に1件、次の順で入力します。<br><b class="text-fg">日付,カテゴリ,ラン距離,ランタイム分,ランタイム秒,ペース分,ペース秒,心拍,カロリー,ウォーク距離,ウォーク時間分,ウォーク時間秒,メモ</b><br>カテゴリ：run / push / pull / legs / golf / full<br>例：2026-06-01,run,3.73,23,10,6,13,0,0,0.91,19,5,今日のラン</div>
   <textarea id="import-text" rows="9" class="inp font-mono text-xs" placeholder="2026-06-01,run,3.73,23,10,6,13,0,0,0.91,19,5,今日のラン"></textarea>
-  <button class="btn-main" onclick="importRecords()">一括インポート</button>
+  <button class="btn-main" onclick="busy(this,importRecords)">一括インポート</button>
   <div id="import-result" class="font-mono text-sm text-accent"></div>
+  <div class="card mt-2 grid gap-2 p-4"><h2 class="h2">バックアップ</h2><p class="text-[13px] text-muted">すべての記録をファイルに書き出します。月に1回ほど、スマホやパソコンに保存しておくと安心です。</p><button class="btn-sub" onclick="busy(this,exportData)">データを書き出す</button></div>
 </section>
 
 </main>

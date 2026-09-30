@@ -10,7 +10,7 @@ const {ROUND,ROUNDS,nextRound,RACE,PHASES,PACE,planFor,plannedKm,longRuns}=windo
 const {pad,ymd,parse,addDays,diffDays,mondayOf,today}=window.PLAN.util;
 const DOW=['日','月','火','水','木','金','土'];
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const md=s=>{const d=parse(s);return `${d.getMonth()+1}/${d.getDate()}（${DOW[d.getDay()]}）`;};
 const km1=n=>(Math.round(n*10)/10).toFixed(1);
 // 計画が始まる前の月（〜2026年9月）は従来の月70kmを目標にする
@@ -20,68 +20,97 @@ function toast(msg,err){const t=$('toast');t.textContent=msg;t.style.background=
 
 // ── データ ──
 let CACHE=null;
-function mapRow(row){return{id:Number(row.id),date:row.date,cat:row.cat,exercises:row.exercises||[],runDist:Number(row.run_dist)||0,runTime:row.run_time||0,runPaceMin:row.run_pace_min||0,runPaceSec:row.run_pace_sec||0,runHr:row.run_hr||0,runCal:row.run_cal||0,walkDist:Number(row.walk_dist)||0,walkTime:row.walk_time||0,note:row.note||''};}
+// 数値は必ず数値に（画面へ埋め込む時の安全対策）
+const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0;};
+function cleanEx(ex){return (Array.isArray(ex)?ex:[]).map(e=>e&&typeof e==='object'?{...e,sets:Array.isArray(e.sets)?e.sets.map(s=>({weight:num(s&&s.weight),reps:num(s&&s.reps),done:!!(s&&s.done)})):e.sets}:e).filter(Boolean);}
+function mapRow(row){return{id:Number(row.id),date:String(row.date||'').slice(0,10),cat:String(row.cat||''),exercises:cleanEx(row.exercises),runDist:num(row.run_dist),runTime:num(row.run_time),runPaceMin:num(row.run_pace_min),runPaceSec:num(row.run_pace_sec),runHr:num(row.run_hr),runCal:num(row.run_cal),walkDist:num(row.walk_dist),walkTime:num(row.walk_time),note:String(row.note||'')};}
+// 重ならないID（ミリ秒×1000＋連番）
+let UID_SEQ=0;const uid=()=>Date.now()*1000+(UID_SEQ++%1000);
 // 通信できない時は端末に保存し、つながった時に自動で送る
 const PKEY='yohei_pending';
-const pend=()=>{try{return JSON.parse(localStorage.getItem(PKEY)||'{"up":{},"del":[]}');}catch{return{up:{},del:[]};}};
+const pend=()=>{try{const p=JSON.parse(localStorage.getItem(PKEY)||'{}');return{up:p.up||{},del:(p.del||[]).map(Number)};}catch{return{up:{},del:[]};}};
 const savePend=p=>{try{localStorage.setItem(PKEY,JSON.stringify(p));}catch{}};
 const pendCount=()=>{const p=pend();return Object.keys(p.up).length+p.del.length;};
-function mergePend(list){const p=pend();const del=new Set(p.del.map(Number));const up=Object.values(p.up);const ids=new Set(up.map(r=>Number(r.id)));
+function mergePend(list){const p=pend();const del=new Set(p.del);const up=Object.values(p.up);const ids=new Set(up.map(r=>Number(r.id)));
   return [...up,...list.filter(r=>!ids.has(Number(r.id))&&!del.has(Number(r.id)))].sort((a,b)=>b.date.localeCompare(a.date));}
+// 送信結果：'ok'／'retry'（通信の問題）／'bad'（内容の問題。送り直しても通らない）
+async function authHeaders(){return window.AUTH&&AUTH.headers?await AUTH.headers():SB_HEADERS;}
+async function sendDelete(id){try{const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?id=eq.'+Number(id),{method:'DELETE',headers:await authHeaders()});return r.ok?'ok':(r.status>=400&&r.status<500&&r.status!==401&&r.status!==408&&r.status!==429?'bad':'retry');}catch(e){return 'retry';}}
 let SYNCING=false;
 async function flushPend(){
-  if(SYNCING)return;const p=pend();if(!Object.keys(p.up).length&&!p.del.length)return;SYNCING=true;let sent=0;
+  if(SYNCING||!pendCount())return;SYNCING=true;let sent=0,bad=0;
   try{
-    for(const id of [...p.del]){const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?id=eq.'+id,{method:'DELETE',headers:SB_HEADERS});if(!r.ok)throw 0;p.del=p.del.filter(x=>x!==id);savePend(p);sent++;}
-    for(const [id,rec] of Object.entries(p.up)){if(!(await sendRec(rec)))throw 0;delete p.up[id];savePend(p);sent++;}
-  }catch(e){}
-  SYNCING=false;
+    for(const id of pend().del){const res=await sendDelete(id);if(res==='retry')break;const p=pend();p.del=p.del.filter(x=>x!==id);savePend(p);res==='ok'?sent++:bad++;}
+    for(const id of Object.keys(pend().up)){const rec=pend().up[id];if(!rec)continue;const res=await sendRec(rec);if(res==='retry')break;
+      const p=pend();if(p.up[id]&&JSON.stringify(p.up[id])===JSON.stringify(rec))delete p.up[id];savePend(p);res==='ok'?sent++:bad++;}
+  }finally{SYNCING=false;}
   if(sent){CACHE=null;toast(`端末に保存していた${sent}件を送信しました`);}
+  if(bad)toast(`${bad}件は内容に問題があり送れませんでした`,true);
   pendBadge();
 }
 function pendBadge(){const n=pendCount();const el=$('pend-badge');if(el){el.textContent=n?`未送信 ${n}件`:'';el.classList.toggle('hidden',!n);}}
+let FETCHING=null;
 async function getRecs(force){
   if(CACHE&&!force)return CACHE;
-  let list;
-  try{
-    const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?order=date.desc',{headers:SB_HEADERS});
-    if(!r.ok)throw new Error(r.status);
-    list=(await r.json()).map(mapRow);
-    try{localStorage.setItem('yohei_bp_cache',JSON.stringify(list));}catch(e){}
-    if(pendCount())setTimeout(flushPend,0);
-  }catch(e){
-    try{list=JSON.parse(localStorage.getItem('yohei_bp_cache')||localStorage.getItem('yohei_bp_v3')||'[]');}catch{list=[];}
-  }
-  CACHE=mergePend(list);pendBadge();
-  return CACHE;
+  if(FETCHING)return FETCHING;
+  FETCHING=(async()=>{
+    let list;
+    try{
+      const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?order=date.desc',{headers:await authHeaders()});
+      if(!r.ok)throw new Error(r.status);
+      list=(await r.json()).map(mapRow);
+      try{localStorage.setItem('yohei_bp_cache',JSON.stringify(list));}catch(e){}
+      if(pendCount())setTimeout(flushPend,0);
+    }catch(e){
+      try{list=JSON.parse(localStorage.getItem('yohei_bp_cache')||localStorage.getItem('yohei_bp_v3')||'[]').map(r=>r&&r.date?{...r,exercises:cleanEx(r.exercises)}:null).filter(Boolean);}catch{list=[];}
+    }
+    CACHE=mergePend(list);pendBadge();return CACHE;
+  })();
+  try{return await FETCHING;}finally{FETCHING=null;}
 }
 function rowOf(rec){return{id:rec.id,date:rec.date,cat:rec.cat,exercises:rec.exercises,run_dist:rec.runDist||0,run_time:rec.runTime||0,run_pace_min:rec.runPaceMin||0,run_pace_sec:rec.runPaceSec||0,run_hr:rec.runHr||0,run_cal:rec.runCal||0,walk_dist:rec.walkDist||0,walk_time:rec.walkTime||0,note:rec.note||''};}
 async function postRow(row){
-  const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs',{method:'POST',headers:{...SB_HEADERS,'Prefer':'resolution=merge-duplicates'},body:JSON.stringify(row)});
-  return r.ok;
+  try{
+    const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs',{method:'POST',headers:{...(await authHeaders()),'Prefer':'resolution=merge-duplicates'},body:JSON.stringify(row)});
+    if(r.ok)return 'ok';
+    return r.status>=400&&r.status<500&&r.status!==401&&r.status!==408&&r.status!==429?'bad':'retry';
+  }catch(e){return 'retry';}
 }
 async function sendRec(rec){
-  try{
-    let ok=await postRow(rowOf(rec));
-    if(!ok&&rec.cat==='golf')ok=await postRow(rowOf({...rec,cat:'full',note:'[ゴルフ] '+(rec.note||'')}));
-    if(!ok&&rec.cat==='study')ok=await postRow(rowOf({...rec,cat:'full'}));
-    return ok;
-  }catch(e){return false;}
+  let res=await postRow(rowOf(rec));
+  if(res==='bad'&&rec.cat==='golf')res=await postRow(rowOf({...rec,cat:'full',note:'[ゴルフ] '+(rec.note||'')}));
+  if(res==='bad'&&rec.cat==='study')res=await postRow(rowOf({...rec,cat:'full'}));
+  return res;
 }
 async function upsertRec(rec){
-  if(await sendRec(rec)){CACHE=null;return true;}
-  const p=pend();p.up[rec.id]=rec;p.del=p.del.filter(x=>Number(x)!==Number(rec.id));savePend(p);
+  const res=await sendRec(rec);
+  if(res==='ok'){const p=pend();if(p.up[rec.id]){delete p.up[rec.id];savePend(p);}CACHE=null;pendBadge();return true;}
+  if(res==='bad'){toast('内容に問題があり保存できませんでした。日付や数字を確認してください',true);return false;}
+  const p=pend();p.up[rec.id]=rec;p.del=p.del.filter(x=>x!==Number(rec.id));savePend(p);
   CACHE=null;pendBadge();
   toast('端末に保存しました（つながったら自動で送ります）');
   return true;
 }
 async function deleteRec(id){
-  const p=pend();
-  if(p.up[id]){delete p.up[id];savePend(p);CACHE=null;pendBadge();return true;}
-  try{const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?id=eq.'+id,{method:'DELETE',headers:SB_HEADERS});if(!r.ok)throw 0;CACHE=null;return true;}
-  catch(e){p.del.push(Number(id));savePend(p);CACHE=null;pendBadge();toast('端末で削除しました（つながったら反映します）');return true;}
+  id=Number(id);const p=pend();delete p.up[id];
+  const res=await sendDelete(id);
+  if(res==='ok'){p.del=p.del.filter(x=>x!==id);savePend(p);CACHE=null;pendBadge();return true;}
+  if(!p.del.includes(id))p.del.push(id);savePend(p);CACHE=null;pendBadge();
+  toast('端末で削除しました（つながったら反映します）');return true;
 }
+// 保存ボタンの二重押し防止
+async function busy(btn,fn){if(!btn){return fn();}if(btn.dataset.busy)return;btn.dataset.busy='1';btn.disabled=true;btn.classList.add('opacity-60');try{return await fn();}finally{delete btn.dataset.busy;btn.disabled=false;btn.classList.remove('opacity-60');}}
 window.addEventListener('online',flushPend);
+// アプリに戻った時：日付が変わっていれば今日に切り替え、最新のデータを取り直す
+let LAST_DAY=today();
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  const t=today();
+  if(t!==LAST_DAY){LAST_DAY=t;if(typeof ACT_DATE!=='undefined')ACT_DATE=null;const rd=$('rec-date');if(rd&&!EDIT_ID)rd.value=t;}
+  if(typeof ACT!=='undefined')Object.keys(ACT).forEach(d=>{if(!ACT_DIRTY.has(d))delete ACT[d];});
+  CACHE=null;headerCount();flushPend();
+  const f=document.activeElement;if(!(f&&/INPUT|TEXTAREA|SELECT/.test(f.tagName)))show(CUR);
+});
 setInterval(flushPend,60000);
 const gymEx=r=>(r.exercises||[]).filter(e=>!e.kind&&(e.sets||[]).length);
 const isGolf=r=>r.cat==='golf'||(r.note||'').startsWith('[ゴルフ]');
@@ -226,7 +255,7 @@ function renderGolf(req){
       </div></article>`;}).join('')}</div></div>`).join('')}
    ${r!=='check'?`<div class="sticky z-10 grid gap-2 rounded-2xl border border-line bg-surface p-3 shadow-lg" style="bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
      <div class="flex items-center justify-between text-sm"><span>今日 <b class="num">${all.filter(e=>chk.includes(e.id)).length}</b> / ${all.length} 種目</span><button class="btn-sm" onclick="setChk(today(),GOLF_R,[]);renderGolf()">リセット</button></div>
-     <button class="btn-main py-2.5" onclick="saveGolf()">今日の記録として保存</button></div>`:''}`;
+     <button class="btn-main py-2.5" onclick="busy(this,saveGolf)">今日の記録として保存</button></div>`:''}`;
 }
 document.querySelectorAll('#golf-seg button').forEach(b=>b.addEventListener('click',()=>{GOLF_R=b.dataset.r;GOLF_PART='';renderGolf();}));
 // 写真：タップで次へ（最後まで行ったら最初に戻る）
@@ -370,7 +399,7 @@ let EDIT_ID=null;
 async function saveRecord(){
   const date=$('rec-date').value;if(!date){toast('日付を入力してください',true);return;}
   const v=id=>$(id).value;
-  const rec={id:EDIT_ID||Date.now(),date,cat:$('rec-cat').value,exercises:collectEx(),runDist:parseFloat(v('run-dist'))||0,
+  const rec={id:EDIT_ID||uid(),date,cat:$('rec-cat').value,exercises:collectEx(),runDist:parseFloat(v('run-dist'))||0,
     runTime:(parseInt(v('run-time-min'))||0)*60+(parseInt(v('run-time-sec'))||0),runPaceMin:parseInt(v('run-pace-min'))||0,runPaceSec:parseInt(v('run-pace-sec'))||0,
     runHr:parseInt(v('run-hr'))||0,runCal:parseInt(v('run-cal'))||0,walkDist:parseFloat(v('walk-dist'))||0,
     walkTime:(parseInt(v('walk-time-min'))||0)*60+(parseInt(v('walk-time-sec'))||0),note:v('rec-note').trim()};
@@ -444,13 +473,21 @@ async function renderStats(){
    <div class="grid gap-2"><h2 class="h2">月間ラン距離</h2><div class="card grid gap-2.5 p-4">${rmonths.length?rmonths.map(m=>{const mm=Number(m.slice(5));const p=monthTarget(m);return `<div class="grid grid-cols-[48px_64px_1fr_60px] items-center gap-2 text-sm"><span class="text-[12px] text-muted">${mm}月</span><b class="num">${km1(runByM[m])}</b>${bar(runByM[m],p,'var(--sky)')}<span class="num text-right text-[11px] text-muted">/${p}km</span></div>`;}).join(''):'<div class="text-sm text-muted">データなし</div>'}</div><p class="text-[12px] text-muted">10月以降は計画の距離、それ以前は月70kmを目標として表示しています。</p></div>`;
 }
 
+// ── 書き出し（バックアップ） ──
+async function exportData(){
+  const recs=await getRecs(true);
+  const blob=new Blob([JSON.stringify({exported:new Date().toISOString(),records:recs},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`yohei-training-${today()}.json`;document.body.appendChild(a);a.click();a.remove();
+  toast(`${recs.length}件を書き出しました`);
+}
+
 // ── 取込 ──
 async function importRecords(){
   const text=$('import-text').value.trim();if(!text)return;
   const lines=text.split('\n').filter(l=>l.trim());$('import-result').textContent='処理中…';let ok=0,err=0;
   for(const line of lines){
     const p=line.split(',');if(!p[0]||!p[0].trim())continue;
-    const rec={id:Date.now()+Math.floor(Math.random()*1000),date:p[0].trim(),cat:(p[1]||'run').trim(),exercises:[],runDist:parseFloat(p[2])||0,runTime:(parseInt(p[3])||0)*60+(parseInt(p[4])||0),runPaceMin:parseInt(p[5])||0,runPaceSec:parseInt(p[6])||0,runHr:parseInt(p[7])||0,runCal:parseInt(p[8])||0,walkDist:parseFloat(p[9])||0,walkTime:(parseInt(p[10])||0)*60+(parseInt(p[11])||0),note:p.slice(12).join(',').trim()};
+    const rec={id:uid(),date:p[0].trim(),cat:(p[1]||'run').trim(),exercises:[],runDist:parseFloat(p[2])||0,runTime:(parseInt(p[3])||0)*60+(parseInt(p[4])||0),runPaceMin:parseInt(p[5])||0,runPaceSec:parseInt(p[6])||0,runHr:parseInt(p[7])||0,runCal:parseInt(p[8])||0,walkDist:parseFloat(p[9])||0,walkTime:(parseInt(p[10])||0)*60+(parseInt(p[11])||0),note:p.slice(12).join(',').trim()};
     if(await upsertRec(rec))ok++;else err++;
     await new Promise(r=>setTimeout(r,100));
   }

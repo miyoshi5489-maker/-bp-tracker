@@ -13,7 +13,7 @@ const VOICE_ALIAS={
   'ラットプル':'ラットプルダウン','懸垂':'チンニング（懸垂）','チンニング':'チンニング（懸垂）','シーテッドロー':'シーテッドロウ（ケーブル）','シーテッドロウ':'シーテッドロウ（ケーブル）',
   'ワンハンドロー':'DBワンハンドロウ','ワンハンドロウ':'DBワンハンドロウ','DBロー':'DBワンハンドロウ','DBロウ':'DBワンハンドロウ','Tバー':'Tバーロウ','ベントオーバー':'フリーバーベルロウ',
   'バーベルカール':'バーベルカール','ハンマーカール':'ハンマーカール','インクラインカール':'インクラインDBカール','ケーブルカール':'ケーブルカール','レッグカール':'レッグカール','カール':'DBカール',
-  'スミススクワット':'スミススクワット','スクワット':'スクワット','ブルガリアン':'ブルガリアンスプリットスクワット','レッグプレス':'レッグプレス','レッグエクステンション':'レッグエクステンション',
+  'スミススクワット':'スミススクワット','スクワット':'スクワット','ブルガリアンスクワット':'ブルガリアンスプリットスクワット','ブルガリアン':'ブルガリアンスプリットスクワット','トライセプスエクステンション':'ケーブルオーバーヘッドトライセプス','ライイングエクステンション':'ケーブルオーバーヘッドトライセプス','レッグプレス':'レッグプレス','レッグエクステンション':'レッグエクステンション',
   'カーフ':'カーフレイズ','ランジ':'DBランジ','アブローラー':'アブローラー','腹筋ローラー':'アブローラー','ケーブルクランチ':'ケーブルクランチ','レッグレイズ':'ハンギングレッグレイズ',
   'サイドベンド':'DBサイドベンド','ロシアンツイスト':'ロシアンツイスト','プランク':'プランク',
 };
@@ -28,7 +28,11 @@ function jaNum(s){ // 漢数字 → 数字（八十→80、百二十→120、十
   });
 }
 function voiceNorm(s){
-  return jaNum(s.normalize('NFKC')).replace(/ダンベル/g,'DB').replace(/(\d+)\s*キロ\s*半/g,(m,a)=>`${a}.5キロ`).replace(/(\d+)\s*点\s*(\d)/g,'$1.$2').replace(/かける|掛ける|x|X/g,'×');
+  return jaNum(s.normalize('NFKC'))
+    .replace(/(\d+(?:\.\d+)?)\s*(?:キロ|km)\s*(?:を)?\s*(走った|走りました|走る|ジョグ|ラン|ランニング|ジョギング)/gi,'ラン$1キロ')
+    .replace(/(?<![\d.])1\s*キロ\s*(\d+)\s*分\s*(?:(\d+)\s*秒)?\s*(?:で|ペース)?/g,(m,a,b)=>`ペース${a}分${b?b+'秒':''} `)
+    .replace(/(\d+)\s*セット目\s*(?:は|が)?/g,'、')
+    .replace(/それを|これを/g,'').replace(/ダンベル/g,'DB').replace(/(\d+)\s*キロ\s*半/g,(m,a)=>`${a}.5キロ`).replace(/(\d+)\s*点\s*(\d)/g,'$1.$2').replace(/かける|掛ける|x|X/g,'×');
 }
 function voiceKeys(){
   const presets=[...new Set([...PRESETS_BY_CAT.full,...GOLF_PRESETS])].map(p=>voiceNorm(p));
@@ -36,9 +40,12 @@ function voiceKeys(){
   return keys.sort((a,b)=>b[0].length-a[0].length);
 }
 function parseVoice(text){
-  const s=voiceNorm(text);const keys=voiceKeys();
+  let s=voiceNorm(text);const keys=voiceKeys();
+  // ペースがランの言葉より前にある時は、ランの後ろへ移す
+  const runAt=Math.min(...RUN_WORDS.map(w=>{const i=s.indexOf(w);return i<0?1e9:i;}));
+  if(runAt<1e9){const pm=[...s.matchAll(/ペース\s*\d+\s*分\s*(?:\d+\s*秒)?/g)].filter(m=>m.index<runAt);pm.reverse().forEach(m=>{s=s.slice(0,m.index)+s.slice(m.index+m[0].length);});if(pm.length){const i=s.indexOf(RUN_WORDS.find(w=>s.includes(w)));const after=s.slice(i).search(/[、,。]/);const cut=after<0?s.length:i+after;s=s.slice(0,cut)+' '+pm.map(m=>m[0]).join(' ')+s.slice(cut);}}
   const marks=[];let i=0;
-  while(i<s.length){const k=keys.find(([key])=>s.startsWith(key,i));if(k){marks.push({pos:i,end:i+k[0].length,name:k[1]});i+=k[0].length;}else i++;}
+  while(i<s.length){const k=keys.find(([key,name])=>s.startsWith(key,i)&&!(name==='__run'&&key==='ラン'&&/[ァ-ヶー]/.test(s[i-1]||'')));if(k){marks.push({pos:i,end:i+k[0].length,name:k[1]});i+=k[0].length;}else i++;}
   const segs=[];
   if(!marks.length)segs.push({name:null,body:s});
   else{ if(marks[0].pos>0)segs.push({name:null,body:s.slice(0,marks[0].pos)});
@@ -48,7 +55,7 @@ function parseVoice(text){
     const b=seg.body;
     if(seg.name==='__run'){
       const r=out.run||{};const km=b.match(/(\d+(?:\.\d+)?)\s*(?:キロ|km)/i);
-      const PACE_RE=/(?:(?<![\d.]\s{0,2})キロ|ペース)\s*(\d+)\s*分\s*(?:(\d+)\s*秒?)?/;
+      const PACE_RE=/(?:(?<![\d.]\s{0,2})キロ|ペース|(?<![\d.])1\s*キロ(?=\s*\d+\s*分))\s*(\d+)\s*分\s*(?:(\d+)\s*秒?)?/;
       const pace=b.match(PACE_RE);const tm=b.replace(PACE_RE,'').match(/(\d+)\s*分\s*(?:(\d+)\s*秒)?/);
       const hr=b.match(/心拍\s*(\d+)/);
       if(km)r.km=parseFloat(km[1]);if(tm){r.min=+tm[1];r.sec=+(tm[2]||0);}if(pace){r.pmin=+pace[1];r.psec=+(pace[2]||0);}if(hr)r.hr=+hr[1];
@@ -56,7 +63,7 @@ function parseVoice(text){
     }
     if(seg.name==='__walk'){const km=b.match(/(\d+(?:\.\d+)?)\s*(?:キロ|km)/i);const tm=b.match(/(\d+)\s*分/);out.walk={km:km?parseFloat(km[1]):0,min:tm?+tm[1]:0};last=null;continue;}
     // 筋トレ：重さ・回数・セット（「、」で区切られた重さ違いのセットにも対応）
-    const parts=b.split(/[、,。．.\n]|そのあと|次に|次/).filter(x=>x.trim());
+    const parts=b.split(/[、,。\n]|(?<!\d)[.．](?!\d)|そのあと|次に|次/).filter(x=>x.trim());
     const setsFrom=p=>{
       let w=null,r=null,n=null;
       const x=p.match(/(\d+(?:\.\d+)?)\s*×\s*(\d+)(?:\s*×\s*(\d+))?/);
@@ -69,7 +76,10 @@ function parseVoice(text){
       return [...Array(Math.max(1,n||1))].map(()=>({weight:w||0,reps:r||0,done:true}));
     };
     if(seg.name){last={name:seg.name,sets:[]};out.ex.push(last);}
-    for(const p of (parts.length?parts:[b])){const ss=setsFrom(p);if(!ss.length)continue;if(!last){last={name:'',sets:[]};out.ex.push(last);}last.sets.push(...ss);}
+    for(const p of (parts.length?parts:[b])){
+      const onlySets=p.match(/^\D*(\d+)\s*(?:セット|set)\D*$/i);
+      if(onlySets&&last&&last.sets.length){const n=+onlySets[1];const base=last.sets[last.sets.length-1];while(last.sets.length<n)last.sets.push({...base});continue;}
+      const ss=setsFrom(p);if(!ss.length)continue;if(!last){last={name:'',sets:[]};out.ex.push(last);}last.sets.push(...ss);}
   }
   out.ex=out.ex.filter(e=>e.name||e.sets.length);
   return out;

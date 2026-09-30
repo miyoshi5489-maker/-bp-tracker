@@ -96,7 +96,7 @@ function planFor(s){
   }
 
   if(ph.id==='base'){
-    const wk=Math.floor(diffDays('2026-10-26',s)/7);
+    const wk=Math.floor(diffDays('2026-10-19',s)/7);
     const day=((wk%3)+3)%3+1;
     const easy=s<'2026-11-09'?6:8;
     if(dow===1){items.push(it('genie','ジーニー ⓪〜③（30分版）',{routine:'genie',part:'short'}),pplItem('base','legs'));}
@@ -115,7 +115,7 @@ function planFor(s){
     if(dow===1){items.push(it('genie','ジーニー ⓪〜③（30分版）',{routine:'genie',part:'short'}),(race?it('off','筋トレお休み',{detail:'レース週'}):pplItem('marathon','legs')));}
     if(dow===2){
       if(race)items.push(it('run','刺激走',{km:6,detail:"うち3kmを5'35/km"}));
-      else if(wk%2===0)items.push(it('run','インターバル',{km:taper?6:8,detail:`1km×${taper?3:5}本 ${PACE.interval}（つなぎ400mジョグ）。アップ・ダウン込み`}));
+      else if(wk%2===1)items.push(it('run','インターバル',{km:taper?6:8,detail:`1km×${taper?3:5}本 ${PACE.interval}（つなぎ400mジョグ）。アップ・ダウン込み`}));
       else items.push(it('run','テンポ走',{km:taper?6:8,detail:`${taper?4:5}kmを ${PACE.tempo}。アップ・ダウン込み`}));
     }
     if(dow===3){items.push(pplItem('marathon','upper'),it('pilates','ピラティスチェア 10分'));}

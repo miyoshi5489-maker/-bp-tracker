@@ -10,7 +10,9 @@ const GYM_DEFAULTS={
   '上半身（ベンチ強化）':[['ベンチプレス',5,4],['シーテッドロウ（ケーブル）',3,10],['フェイスプル',3,15]],
   '脚の筋力維持':[['スクワット',3,5]],
 };
-let ACT_DATE=null;const ACT={};
+let ACT_DATE=null;const ACT={};const ACT_DIRTY=new Set();
+// 入力するたびに状態へ反映（タブを移っても消えない）
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#act-box')){actRead();ACT_DIRTY.add(ACT_DATE);}});
 const dailyId=d=>Number(d.replace(/-/g,''))*100+50;
 function lastWeight(recs,name){for(const r of recs){for(const e of (r.exercises||[])){if(!e.kind&&e.name===name){const w=Math.max(0,...(e.sets||[]).map(s=>s.weight||0));if(w)return w;}}}return '';}
 function golfCount(d,routine){const all=golfData(routine).flatMap(b=>b.ex).length;return{done:getChk(d,routine).length,all};}
@@ -73,14 +75,14 @@ async function renderActual(d){
        <label class="grid gap-0.5"><span class="lbl">予定外にやったこと・体調メモ</span><textarea data-f="g.0.memo" rows="2" class="inp text-[13px]" placeholder="例：寝不足。肩の張りは軽め">${esc(S.memo)}</textarea></label>
      </div>
    </div>
-   <button class="btn-main" onclick="saveActual()">${saved?'実績を更新する':'実績を保存する'}</button>
+   <button class="btn-main" onclick="busy(this,saveActual)">${saved?'実績を更新する':'実績を保存する'}</button>
    <datalist id="ex-list">${[...new Set([...PRESETS_BY_CAT.full])].map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
 }
-function actSet(i,v){actRead();const s=ACT[ACT_DATE].items[i];s.st=s.st===v?'':v;
+function actSet(i,v){actRead();ACT_DIRTY.add(ACT_DATE);const s=ACT[ACT_DATE].items[i];s.st=s.st===v?'':v;
   const it=planFor(ACT_DATE).items.filter(x=>x.kind!=='off')[i];
   if(v==='done'&&it&&it.kind==='run'&&!s.km)s.km=it.km||'';
   renderActual();}
-function actRow(i,j){actRead();const rows=ACT[ACT_DATE].items[i].rows;if(j<0)rows.push({n:'',w:'',r:'',s:3});else rows.splice(j,1);renderActual();}
+function actRow(i,j){actRead();ACT_DIRTY.add(ACT_DATE);const rows=ACT[ACT_DATE].items[i].rows;if(j<0)rows.push({n:'',w:'',r:'',s:3});else rows.splice(j,1);renderActual();}
 async function saveActual(){
   actRead();const d=ACT_DATE;const S=ACT[d];
   const items=planFor(d).items.filter(it=>it.kind!=='off');
@@ -100,5 +102,5 @@ async function saveActual(){
   const pace=runDist>0&&runTime>0?runTime/runDist:0;
   const rec={id:dailyId(d),date:d,cat,exercises:ex,runDist,runTime,runPaceMin:pace?Math.floor(pace/60):0,runPaceSec:pace?Math.round(pace%60):0,runHr,runCal:0,
     walkDist:parseFloat(S.walk)||0,walkTime:0,note:['[実績]',...notes,S.memo||''].filter(Boolean).join(' ').trim()};
-  if(await upsertRec(rec)){toast('実績を保存しました');renderToday();}
+  if(await upsertRec(rec)){ACT_DIRTY.delete(d);delete ACT[d];toast('実績を保存しました');renderToday();}
 }

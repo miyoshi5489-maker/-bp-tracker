@@ -2,7 +2,8 @@
   "name": "yohei-training",
   "private": true,
   "scripts": {
-    "build:css": "tailwindcss -i ./src/input.css -o ./app.css --minify"
+    "build:css": "tailwindcss -i ./src/input.css -o ./app.css --minify",
+    "test": "node tests/voice.test.js"
   },
   "devDependencies": {
     "tailwindcss": "3.4.16"

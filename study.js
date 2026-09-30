@@ -10,7 +10,7 @@ const MJ_RANKS=['初心1','初心2','初心3','雀士1','雀士2','雀士3','雀
 let STUDY_G='mahjong',STUDY_FORM=null;
 const isStudy=r=>(r.exercises||[]).some(e=>e.kind==='study');
 const studyOf=r=>(r.exercises||[]).find(e=>e.kind==='study');
-function xpOf(s){return (s.min||0)+(s.games||0)*(s.game==='poker'?10:5)+(s.acts||[]).filter(a=>a!=='実戦').length*5;}
+function xpOf(s){return num(s.min)+num(s.games)*(s.game==='poker'?10:5)+(s.acts||[]).filter(a=>a!=='実戦').length*5;}
 function levelOf(xp){let lv=1,need=60,acc=0;while(xp>=acc+need){acc+=need;lv++;need=Math.round(60+lv*20);}return{lv,into:xp-acc,need};}
 function streak(dates){const set=new Set(dates);let d=today(),n=0;if(!set.has(d))d=addDays(d,-1);while(set.has(d)){n++;d=addDays(d,-1);}return n;}
 const LV_TITLE=['見習い','初段の卵','研究家','理論派','勝負師','達人','名人','鬼','神'];
@@ -19,8 +19,8 @@ async function renderStudy(){
   const el=$('p-study');const recs=await getRecs();const g=STUDY_G;const G=STUDY[g];
   const logs=recs.filter(isStudy).map(r=>({r,s:studyOf(r)})).filter(x=>x.s.game===g);
   const xp=logs.reduce((a,x)=>a+xpOf(x.s),0);const L=levelOf(xp);
-  const totalMin=logs.reduce((a,x)=>a+(x.s.min||0),0);const mon=today().slice(0,7);
-  const monthMin=logs.filter(x=>x.r.date.startsWith(mon)).reduce((a,x)=>a+(x.s.min||0),0);
+  const totalMin=logs.reduce((a,x)=>a+num(x.s.min),0);const mon=today().slice(0,7);
+  const monthMin=logs.filter(x=>x.r.date.startsWith(mon)).reduce((a,x)=>a+num(x.s.min),0);
   const st=streak(logs.map(x=>x.r.date));
   const rank=(logs.find(x=>x.s.rank)||{s:{}}).s.rank||'';
   if(!STUDY_FORM||STUDY_FORM.game!==g)STUDY_FORM={game:g,date:today(),min:'',acts:[],games:'',r1:'',r2:'',r3:'',pl:'',rank:rank,note:''};
@@ -52,11 +52,11 @@ async function renderStudy(){
       :`<div class="grid grid-cols-2 gap-2"><label class="grid gap-0.5"><span class="lbl">セッション数</span><input id="st-games" value="${esc(F.games)}" inputmode="numeric" class="inp py-2 text-center"></label><label class="grid gap-0.5"><span class="lbl">収支（任意）</span><input id="st-pl" value="${esc(F.pl)}" placeholder="+30BB など" class="inp py-2 text-center"></label></div>`):''}
     <div class="grid gap-1"><div class="flex items-center justify-between"><span class="lbl">学んだこと・気づき</span><button class="btn-sm" onclick="micToggle('st-note',this)">🎤 話す</button></div>
       <textarea id="st-note" rows="3" class="inp text-[13px]" placeholder="${g==='mahjong'?'例：北抜きの押し引き。親リーチには2シャンテンから降りる':'例：BTNのオープンレンジを見直した。3ベット後のCBは小さく'}">${esc(F.note)}</textarea></div>
-    <button class="btn-main" onclick="saveStudy()">記録してXPをもらう</button>
+    <button class="btn-main" onclick="busy(this,saveStudy)">記録してXPをもらう</button>
    </div></div>
   <div class="grid gap-2"><h2 class="h2">最近の記録</h2>
    <div class="card divide-y divide-line px-4">${logs.length?logs.slice(0,15).map(({r,s})=>`<div class="grid gap-1 py-2.5"><div class="flex items-center justify-between gap-2"><span class="font-bold">${md(r.date)}</span><span class="flex items-center gap-2"><span class="num text-[12px] text-accent">+${xpOf(s)}XP</span><button class="btn-sm !text-warn" onclick="delStudy(${r.id})">削除</button></span></div>
-     <div class="flex flex-wrap gap-1 text-[12px]">${s.min?`<span class="chip k-genie">${s.min}分</span>`:''}${(s.acts||[]).map(a=>`<span class="chip k-off">${esc(a)}</span>`).join('')}${s.games?`<span class="chip k-run">${g==='poker'?s.games+'セッション':s.games+'局'}${s.res?' '+esc(s.res):''}</span>`:''}${s.rank?`<span class="chip k-goltore">${esc(s.rank)}</span>`:''}</div>
+     <div class="flex flex-wrap gap-1 text-[12px]">${s.min?`<span class="chip k-genie">${num(s.min)}分</span>`:''}${(s.acts||[]).map(a=>`<span class="chip k-off">${esc(a)}</span>`).join('')}${s.games?`<span class="chip k-run">${g==='poker'?num(s.games)+'セッション':num(s.games)+'局'}${s.res?' '+esc(s.res):''}</span>`:''}${s.rank?`<span class="chip k-goltore">${esc(s.rank)}</span>`:''}</div>
      ${s.note?`<div class="text-[13px] text-muted">${esc(s.note)}</div>`:''}</div>`).join(''):'<div class="py-4 text-sm text-muted">まだ記録がありません。最初の1件を入れてみましょう。</div>'}</div></div>`;
 }
 function studyRead(){const F=STUDY_FORM;if(!F)return;const v=id=>{const e=$(id);return e?e.value:undefined;};
@@ -69,7 +69,7 @@ async function saveStudy(){
   const res=g==='mahjong'?[F.r1,F.r2,F.r3].some(x=>x)?`1位${F.r1||0}・2位${F.r2||0}・3位${F.r3||0}`:'':(F.pl||'');
   const s={name:g==='mahjong'?'麻雀の学習':'ポーカーの学習',kind:'study',game:g,min,acts:F.acts,games,res,rank:g==='mahjong'?(F.rank||''):'',note:F.note||''};
   const before=levelOf((await getRecs()).filter(isStudy).map(studyOf).filter(x=>x.game===g).reduce((a,x)=>a+xpOf(x),0)).lv;
-  const rec={id:Date.now(),date:F.date||today(),cat:'study',exercises:[s],runDist:0,runTime:0,walkDist:0,walkTime:0,note:`[学習] ${s.name}`};
+  const rec={id:uid(),date:F.date||today(),cat:'study',exercises:[s],runDist:0,runTime:0,walkDist:0,walkTime:0,note:`[学習] ${s.name}`};
   if(await upsertRec(rec)){
     const after=levelOf((await getRecs(true)).filter(isStudy).map(studyOf).filter(x=>x.game===g).reduce((a,x)=>a+xpOf(x),0)).lv;
     toast(after>before?`レベルアップ！ Lv.${after} になりました`:`+${xpOf(s)}XP 記録しました`);
