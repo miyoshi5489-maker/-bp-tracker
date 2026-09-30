@@ -116,7 +116,7 @@ const gymEx=r=>(r.exercises||[]).filter(e=>!e.kind&&(e.sets||[]).length);
 const isGolf=r=>r.cat==='golf'||(r.note||'').startsWith('[ゴルフ]');
 const byDate=recs=>{const m={};recs.forEach(r=>{(m[r.date]=m[r.date]||[]).push(r);});return m;};
 function dayActual(list){
-  list=(list||[]).filter(r=>!(r.exercises||[]).some(e=>e.kind==='study'||e.kind==='roundplan'));
+  list=(list||[]).filter(r=>!(r.exercises||[]).some(e=>['study','roundplan','tm','clubs'].includes(e.kind)));
   const run=list.reduce((s,r)=>s+(r.runDist||0),0);
   const golf=list.filter(isGolf);
   const gym=list.filter(r=>!isGolf(r)&&gymEx(r).length>0);
@@ -232,6 +232,7 @@ function getChk(d,r){try{return JSON.parse(localStorage.getItem(chkKey(d,r))||'[
 function setChk(d,r,a){try{localStorage.setItem(chkKey(d,r),JSON.stringify(a));}catch{}}
 function renderGolf(req){
   if(req){const[r,part]=req.split(':');GOLF_R=r;GOLF_PART=part||'';}
+  if(GOLF_R==='clubs'||req==='clubs'){GOLF_R='clubs';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='clubs'));return renderClubs();}
   if(GOLF_R==='rounds'||req==='rounds'){GOLF_R='rounds';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='rounds'));return renderRounds();}
   if(!GOLF_R){const it=planFor(today()).items.find(i=>i.routine);GOLF_R=it?it.routine:'genie';GOLF_PART=it&&it.part||'';}
   document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r===GOLF_R));
@@ -437,7 +438,7 @@ async function renderHistory(){
   const recs=await getRecs();
   const months=[...new Set(recs.map(r=>r.date.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
   $('month-bar').innerHTML=[`<button class="btn-sm ${curMonth===null?'!border-fg !text-fg':''}" onclick="curMonth=null;renderHistory()">すべて</button>`,...months.map(m=>`<button class="btn-sm shrink-0 ${curMonth===m?'!border-fg !text-fg':''}" onclick="curMonth='${m}';renderHistory()">${m.slice(2,4)}年${parseInt(m.slice(5))}月</button>`)].join('');
-  const list=(curMonth?recs.filter(r=>r.date.startsWith(curMonth)):recs).filter(r=>!(r.exercises||[]).some(e=>e.kind==='study'||e.kind==='roundplan'));
+  const list=(curMonth?recs.filter(r=>r.date.startsWith(curMonth)):recs).filter(r=>!(r.exercises||[]).some(e=>['study','roundplan','tm','clubs'].includes(e.kind)));
   $('log-list').innerHTML=list.length?list.map(r=>{
     const g=isGolf(r);const cat=g?'golf':r.cat;
     const kinds=(r.exercises||[]).filter(e=>e.kind&&e.kind!=='form').map(e=>{
