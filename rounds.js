@@ -5,8 +5,12 @@
 // ─────────────────────────────────────────────
 // ホール：[番, Par, ヤード, ハンデ, 目標, ティーのクラブ, 狙い, 難しさ(easy/mid/hard)]
 const ROUND_DEFS=[
+ {date:'2026-09-22',course:'三田ゴルフクラブ',time:'',tee:'レギュラー 6,261y・Par72',members:'',plan:'',result:{score:118,putts:0},
+  diff:{stars:4,cr:71.6,par:72,yards:6261,bunkers:76,water:5,green:'高麗グリーン（秋は8フィート前後）',terrain:'丘陵（坂あり）',why:['コースレートがParに近い（3つの中で一番難しい）','バンカー76個','高麗グリーンは芝目が強く、読みにくい']},
+ },
  {date:'2026-10-20',course:'東条湖カントリー倶楽部',time:'',tee:'レギュラー 6,198y・Par72',members:'',plan:'',
   target:95,limit:99,link:'https://claude.ai/artifact/Cq7XPSVNLmbx1azX5LmUY4',
+  diff:{stars:3,cr:69.2,par:72,yards:6198,bunkers:65,water:9,green:'ベントグリーン（秋は8.5フィート前後）',terrain:'丘陵（見えないホールが多い）',why:['コースレートはやさしめ','池が絡むホールが9つ','フェアウェイが狭く、ブラインドが多い']},
   summary:'全ホールをボギーで回ると90。難しい4ホールはダブルボギーでよしとして、目標は95。予備が4打あるので、大叩きが1〜2回あっても100を切れる計算です。',
   info:['コースレート 69.2。ベントグリーン（秋は速さ8.5フィート前後）','バンカー65個。池が絡むホールが9つ。見えないホール（ブラインド）が多い'],
   rules:[
@@ -44,6 +48,7 @@ const ROUND_DEFS=[
  {date:'2026-11-29',course:'宝塚クラシックゴルフ倶楽部',time:'IN 7:32',tee:'レギュラー 6,141y・Par71',members:'3名',
   plan:'セルフ・4人乗りカート付き（昼食は別料金）　1人 16,810円',
   target:95,limit:99,link:'',
+  diff:{stars:3,cr:69.2,par:71,yards:6141,bunkers:47,water:4,green:'ベントグリーン（秋は9フィート前後・11月は硬め）',terrain:'丘陵（INの坂がきつい）',why:['コースレートは中くらい','INの打ち上げ・打ち下ろし・谷越え','小さめのグリーンと深いバンカー']},
   summary:'Par71なので、全部ボギーで89。難しいホールはダブルボギーでよしとして、目標は95（IN 47・OUT 48）。予備が4打あります。<b>スタートはIN（10番）から</b>です。',
   info:['ベントのワングリーン（小さめで、深いバンカー）。秋の速さは9フィート前後で、東条湖より少し速い','アップダウンが大きく、特にINは打ち上げ・打ち下ろしと谷越えが多い','池・谷が絡むのは4・14・15・17番。13番は左右OBで見えないホール','カートはフェアウェイに入れない。2打目にはUT・7I・PW／AWとパターを持って歩く'],
   rules:[
@@ -92,6 +97,8 @@ function roundList(recs){
     const b=m[d]||{date:d};const o={...b,recId:r.id};
     ['course','time','tee','members','plan','memo','link'].forEach(k=>{if(e[k])o[k]=e[k];});
     if(parseInt(e.target))o.target=parseInt(e.target);
+    if(parseInt(e.stars)||parseFloat(e.cr))o.diff={...(b.diff||{}),...(parseInt(e.stars)?{stars:parseInt(e.stars)}:{}),...(parseFloat(e.cr)?{cr:parseFloat(e.cr)}:{})};
+    if(parseInt(e.score))o.result={score:parseInt(e.score),putts:0};
     m[d]=o;});
   // 結果（今日の記入欄で入れたスコア）
   recs.forEach(r=>(r.exercises||[]).forEach(e=>{if(e.kind==='round'&&num(e.score)>0&&m[r.date])m[r.date].result={score:num(e.score),putts:num(e.putts)};}));
@@ -111,6 +118,7 @@ async function renderRounds(){
   el.innerHTML=`
   <div class="flex flex-wrap items-end justify-between gap-2"><div><div class="font-display text-2xl">ラウンド</div><div class="text-[12px] text-muted">予定と作戦。タップで作戦を開きます。</div></div>
    <button class="btn-sm !border-accent !text-accent" onclick="roundEdit('new')">＋ ラウンドを追加</button></div>
+  ${roundHistory(list)}
   ${ROUND_EDIT?roundForm(list):''}
   <div class="grid gap-3">${up.length?up.map(x=>roundCard(x,t)).join(''):'<div class="card p-4 text-sm text-muted">予定しているラウンドはありません。「＋ ラウンドを追加」から入れてください。</div>'}</div>
   ${past.length?`<div class="grid gap-3"><h2 class="h2">これまでのラウンド</h2>${past.map(x=>roundCard(x,t)).join('')}</div>`:''}`;
@@ -124,7 +132,7 @@ function roundCard(x,t){
     <div class="flex items-center gap-2"><span class="font-bold">${md(x.date)}</span>${left>=0?`<span class="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">${left===0?'今日':'あと'+left+'日'}</span>`:''}
      ${x.result?`<span class="ml-auto num text-xl font-semibold ${x.result.score<100?'text-accent':''}">${x.result.score}</span>`:x.target?`<span class="ml-auto text-[12px] text-muted">目標 <b class="num text-base text-accent">${x.target}</b></span>`:''}<span class="text-muted ${x.result||x.target?'':'ml-auto'}">${open?'▲':'▼'}</span></div>
     <div class="text-lg font-bold leading-snug">${esc(x.course||'コース未定')}</div>
-    ${tags.length?`<div class="flex flex-wrap gap-1">${tags.map(s=>`<span class="chip k-off">${esc(s)}</span>`).join('')}</div>`:''}
+    ${tags.length||x.diff?`<div class="flex flex-wrap items-center gap-1">${x.diff&&x.diff.stars?`<span class="chip k-event">難易度 ${stars(x.diff.stars)}</span>`:''}${tags.map(s=>`<span class="chip k-off">${esc(s)}</span>`).join('')}</div>`:''}
     ${x.plan?`<div class="text-[12px] text-muted">${esc(x.plan)}</div>`:''}
     ${x.result?`<div class="text-[12px] text-muted">結果 ${x.result.score}${x.result.putts?`（${x.result.putts}パット）`:''}${x.target?`／目標 ${x.target}`:''}</div>`:''}
    </button>
@@ -137,7 +145,7 @@ function roundStrategy(x){
   const H=x.holes||[];const half=k=>H.filter(h=>k==='out'?h[0]<=9:h[0]>=10);
   const sum=(a,i)=>a.reduce((s,h)=>s+h[i],0);
   const memo=(x.memo||'').split('\n').map(s=>s.trim()).filter(Boolean);
-  let out='';
+  let out=x.diff?roundDiff(x):'';
   if(x.summary)out+=`<p class="text-[14px] [&_b]:text-accent">${x.summary}</p>`;
   if(H.length){const o=x.order||['out','in'];
     out+=`<div class="grid grid-cols-3 gap-2 text-center">${o.map(k=>`<div class="rounded-xl bg-accent-soft p-2"><div class="num text-2xl font-semibold text-accent">${sum(half(k),4)}</div><div class="lbl">${k==='out'?'OUT':'IN'}の目標</div></div>`).join('')}<div class="rounded-xl bg-warn-soft p-2"><div class="num text-2xl font-semibold text-warn">${x.limit||99}</div><div class="lbl">上限</div></div></div>`;}
@@ -155,7 +163,7 @@ function roundStrategy(x){
   if(x.checks)out+=`<div class="grid gap-2"><h3 class="font-bold">途中の確認</h3><ul class="grid gap-1 pl-4 text-[13px] list-disc [&_b]:text-accent">${x.checks.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
   if(x.prep)out+=`<div class="grid gap-2"><h3 class="font-bold">当日の朝と、それまでの練習</h3><ul class="grid gap-1 pl-4 text-[13px] list-disc">${x.prep.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`;
   if(x.note)out+=`<p class="text-[12px] text-muted">${esc(x.note)}</p>`;
-  if(!out)out='<p class="text-sm text-muted">作戦はまだありません。「予定・メモを直す」から作戦メモを書けます。</p>';
+  if(!x.holes&&!memo.length&&!x.result)out+='<p class="text-sm text-muted">作戦はまだありません。「予定・メモを直す」から作戦メモを書けます。</p>';
   return out;
 }
 
@@ -170,17 +178,33 @@ function roundForm(list){
    <div class="grid grid-cols-2 gap-3">${f('tee','ティー','text',v('tee'),'例：レギュラー')}${f('members','人数','text',v('members'),'例：3名')}</div>
    ${f('plan','プラン内容','text',v('plan'),'例：セルフ・カート付き・昼食別')}
    <div class="grid grid-cols-2 gap-3">${f('target','目標スコア','number',v('target'),'例：95')}${f('link','作戦ページのURL','url',x.builtin?'':v('link'),'なくてもOK')}</div>
+   <div class="grid grid-cols-3 gap-3">${f('stars','難易度（1〜5）','number',x.diff&&x.diff.stars||'','例：3')}${f('cr','コースレート','number',x.diff&&x.diff.cr||'','例：70.1')}${f('score','スコア（終わったら）','number',x.result?x.result.score:'','例：98')}</div>
    <label class="grid gap-1"><span class="lbl">作戦メモ（1行に1つ）</span><textarea id="rf-memo" rows="4" class="inp" placeholder="例：OBを0にする&#10;短いミドルは5番ウッド">${v('memo')}</textarea></label>
    <div class="flex gap-2"><button class="btn-main flex-1" onclick="busy(this,roundSave)">保存</button><button class="btn-sub" onclick="ROUND_EDIT=null;renderRounds()">やめる</button></div>
   </div>`;
 }
+const stars=n=>'★'.repeat(n)+'☆'.repeat(Math.max(0,5-n));
+function roundDiff(x){const d=x.diff;const gap=d.cr&&d.par?Math.round((d.cr-d.par)*10)/10:null;
+  const facts=[d.yards?['距離',d.yards.toLocaleString()+'y']:null,d.par?['Par',d.par]:null,d.bunkers?['バンカー',d.bunkers+'個']:null,d.water?['池が絡む',d.water+'ホール']:null].filter(Boolean);
+  return `<div class="grid gap-3 rounded-xl border border-line p-3">
+   <div class="flex items-baseline gap-2"><h3 class="font-bold">難易度</h3><span class="text-lg tracking-wider text-sand">${stars(d.stars||0)}</span>${d.cr?`<span class="ml-auto text-[12px] text-muted">コースレート <b class="num text-base text-fg">${d.cr}</b></span>`:''}</div>
+   ${gap!==null?`<p class="text-[13px] text-muted">上手な人（ハンデ0）がふつうに回ると${d.cr}くらい。Parより<b class="text-fg">${Math.abs(gap)}打${gap<0?'やさしい':'むずかしい'}</b>コースです。</p>`:''}
+   ${facts.length?`<div class="grid grid-cols-${facts.length} gap-2 text-center">${facts.map(([k,v])=>`<div class="rounded-lg bg-field p-1.5 ring-1 ring-line"><div class="num text-[15px] font-semibold">${v}</div><div class="text-[10px] text-muted">${k}</div></div>`).join('')}</div>`:''}
+   ${d.green||d.terrain?`<div class="text-[12px] text-muted">${[d.green,d.terrain].filter(Boolean).map(esc).join('　／　')}</div>`:''}
+   ${d.why?`<ul class="grid gap-0.5 pl-4 text-[13px] list-disc">${d.why.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}
+  </div>`;}
+function roundHistory(list){const done=list.filter(x=>x.result&&x.result.score);if(!done.length)return '';
+  const nx=list.find(x=>x.date>=today()&&!x.result);
+  return `<div class="card grid gap-2 p-4"><div class="lbl">スコアの流れ</div>
+   <div class="flex flex-wrap items-end gap-x-4 gap-y-2">${done.map(x=>`<div><div class="num text-2xl font-semibold ${x.result.score<100?'text-accent':''}">${x.result.score}</div><div class="text-[11px] text-muted">${md(x.date)} ${esc(x.course||'')}</div></div>`).join('<span class="pb-4 text-muted">→</span>')}
+   ${nx&&nx.target?`<span class="pb-4 text-muted">→</span><div><div class="num text-2xl font-semibold text-accent">${nx.target}</div><div class="text-[11px] text-muted">${md(nx.date)} 目標</div></div>`:''}</div></div>`;}
 function roundToggle(d){ROUND_OPEN=ROUND_OPEN===d?'':d;renderRounds();}
 function roundEdit(d){ROUND_EDIT=d;renderRounds().then(()=>{const e=$('rf-course');if(e)e.scrollIntoView({block:'center',behavior:'smooth'});});}
 async function roundSave(){
   const g=k=>($('rf-'+k)?$('rf-'+k).value.trim():'');
   const d=g('date');if(!d){toast('日付を入れてください',true);return;}
   if(!g('course')&&!ROUND_BASE(d)){toast('ゴルフ場を入れてください',true);return;}
-  const e={name:'ラウンド予定',kind:'roundplan',course:g('course'),time:g('time'),tee:g('tee'),members:g('members'),plan:g('plan'),target:parseInt(g('target'))||0,link:g('link'),memo:g('memo')};
+  const e={name:'ラウンド予定',kind:'roundplan',course:g('course'),time:g('time'),tee:g('tee'),members:g('members'),plan:g('plan'),target:parseInt(g('target'))||0,link:g('link'),memo:g('memo'),stars:Math.min(5,Math.max(0,parseInt(g('stars'))||0)),cr:parseFloat(g('cr'))||0,score:parseInt(g('score'))||0};
   const old=ROUND_EDIT&&ROUND_EDIT!=='new'&&ROUND_EDIT!==d?roundPlanId(ROUND_EDIT):null;
   const rec={id:roundPlanId(d),date:d,cat:'full',exercises:[e],runDist:0,runTime:0,walkDist:0,walkTime:0,note:`[ラウンド予定] ${e.course||ROUND_BASE(d).course}`};
   if(await upsertRec(rec)){
