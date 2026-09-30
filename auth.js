@@ -16,7 +16,11 @@ async function refresh(s){
   REFRESHING=(async()=>{
     try{const r=await fetch(URL_+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:base,body:JSON.stringify({refresh_token:s.refresh_token})});
       if(r.ok){const n=fromToken(await r.json());save(n);return n;}
-      if(r.status>=400&&r.status<500){save(null);showGate();return null;} // ログインし直しが必要
+      if(r.status>=400&&r.status<500){
+        const now=load();if(now&&now.refresh_token!==s.refresh_token)return now; // 別のタブが先に更新していた
+        if(r.status===429)return s; // 混み合っている時は今のまま
+        save(null);showGate();return null; // 本当にログインし直しが必要な時だけ
+      }
     }catch(e){}
     return s; // 通信できない時は今のまま
   })();
@@ -112,6 +116,10 @@ function showNewPass(){
     document.getElementById('auth-gate').remove();if(typeof show==='function')show('today');};
 }
 window.AUTH={headers,signOut,session:load,showGate,user:()=>{const s=load();return s&&s.user;}};
+// 開くたび・戻ってくるたびにログインを新しくしておく（ずっとログインしたままにする）
+function keepAlive(){const s=load();if(s&&s.refresh_token&&s.expires_at-600<Date.now()/1000)refresh(s);}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')keepAlive();});
+setInterval(keepAlive,10*60*1000);keepAlive();
 if(RECOVERY)document.addEventListener('DOMContentLoaded',showNewPass);
 else if(!load())document.addEventListener('DOMContentLoaded',showGate);
 })();
