@@ -136,6 +136,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
   <button class="btn-main" onclick="busy(this,importRecords)">一括インポート</button>
   <div id="import-result" class="font-mono text-sm text-accent"></div>
   <div class="card mt-2 grid gap-2 p-4"><h2 class="h2">バックアップ</h2><p class="text-[13px] text-muted">すべての記録をファイルに書き出します。月に1回ほど、スマホやパソコンに保存しておくと安心です。</p><button class="btn-sub" onclick="busy(this,exportData)">データを書き出す</button></div>
+  <div class="card grid gap-2 p-4"><h2 class="h2">アカウント</h2><p class="text-[13px] text-muted" id="acct-email"></p><button class="btn-sub" onclick="if(confirm('ログアウトしますか？'))AUTH.signOut()">ログアウト</button></div>
 </section>
 
 </main>
@@ -159,6 +160,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 </div>
 <div id="toast" class="pointer-events-none fixed left-1/2 z-50 -translate-x-1/2 translate-y-2 rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-bg opacity-0 transition" style="bottom:calc(env(safe-area-inset-bottom,0px) + 140px)"></div>
 
+<script src="auth.js"></script>
 <script src="exercises.js"></script>
 <script src="plan.js"></script>
 <script src="app.js"></script>

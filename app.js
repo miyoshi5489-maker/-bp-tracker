@@ -518,6 +518,7 @@ function openPalette(){
 function closePalette(){$('palette').classList.add('hidden');$('palette').classList.remove('flex');}
 
 // ── 起動 ──
+{const u=window.AUTH&&AUTH.user();const el=$('acct-email');if(el)el.textContent=u&&u.email?`${u.email} でログイン中`:'ログインしていません';}
 headerCount();
 $('rec-date').value=today();addExBlock();
 show((location.hash||'#today').slice(1));
