@@ -81,7 +81,7 @@ async function renderActual(d){
      <div class="divide-y divide-line">${items.length?items.map((it,i)=>actItem(it,i,S.items[i],d)).join(''):'<div class="py-4 text-sm text-muted">この日は休みの予定です。やったことがあれば下に書いてください。</div>'}</div>
      <div class="grid gap-2 border-t border-line py-3.5">
        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">${field('走った km','g.0.run',S.run||'',{ph:'',mode:'decimal'})}${field('走った時間（分）','g.0.runmin',S.runmin||'',{ph:''})}${field('練習場（球）','g.0.balls',S.balls,{ph:''})}${field('歩いた km','g.0.walk',S.walk,{ph:'',mode:'decimal'})}${field('体重 kg','g.0.weight',S.weight||'',{ph:'',mode:'decimal'})}</div>
-       <label class="grid gap-0.5"><span class="lbl">予定外にやったこと・体調メモ</span><textarea data-f="g.0.memo" rows="2" class="inp text-[14px]" placeholder="例：寝不足。肩の張りは軽め">${esc(S.memo)}</textarea></label>
+       <label class="grid gap-1"><span class="text-sm font-bold">体調メモ・予定外にやったこと</span><textarea data-f="g.0.memo" rows="6" class="inp min-h-[160px] text-base leading-relaxed" oninput="this.style.height='auto';this.style.height=Math.max(160,this.scrollHeight+2)+'px'" placeholder="例：寝不足。肩の張りは軽め。&#10;ラウンドで右肩が少し痛かった">${esc(S.memo)}</textarea></label>
      </div>
    </div>
    <div class="sticky z-10 -mx-1 rounded-2xl bg-bg px-1 pt-1" style="bottom:calc(env(safe-area-inset-bottom,0px) + 66px)"><button class="btn-main shadow-lg" onclick="busy(this,saveActual)">${saved?'記録を更新する':'記録を保存する'}</button></div>
