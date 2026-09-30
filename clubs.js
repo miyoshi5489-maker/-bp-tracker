@@ -3,20 +3,20 @@
 //   kind:'tm'   … トラックマン1回分のまとめ（クラブごとの平均）
 //   kind:'clubs'… 手で直した値（トラックマンより優先）
 // ─────────────────────────────────────────────
-const CLUB_ORDER=['1W','3W','5W','7W','UT','4I','5I','6I','7I','8I','9I','PW','AW','SW','LW'];
+// 今のセット：D・5W・4H・5〜9I・PW・52°・58°・パター
+const CLUB_ORDER=['1W','3W','5W','7W','4H','4I','5I','6I','7I','8I','9I','PW','52°','58°'];
 // トラックマンを入れるまでの仮の値（聞いた話：ドライバー約250y・7番170y）
-const CLUB_DEFAULT={'1W':{carry:230,total:250},'5W':{carry:205,total:220},'UT':{carry:190,total:200},'5I':{carry:182,total:190},'6I':{carry:176,total:183},'7I':{carry:168,total:175},'8I':{carry:156,total:162},'9I':{carry:144,total:149},'PW':{carry:130,total:134},'AW':{carry:110,total:113},'SW':{carry:88,total:90}};
+const CLUB_DEFAULT={'1W':{carry:230,total:250},'5W':{carry:205,total:220},'4H':{carry:190,total:200},'5I':{carry:182,total:190},'6I':{carry:176,total:183},'7I':{carry:168,total:175},'8I':{carry:156,total:162},'9I':{carry:144,total:149},'PW':{carry:130,total:134},'52°':{carry:110,total:113},'58°':{carry:85,total:87}};
 const isClubRec=r=>(r.exercises||[]).some(e=>e.kind==='tm'||e.kind==='clubs');
 
 function clubNorm(s){s=String(s||'').trim().toUpperCase().replace(/\s+/g,'');
   if(/^(DR|DRIVER|1W|ドライバー|D)$/.test(s))return '1W';
   let m=s.match(/^(\d)(W|WOOD|ウッド)$/);if(m)return m[1]+'W';
-  if(/(HYBRID|UT|ユーティリティ|^\dH$|^H\d$)/.test(s))return 'UT';
+  if(/(HYBRID|UT|ユーティリティ|ハイブリッド|^\dH$|^H\d$)/.test(s))return '4H';
   m=s.match(/^(\d)(I|IRON|アイアン|番)?$/);if(m&&+m[1]>=3)return m[1]+'I';
   if(/^(PW|P|PITCHING|ピッチング)/.test(s))return 'PW';
-  if(/^(AW|GW|A|G|GAP|APPROACH|アプローチ|5[0-2]°?)$/.test(s))return 'AW';
-  if(/^(SW|S|SAND|サンド|5[4-8]°?)$/.test(s))return 'SW';
-  if(/^(LW|LOB|6\d°?)$/.test(s))return 'LW';
+  if(/^(AW|GW|A|G|GAP|GAPWEDGE|APPROACH|アプローチ|ギャップ.*|5[0-3]°?(度)?)$/.test(s))return '52°';
+  if(/^(SW|S|LW|L|SAND|LOB|LOBWEDGE|サンド|ロブ.*|5[4-9]°?(度)?|6\d°?(度)?)$/.test(s))return '58°';
   return s;}
 const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
 const sd=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/(a.length-1));};
@@ -59,7 +59,7 @@ function buildClubs(recs){
   MYCLUBS=T;return T;
 }
 const clubList=()=>CLUB_ORDER.filter(c=>MYCLUBS[c]).map(c=>MYCLUBS[c]);
-function clubCode(s){const m=String(s||'').match(/1W|3W|5W|7W|UT|[4-9]I|PW|AW|SW|LW/);return m?m[0]:null;}
+function clubCode(s){const m=String(s||'').match(/1W|3W|5W|7W|UT|4H|[4-9]I|PW|AW|SW|LW|52°|58°/);if(!m)return null;return {UT:'4H',AW:'52°',SW:'58°',LW:'58°'}[m[0]]||m[0];}
 // 残り距離にいちばん合うクラブ（キャリーが残り距離以上で一番短いもの）
 function clubFor(dist){const L=clubList().filter(x=>x.carry>0).sort((a,b)=>a.carry-b.carry);if(!L.length)return null;
   return L.find(x=>x.carry>=dist-3)||L[L.length-1];}
@@ -72,7 +72,7 @@ async function renderClubs(){
   const tmN=L.filter(x=>x.src.startsWith('TM')).length;
   el.innerHTML=`
   <div class="grid gap-1"><div class="font-display text-2xl">マイ飛距離</div><div class="text-[12px] text-muted">ラウンドのマップのクラブ選び・残り距離のおすすめ・ブレの範囲は、この表を使います。</div></div>
-  ${tmN?'':`<div class="rounded-xl bg-warn-soft px-3 py-2 text-[13px] text-warn">まだトラックマンのデータがありません。いまは<b>仮の距離</b>（ドライバー約250y・7番170yから計算）です。</div>`}
+  ${tmN?'':`<div class="rounded-xl bg-warn-soft px-3 py-2 text-[13px] text-warn">まだトラックマンのデータがありません。いまは<b>仮の距離</b>（ドライバー約250y・7番170yから計算）です。セット：D・5W・4H・5〜9I・PW・52°・58°</div>`}
   <div class="card overflow-hidden">
    <div class="grid grid-cols-[3rem_1fr_1fr_1.3fr] gap-2 border-b border-line bg-field px-3 py-2 text-[11px] font-bold text-muted"><span>クラブ</span><span class="text-right">キャリー</span><span class="text-right">トータル</span><span class="text-right">左右のブレ</span></div>
    ${L.map(x=>`<div class="grid grid-cols-[3rem_1fr_1fr_1.3fr] items-center gap-2 border-b border-line px-3 py-2 last:border-0">
