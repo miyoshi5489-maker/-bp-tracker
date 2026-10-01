@@ -258,6 +258,7 @@ function drawHoleMap(){
     </div>`}
    </div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
+    <div class="grid grid-cols-9 gap-1">${HM.order.map(n=>{const hh=x.holes.find(r=>r[0]===n);const c=hh[7]==='hard'?'var(--warn)':hh[7]==='mid'?'var(--sand)':'var(--accent)';const on=n===HM.no;return `<button class="grid h-10 place-items-center rounded-lg font-mono text-[14px] font-bold" style="${on?`background:${c};color:var(--surface)`:`border:1.5px solid ${c};color:${c}`}" onclick="HM.no=${n};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()" aria-label="${n}番ホール">${n}</button>`;}).join('')}</div>
     <div class="rounded-lg bg-accent-soft px-2.5 py-2 text-[13px] leading-snug"><div class="mb-0.5 font-bold text-accent">🧢 キャディ</div><ul class="grid gap-1">${caddie(x,h,m).map(t=>`<li>${t}</li>`).join('')}</ul></div>
     ${PH?`<figure class="grid gap-1"><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[10px] text-muted">写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`:''}
     <div class="text-[13px] leading-snug"><b class="text-accent">狙い</b>　${esc(h[6])}</div>
