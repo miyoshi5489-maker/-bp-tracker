@@ -122,14 +122,14 @@ function holeSVG(m,par,yards,opt){
 }
 
 // ティーからの距離の一覧
-function hazList(m,yards){const c=m.c,G=c[c.length-1];const len=Math.round(holeLen(c));const side=h=>{const x0=alongPt(c,h.y||0)[0];const d=(h.x||0)-x0;return d<-6?'左':d>6?'右':'正面';};
+function hazList(m,yards,dt){dt=dt||0;const c=m.c,G=c[c.length-1];const len=Math.round(holeLen(c));const side=h=>{const x0=alongPt(c,h.y||0)[0];const d=(h.x||0)-x0;return d<-6?'左':d>6?'右':'正面';};
   const L=[];
   m.hz.slice().sort((a,b)=>(a.y||a.from||0)-(b.y||b.from||0)).forEach(h=>{
-    if(h.t==='b')L.push(`⛱ ${side(h)}バンカー <b>${Math.round(h.y-6)}y</b>（越え${Math.round(h.y+6)}）`);
-    else if(h.t==='w')L.push(`💧 ${side(h)}の池 <b>${Math.round(h.y-h.ry)}y</b>（越え${Math.round(h.y+h.ry)}）`);
-    else if(h.t==='v')L.push(`⛰ 谷 <b>${h.from}y</b>（越え${h.to}）`);
+    if(h.t==='b')L.push(`⛱ ${side(h)}バンカー <b>${Math.round(h.y-6-dt)}y</b>（越え${Math.round(h.y+6-dt)}）`);
+    else if(h.t==='w')L.push(`💧 ${side(h)}の池 <b>${Math.round(h.y-h.ry-dt)}y</b>（越え${Math.round(h.y+h.ry-dt)}）`);
+    else if(h.t==='v')L.push(`⛰ 谷 <b>${h.from-dt}y</b>（越え${h.to-dt}）`);
     else if(h.t==='ob')L.push(`⚠ ${h.side==='L'?'左':'右'}OB ${h.from?h.from+'y〜':''}`);
-    else if(h.t==='t')L.push(`🌲 目印の木 <b>${h.y}y</b>`);});
+    else if(h.t==='t')L.push(`🌲 目印の木 <b>${h.y-dt}y</b>`);});
   L.push(`⛳ グリーン中央 <b>${yards||len}y</b>`);return L;}
 
 // ── グリーン（大きさ・段・傾斜）…わかっている所だけ。slope＝ボールが転がる向き（0=手前へ、90=右へ、-90=左へ、180=奥へ）
@@ -152,12 +152,12 @@ function caddie(x,h,m){
   const hasClubs=typeof MYCLUBS!=='undefined'&&Object.keys(MYCLUBS).length;
   if(T[0]&&hasClubs){const code=clubCode(T[0][2])||clubCode(h[5]);const c=code&&MYCLUBS[code];
     if(c){const car=c.carry,tot=c.total||c.carry;out.push(`<b>1打目 ${code}</b>：あなたの平均 キャリー${Math.round(car)}y・トータル${Math.round(tot)}y${c.src==='仮'?'（仮）':''}`);
-      const warn=[];m.hz.forEach(z=>{let f,b,nm;if(z.t==='b'){f=z.y-6;b=z.y+6;nm='バンカー';}else if(z.t==='w'){f=z.y-z.ry;b=z.y+z.ry;nm='池';}else if(z.t==='v'){f=z.from;b=z.to;nm='谷';}else return;
-        const sd=(c.sdCarry||8)*1.5;if(f<=tot+sd&&b>=car-sd-10){const x0=alongPt(m.c,(f+b)/2)[0];const sdd=(z.x||0)-x0;warn.push(`${sdd<-6?'左':sdd>6?'右':'正面'}の${nm}（${Math.round(f)}〜${Math.round(b)}y）`);}
+      const warn=[];m.hz.forEach(z=>{let f,b,nm;if(z.t==='b'){f=z.y-6;b=z.y+6;nm='バンカー';}else if(z.t==='w'){f=z.y-z.ry;b=z.y+z.ry;nm='池';}else if(z.t==='v'){f=z.from;b=z.to;nm='谷';}else return;const dt0=teeShift(x.mapKey,h[0]);f-=dt0;b-=dt0;
+        const sd=(c.sdCarry||8)*1.5;if(f<=tot+sd&&b>=car-sd-10){const x0=alongPt(m.c,(f+b)/2+dt0)[0];const sdd=(z.x||0)-x0;warn.push(`${sdd<-6?'左':sdd>6?'右':'正面'}の${nm}（${Math.round(f)}〜${Math.round(b)}y）`);}
         else if(z.t!=='b'&&b<car-sd)out.push(`${nm}（越え${Math.round(b)}y）はキャリーで越える`);});
       if(warn.length)out.push(`<span class="text-warn">⚠ 届く範囲：${warn.join('・')}</span> → 1番手落とすか、反対側を狙う`);
       if(c.side!=null&&Math.abs(c.side)>=6)out.push(`平均で<b>${c.side>0?'右':'左'}に${Math.abs(Math.round(c.side))}y</b>曲がる → その分${c.side>0?'左':'右'}に向けて構える`);}}
-  const last=T.length?T[T.length-1]:[0,0];const dist=Math.round(Math.hypot(P[0]-last[0],P[1]-last[1]));
+  const last=T.length?T[T.length-1]:[0,teeShift(x.mapKey,h[0])];const dist=Math.round(Math.hypot(P[0]-last[0],P[1]-last[1]));
   const toC=Math.hypot(G[0]-last[0],G[1]-last[1]);const fr=Math.round(toC-g.d/2),bk=Math.round(toC+g.d/2);
   const cf=hasClubs&&clubFor(dist);
   out.push(`<b>${T.length?(T.length+1)+'打目':'ティーショット'}</b>：ピンまで<b>${dist}y</b>（手前${fr}y・奥${bk}y）${cf?` → <b class="text-accent">${cf.c}</b>（キャリー${Math.round(cf.carry)}y）`:''}`);
@@ -172,19 +172,19 @@ const ILLUS={tojo:[Object.assign({"base": "https://i.gimg.jp/resource/reserve/co
 const PHOTOS={taka:{1:'https://www.takarazuka-cgc.com/_src/96801238/photo01.jpg',3:'https://www.takarazuka-cgc.com/_src/96801240/photo02.jpg',5:'https://www.takarazuka-cgc.com/_src/96801242/photo03.jpg',7:'https://www.takarazuka-cgc.com/_src/96801244/photo04.jpg',8:'https://www.takarazuka-cgc.com/_src/96801246/photo05.jpg'}};
 function routeAt(r,d){for(let i=1;i<r.length;i++){const L=Math.hypot(r[i][0]-r[i-1][0],r[i][1]-r[i-1][1]);if(d<=L||i===r.length-1){const k=Math.min(1,d/L);const ux=(r[i][0]-r[i-1][0])/L,uy=(r[i][1]-r[i-1][1])/L;return{p:[r[i-1][0]+(r[i][0]-r[i-1][0])*k,r[i-1][1]+(r[i][1]-r[i-1][1])*k],u:[ux,uy]};}d-=L;}}
 // 公式イラストの上に狙いを重ねる
-function illusView(I,hi,m,opt){const L=(opt&&opt.L)||1;const SC=(x,y)=>`translate(${x} ${y}) scale(${L}) translate(${-x} ${-y})`;
-  const r=hi.r,s=hi.s,G=r[r.length-1];const T=m.t||[];
+function illusView(I,hi,m,opt){const L=(opt&&opt.L)||1;const DT=(opt&&opt.dt)||0;const SC=(x,y)=>`translate(${x} ${y}) scale(${L}) translate(${-x} ${-y})`;
+  const r=hi.r,s=hi.s,G=r[r.length-1];const T=m.t||[];const T0=(()=>{if(DT>=0)return routeAt(r,DT*s).p;const u=routeAt(r,0).u;return [r[0][0]-u[0]*(-DT)*s,r[0][1]-u[1]*(-DT)*s];})();
   const toPx=(x,y)=>{const a=routeAt(r,y*s);return [a.p[0]-a.u[1]*x*s,a.p[1]+a.u[0]*x*s];}; // 右＝進行方向の右
   const last=routeAt(r,1e9).u;const pin=(opt&&opt.pin)||{x:0,y:0};const P=[G[0]-last[1]*pin.x*s+last[0]*pin.y*s,G[1]+last[0]*pin.x*s+last[1]*pin.y*s];
   const IH=hi.h||I.h;let v=`<svg viewBox="0 0 ${I.w} ${IH}" class="absolute inset-0 h-full w-full" style="overflow:visible" font-family="sans-serif">`;
   const cl=opt&&opt.club;
   if(cl&&cl.side!=null&&T[0]){const a=routeAt(r,(cl.total||cl.carry)*s);const c=[a.p[0]-a.u[1]*cl.side*s,a.p[1]+a.u[0]*cl.side*s];const ang=Math.atan2(a.u[0],-a.u[1])*180/Math.PI;
     v+=`<ellipse cx="${c[0]}" cy="${c[1]}" rx="${Math.max(3,1.5*(cl.sdSide||10)*s)}" ry="${Math.max(3,1.5*(cl.sdCarry||8)*s)}" transform="rotate(${ang} ${c[0]} ${c[1]})" fill="#ffb300" fill-opacity=".22" stroke="#e65100" stroke-width=".7" stroke-dasharray="2 1.5"/>`;}
-  let prev=r[0];const pts=T.map(t=>toPx(t[0],t[1]));
+  let prev=T0;const pts=T.map(t=>toPx(t[0],t[1]));v+=`<circle cx="${T0[0]}" cy="${T0[1]}" r="${3*L}" fill="#fff" stroke="#111" stroke-width=".8"/>`;
   [...pts,P].forEach(q=>{v+=`<line x1="${prev[0]}" y1="${prev[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#e65100" stroke-width="1" stroke-dasharray="2.5 1.5"/>`;prev=q;});
   v+=`<line x1="${P[0]}" y1="${P[1]}" x2="${P[0]}" y2="${P[1]-9}" stroke="#111" stroke-width=".6"/><path d="M${P[0]} ${P[1]-9} l5 1.8 l-5 1.8z" fill="#e53935"/>`;
   let pv=[0,0];
-  T.forEach((t,i)=>{const q=pts[i];const d=Math.round(Math.hypot(t[0]-pv[0],t[1]-pv[1]));pv=t;const rest=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);
+  T.forEach((t,i)=>{const q=pts[i];const d=i===0?Math.round(Math.hypot(q[0]-T0[0],q[1]-T0[1])/s):Math.round(Math.hypot(t[0]-pv[0],t[1]-pv[1]));pv=t;const rest=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);
     const right=q[0]<I.w/2;const bx=right?Math.min(q[0]+7,I.w-55):Math.max(1,q[0]-7-54);
     v+=`<g transform="${SC(q[0],q[1])}"><circle cx="${q[0]}" cy="${q[1]}" r="5.5" fill="#ffb300" fill-opacity=".35" stroke="#e65100" stroke-width="1.2"/><text x="${q[0]}" y="${q[1]+2.2}" font-size="6" font-weight="bold" fill="#111" text-anchor="middle">${i+1}</text>`;
     v+=`<rect x="${bx}" y="${q[1]-7}" width="54" height="14" rx="2" fill="#111" fill-opacity=".78"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#ffd54a">${i+1}打目 ${esc(t[2]||'')}</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">${d}y・ピン${rest}y</text></g>`;});
@@ -201,11 +201,20 @@ function illusView(I,hi,m,opt){const L=(opt&&opt.L)||1;const SC=(x,y)=>`translat
     [['L',2,'start','← 左'],['R',I.w-2,'end','右 →']].forEach(([k,xx,an,hd])=>{const t=sd[k];if(sideKind(t)==='na')return;const c=bad(t)?'#c62828':sideKind(t)==='good'?'#2e7d32':'#555';const w=Math.max(30,lab(t).length*5.4+6);const bx=an==='start'?xx:xx-w;
       v+=`<g transform="${SC(xx,a.p[1])}"><rect x="${bx}" y="${a.p[1]-9}" width="${w}" height="17" rx="2.5" fill="#fff" fill-opacity=".92" stroke="${c}" stroke-width=".8"/><text x="${bx+3}" y="${a.p[1]-2.2}" font-size="5" font-weight="bold" fill="${c}">${hd}</text><text x="${bx+3}" y="${a.p[1]+5.2}" font-size="5.6" font-weight="bold" fill="${c}">${sideMark(t)} ${esc(lab(t))}</text></g>`;});
     if(sd.B){const w=Math.max(34,sd.B.length*5.4+14);v+=`<g transform="${SC(G[0],Math.max(1,G[1]-24))}"><rect x="${G[0]-w/2}" y="${Math.max(1,G[1]-24)}" width="${w}" height="10" rx="2" fill="#c62828"/><text x="${G[0]}" y="${Math.max(1,G[1]-24)+7.2}" font-size="5.6" font-weight="bold" fill="#fff" text-anchor="middle">奥 ✕ ${esc(sd.B.replace(/（.*/,''))}</text></g>`;}}
-  if(HM&&HM.tap){const q=HM.tap;const ft=Math.round(Math.hypot(q[0]-r[0][0],q[1]-r[0][1])/s),tp=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);const bx=q[0]<I.w/2?q[0]+5:q[0]-5-50;
-    v+=`<line x1="${r[0][0]}" y1="${r[0][1]}" x2="${q[0]}" y2="${q[1]}" stroke="#1565c0" stroke-width=".7"/><line x1="${q[0]}" y1="${q[1]}" x2="${P[0]}" y2="${P[1]}" stroke="#1565c0" stroke-width=".7" stroke-dasharray="1.5 1"/><circle cx="${q[0]}" cy="${q[1]}" r="3" fill="#1565c0" stroke="#fff" stroke-width=".8"/>`;
+  if(HM&&HM.tap){const q=HM.tap;const ft=Math.round(Math.hypot(q[0]-T0[0],q[1]-T0[1])/s),tp=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);const bx=q[0]<I.w/2?q[0]+5:q[0]-5-50;
+    v+=`<line x1="${T0[0]}" y1="${T0[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#1565c0" stroke-width=".7"/><line x1="${q[0]}" y1="${q[1]}" x2="${P[0]}" y2="${P[1]}" stroke="#1565c0" stroke-width=".7" stroke-dasharray="1.5 1"/><circle cx="${q[0]}" cy="${q[1]}" r="3" fill="#1565c0" stroke="#fff" stroke-width=".8"/>`;
     v+=`<g transform="${SC(q[0],q[1])}"><rect x="${bx}" y="${q[1]-7}" width="50" height="14" rx="2" fill="#1565c0"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#fff">ティーから ${ft}y</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">ピンまで ${tp}y</text></g>`;}
   return v+'</svg>';
 }
+
+// ティー別のヤード（東条湖：公式／GDO、宝塚：公式スコアカード）
+const TEES={
+ tojo:[['バック',[317,500,355,430,365,200,445,510,153,375,395,497,370,163,491,330,158,428]],['レギュラー',[307,485,330,418,345,189,430,487,137,360,370,487,350,151,480,311,147,414]],['レディース',[277,440,298,324,320,157,310,385,103,318,324,380,337,119,428,247,123,328]]],
+ taka:[['バック',[519,421,390,147,519,200,401,347,397,341,387,440,551,176,350,363,169,396]],['レギュラー',[500,382,375,127,503,169,384,332,383,330,352,398,530,148,330,353,159,386]],['フロント',[481,368,362,118,487,158,368,315,327,309,328,345,509,142,313,343,145,376]],['レディース',[478,360,352,112,473,147,353,310,321,289,301,343,491,136,295,340,135,374]],['レディース（前）',[418,298,264,112,407,100,311,250,278,289,260,248,449,60,295,310,77,301]]]};
+const teeIdx=k=>{try{const v=parseInt(localStorage.getItem('tee:'+k));const T=TEES[k]||[];return v>=0&&v<T.length?v:T.findIndex(t=>t[0]==='レギュラー');}catch{return 1;}};
+function setTee(k,i){try{localStorage.setItem('tee:'+k,String(i));}catch{}HM.L=0;HM.tap=null;drawHoleMap();}
+// レギュラーとの差（前に出る分がプラス）
+function teeShift(k,n){const T=TEES[k];if(!T)return 0;const reg=T.find(t=>t[0]==='レギュラー')[1][n-1];return reg-T[teeIdx(k)][1][n-1];}
 
 // ── 全画面で開く ──
 let HM=null;
@@ -237,7 +246,7 @@ function drawHoleMap(){
   el.innerHTML=`
    <div class="flex items-center gap-2 border-b border-line bg-surface px-3 py-2" style="padding-top:calc(env(safe-area-inset-top,0px) + 8px)">
     <span class="grid h-10 w-10 place-items-center rounded-lg ${col} font-mono text-lg font-bold text-surface">${h[0]}</span>
-    <div class="min-w-0 flex-1"><div class="font-bold leading-tight">Par${h[1]}・${h[2]}y</div><div class="text-[12px] text-muted">目標 <b class="text-accent">${h[4]}</b>　ティー ${esc(h[5])}</div></div>
+    <div class="min-w-0 flex-1"><div class="font-bold leading-tight">Par${h[1]}・${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2]}y <span class="text-[11px] font-normal text-muted">${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][0]:''}</span></div><div class="text-[12px] text-muted">目標 <b class="text-accent">${h[4]}</b>　ティー ${esc(h[5])}</div></div>
     <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button></div>
     <button class="btn-sm !px-2" onclick="closeHoleMap()">✕</button>
    </div>
@@ -258,20 +267,21 @@ function drawHoleMap(){
     </div>`}
    </div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
+    ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
     <div class="grid grid-cols-9 gap-1">${HM.order.map(n=>{const hh=x.holes.find(r=>r[0]===n);const c=hh[7]==='hard'?'var(--warn)':hh[7]==='mid'?'var(--sand)':'var(--accent)';const on=n===HM.no;return `<button class="grid h-10 place-items-center rounded-lg font-mono text-[14px] font-bold" style="${on?`background:${c};color:var(--surface)`:`border:1.5px solid ${c};color:${c}`}" onclick="HM.no=${n};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()" aria-label="${n}番ホール">${n}</button>`;}).join('')}</div>
     <div class="rounded-lg bg-accent-soft px-2.5 py-2 text-[13px] leading-snug"><div class="mb-0.5 font-bold text-accent">🧢 キャディ</div><ul class="grid gap-1">${caddie(x,h,m).map(t=>`<li>${t}</li>`).join('')}</ul></div>
     ${PH?`<figure class="grid gap-1"><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[10px] text-muted">写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`:''}
     <div class="text-[13px] leading-snug"><b class="text-accent">狙い</b>　${esc(h[6])}</div>
     ${m.n?`<div class="text-[12px] leading-snug text-muted"><b>コース</b>　${esc(m.n)}</div>`:''}
     ${IL?'<div class="text-[11px] text-muted">下の距離はショットナビの図からの目安。公式イラストをタップして測る方が正確です。</div>':''}
-    <div class="flex flex-wrap gap-1">${hazList(m,h[2]).map(t=>`<span class="rounded-md bg-field px-1.5 py-0.5 text-[11px] ring-1 ring-line">${t}</span>`).join('')}</div>
+    <div class="flex flex-wrap gap-1">${hazList(m,TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2],teeShift(x.mapKey,h[0])).map(t=>`<span class="rounded-md bg-field px-1.5 py-0.5 text-[11px] ring-1 ring-line">${t}</span>`).join('')}</div>
     <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
    </div>
    </div>`;
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
   const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*vb.width/vb.height);
-  $('hm-in').style.width=HM.base*HM.z+'px';hmGestures(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]]}};hmOverlay();}
+  $('hm-in').style.width=HM.base*HM.z+'px';hmGestures(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
   if(!HM.tap)requestAnimationFrame(()=>{sc.scrollTop=sc.scrollHeight;sc.scrollLeft=(sc.scrollWidth-sc.clientWidth)/2;});
 }
 // 拡大縮小：（px,py）＝画面上の基準点（その点が動かないように拡大する）
