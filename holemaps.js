@@ -190,11 +190,11 @@ function illusView(I,hi,m,opt){const L=(opt&&opt.L)||1;const SC=(x,y)=>`translat
     v+=`<rect x="${bx}" y="${q[1]-7}" width="54" height="14" rx="2" fill="#111" fill-opacity=".78"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#ffd54a">${i+1}打目 ${esc(t[2]||'')}</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">${d}y・ピン${rest}y</text></g>`;});
   // OBライン（出典に「OB」とある側だけ。範囲の指定がない時はホール全体）
   if(opt&&opt.sides){const sd=opt.sides;const Lr=r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-r[i-1][0],q[1]-r[i-1][1]):0,0);const rg=(opt.obr||{});
-    ['L','R'].forEach(k=>{const t=sd[k]||'';if(!/^OB/.test(t))return;const sg=k==='R'?1:-1;const [f,e]=rg[k]||[0,9999];const pts=[];
+    ['L','R'].forEach(k=>{const t=sd[k]||'';if(!/^OB(?!の記載)/.test(t))return;const sg=k==='R'?1:-1;const [f,e]=rg[k]||[0,9999];const pts=[];
       for(let d=Math.max(0,f*s);d<=Math.min(Lr,e*s)+0.1;d+=4){const a=routeAt(r,Math.min(d,Lr));let px=a.p[0]-a.u[1]*sg*36*s,py=a.p[1]+a.u[0]*sg*36*s;px=Math.max(2,Math.min(I.w-2,px));pts.push([px,py]);}
       if(pts.length<2)return;v+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-width="${1.6*L}" stroke-dasharray="${4*L} ${3*L}"/><polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#d32f2f" stroke-width="${0.8*L}" stroke-dasharray="${4*L} ${3*L}"/>`;
       [0.3,0.75].forEach(fr=>{const q=pts[Math.floor((pts.length-1)*fr)];v+=`<g transform="${SC(q[0],q[1])}"><rect x="${q[0]-8}" y="${q[1]-5}" width="16" height="10" rx="2" fill="#d32f2f" stroke="#fff" stroke-width=".6"/><text x="${q[0]}" y="${q[1]+2.6}" font-size="6.5" font-weight="bold" fill="#fff" text-anchor="middle">OB</text></g>`;});});
-    if(/^OB/.test(sd.B||'')){const a=routeAt(r,1e9);const bx=G[0]+a.u[0]*22*s,by=G[1]+a.u[1]*22*s;const px=-a.u[1],py=a.u[0];const w=30*s;
+    if(/^OB(?!の記載)/.test(sd.B||'')){const a=routeAt(r,1e9);const bx=G[0]+a.u[0]*22*s,by=G[1]+a.u[1]*22*s;const px=-a.u[1],py=a.u[0];const w=30*s;
       v+=`<line x1="${bx-px*w}" y1="${by-py*w}" x2="${bx+px*w}" y2="${by+py*w}" stroke="#fff" stroke-width="${1.6*L}" stroke-dasharray="${4*L} ${3*L}"/><line x1="${bx-px*w}" y1="${by-py*w}" x2="${bx+px*w}" y2="${by+py*w}" stroke="#d32f2f" stroke-width="${0.8*L}" stroke-dasharray="${4*L} ${3*L}"/>`;}}
   if(opt&&opt.sides){const sd=opt.sides;const L=r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-r[i-1][0],q[1]-r[i-1][1]):0,0);const a=routeAt(r,L*0.2);
     const bad=t=>sideKind(t)==='bad';const lab=t=>t.replace(/（.*/,'');
