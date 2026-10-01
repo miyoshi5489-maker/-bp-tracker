@@ -170,11 +170,11 @@ const ILLUS={tojo:[Object.assign({"base": "https://i.gimg.jp/resource/reserve/co
 const PHOTOS={taka:{1:'https://www.takarazuka-cgc.com/_src/96801238/photo01.jpg',3:'https://www.takarazuka-cgc.com/_src/96801240/photo02.jpg',5:'https://www.takarazuka-cgc.com/_src/96801242/photo03.jpg',7:'https://www.takarazuka-cgc.com/_src/96801244/photo04.jpg',8:'https://www.takarazuka-cgc.com/_src/96801246/photo05.jpg'}};
 function routeAt(r,d){for(let i=1;i<r.length;i++){const L=Math.hypot(r[i][0]-r[i-1][0],r[i][1]-r[i-1][1]);if(d<=L||i===r.length-1){const k=Math.min(1,d/L);const ux=(r[i][0]-r[i-1][0])/L,uy=(r[i][1]-r[i-1][1])/L;return{p:[r[i-1][0]+(r[i][0]-r[i-1][0])*k,r[i-1][1]+(r[i][1]-r[i-1][1])*k],u:[ux,uy]};}d-=L;}}
 // 公式イラストの上に狙いを重ねる
-function illusView(I,hi,m,opt){
+function illusView(I,hi,m,opt){const L=(opt&&opt.L)||1;const SC=(x,y)=>`translate(${x} ${y}) scale(${L}) translate(${-x} ${-y})`;
   const r=hi.r,s=hi.s,G=r[r.length-1];const T=m.t||[];
   const toPx=(x,y)=>{const a=routeAt(r,y*s);return [a.p[0]-a.u[1]*x*s,a.p[1]+a.u[0]*x*s];}; // 右＝進行方向の右
   const last=routeAt(r,1e9).u;const pin=(opt&&opt.pin)||{x:0,y:0};const P=[G[0]-last[1]*pin.x*s+last[0]*pin.y*s,G[1]+last[0]*pin.x*s+last[1]*pin.y*s];
-  const IH=hi.h||I.h;let v=`<svg viewBox="0 0 ${I.w} ${IH}" class="absolute inset-0 h-full w-full" font-family="sans-serif">`;
+  const IH=hi.h||I.h;let v=`<svg viewBox="0 0 ${I.w} ${IH}" class="absolute inset-0 h-full w-full" style="overflow:visible" font-family="sans-serif">`;
   const cl=opt&&opt.club;
   if(cl&&cl.side!=null&&T[0]){const a=routeAt(r,(cl.total||cl.carry)*s);const c=[a.p[0]-a.u[1]*cl.side*s,a.p[1]+a.u[0]*cl.side*s];const ang=Math.atan2(a.u[0],-a.u[1])*180/Math.PI;
     v+=`<ellipse cx="${c[0]}" cy="${c[1]}" rx="${Math.max(3,1.5*(cl.sdSide||10)*s)}" ry="${Math.max(3,1.5*(cl.sdCarry||8)*s)}" transform="rotate(${ang} ${c[0]} ${c[1]})" fill="#ffb300" fill-opacity=".22" stroke="#e65100" stroke-width=".7" stroke-dasharray="2 1.5"/>`;}
@@ -184,16 +184,16 @@ function illusView(I,hi,m,opt){
   let pv=[0,0];
   T.forEach((t,i)=>{const q=pts[i];const d=Math.round(Math.hypot(t[0]-pv[0],t[1]-pv[1]));pv=t;const rest=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);
     const right=q[0]<I.w/2;const bx=right?Math.min(q[0]+7,I.w-55):Math.max(1,q[0]-7-54);
-    v+=`<circle cx="${q[0]}" cy="${q[1]}" r="5.5" fill="#ffb300" fill-opacity=".35" stroke="#e65100" stroke-width="1.2"/><text x="${q[0]}" y="${q[1]+2.2}" font-size="6" font-weight="bold" fill="#111" text-anchor="middle">${i+1}</text>`;
-    v+=`<rect x="${bx}" y="${q[1]-7}" width="54" height="14" rx="2" fill="#111" fill-opacity=".78"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#ffd54a">${i+1}打目 ${esc(t[2]||'')}</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">${d}y・ピン${rest}y</text>`;});
+    v+=`<g transform="${SC(q[0],q[1])}"><circle cx="${q[0]}" cy="${q[1]}" r="5.5" fill="#ffb300" fill-opacity=".35" stroke="#e65100" stroke-width="1.2"/><text x="${q[0]}" y="${q[1]+2.2}" font-size="6" font-weight="bold" fill="#111" text-anchor="middle">${i+1}</text>`;
+    v+=`<rect x="${bx}" y="${q[1]-7}" width="54" height="14" rx="2" fill="#111" fill-opacity=".78"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#ffd54a">${i+1}打目 ${esc(t[2]||'')}</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">${d}y・ピン${rest}y</text></g>`;});
   if(opt&&opt.sides){const sd=opt.sides;const L=r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-r[i-1][0],q[1]-r[i-1][1]):0,0);const a=routeAt(r,L*0.2);
     const bad=t=>sideKind(t)==='bad';const lab=t=>t.replace(/（.*/,'');
     [['L',2,'start','← 左'],['R',I.w-2,'end','右 →']].forEach(([k,xx,an,hd])=>{const t=sd[k];if(sideKind(t)==='na')return;const c=bad(t)?'#c62828':sideKind(t)==='good'?'#2e7d32':'#555';const w=Math.max(30,lab(t).length*5.4+6);const bx=an==='start'?xx:xx-w;
-      v+=`<rect x="${bx}" y="${a.p[1]-9}" width="${w}" height="17" rx="2.5" fill="#fff" fill-opacity=".92" stroke="${c}" stroke-width=".8"/><text x="${bx+3}" y="${a.p[1]-2.2}" font-size="5" font-weight="bold" fill="${c}">${hd}</text><text x="${bx+3}" y="${a.p[1]+5.2}" font-size="5.6" font-weight="bold" fill="${c}">${sideMark(t)} ${esc(lab(t))}</text>`;});
-    if(sd.B){const w=Math.max(34,sd.B.length*5.4+14);v+=`<rect x="${G[0]-w/2}" y="${Math.max(1,G[1]-24)}" width="${w}" height="10" rx="2" fill="#c62828"/><text x="${G[0]}" y="${Math.max(1,G[1]-24)+7.2}" font-size="5.6" font-weight="bold" fill="#fff" text-anchor="middle">奥 ✕ ${esc(sd.B.replace(/（.*/,''))}</text>`;}}
+      v+=`<g transform="${SC(xx,a.p[1])}"><rect x="${bx}" y="${a.p[1]-9}" width="${w}" height="17" rx="2.5" fill="#fff" fill-opacity=".92" stroke="${c}" stroke-width=".8"/><text x="${bx+3}" y="${a.p[1]-2.2}" font-size="5" font-weight="bold" fill="${c}">${hd}</text><text x="${bx+3}" y="${a.p[1]+5.2}" font-size="5.6" font-weight="bold" fill="${c}">${sideMark(t)} ${esc(lab(t))}</text></g>`;});
+    if(sd.B){const w=Math.max(34,sd.B.length*5.4+14);v+=`<g transform="${SC(G[0],Math.max(1,G[1]-24))}"><rect x="${G[0]-w/2}" y="${Math.max(1,G[1]-24)}" width="${w}" height="10" rx="2" fill="#c62828"/><text x="${G[0]}" y="${Math.max(1,G[1]-24)+7.2}" font-size="5.6" font-weight="bold" fill="#fff" text-anchor="middle">奥 ✕ ${esc(sd.B.replace(/（.*/,''))}</text></g>`;}}
   if(HM&&HM.tap){const q=HM.tap;const ft=Math.round(Math.hypot(q[0]-r[0][0],q[1]-r[0][1])/s),tp=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);const bx=q[0]<I.w/2?q[0]+5:q[0]-5-50;
     v+=`<line x1="${r[0][0]}" y1="${r[0][1]}" x2="${q[0]}" y2="${q[1]}" stroke="#1565c0" stroke-width=".7"/><line x1="${q[0]}" y1="${q[1]}" x2="${P[0]}" y2="${P[1]}" stroke="#1565c0" stroke-width=".7" stroke-dasharray="1.5 1"/><circle cx="${q[0]}" cy="${q[1]}" r="3" fill="#1565c0" stroke="#fff" stroke-width=".8"/>`;
-    v+=`<rect x="${bx}" y="${q[1]-7}" width="50" height="14" rx="2" fill="#1565c0"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#fff">ティーから ${ft}y</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">ピンまで ${tp}y</text>`;}
+    v+=`<g transform="${SC(q[0],q[1])}"><rect x="${bx}" y="${q[1]-7}" width="50" height="14" rx="2" fill="#1565c0"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#fff">ティーから ${ft}y</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">ピンまで ${tp}y</text></g>`;}
   return v+'</svg>';
 }
 
@@ -202,7 +202,7 @@ let HM=null;
 function openHoleMap(date,no){
   const x=ROUND_BASE(date);if(!x||!x.mapKey)return;
   const order=(x.order||['out','in']).flatMap(k=>x.holes.filter(h=>k==='out'?h[0]<=9:h[0]>=10)).map(h=>h[0]);
-  HM={date,no,order,z:1,view:'hole',tap:null,src:0};
+  HM={date,no,order,z:1,view:'hole',tap:null,src:0,L:0};
   if(typeof buildClubs==='function')getRecs().then(r=>{buildClubs(r);if(HM)drawHoleMap();});
   drawHoleMap();
 }
@@ -231,38 +231,54 @@ function drawHoleMap(){
     <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button></div>
     <button class="btn-sm !px-2" onclick="closeHoleMap()">✕</button>
    </div>
+   <div class="flex min-h-0 flex-1 flex-col lg:flex-row-reverse">
    <div class="relative min-h-0 flex-1">
-    <div id="hm-scroll" class="absolute inset-0 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y">
+    <div id="hm-scroll" class="absolute inset-0 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y;overscroll-behavior:contain">
      ${gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>${greenSVG(g,pin)}
        <div class="text-center text-[12px] text-white">ピン：${pin.y===0?'真ん中':pin.y>0?`中心から奥へ${Math.round(pin.y)}y`:`中心から手前へ${Math.round(-pin.y)}y`}${pin.x?`・${pin.x>0?'右':'左'}${Math.abs(Math.round(pin.x))}y`:''}（手前から${Math.round(g.d/2+pin.y)}y）　大きさの目安 ${g.w}×${g.d}y</div>
        <div class="flex justify-center"><button class="btn-sm !border-white !text-white" onclick="setPin(HM.date,HM.no,{x:0,y:0});drawHoleMap()">ピンを真ん中に戻す</button></div></div>`
-      :(IL?`${VW.length>1?`<div class="flex justify-center gap-1 pt-2">${VW.map((v,k)=>`<button class="rounded-full px-3 py-1 text-[12px] font-bold " style="${k===(HM.src||0)?'background:#fff;color:#111':'background:rgba(0,0,0,.45);color:#fff'}" onclick="HM.src=${k};HM.tap=null;drawHoleMap()">${v.name}</button>`).join('')}</div>`:''}<div id="hm-in" class="relative mx-auto bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div><div class="py-1 text-center text-[10px] text-white/80">${IL.credit}（オレンジの線と丸はこのアプリの狙い。${IL.note}）<br><b>図をタップすると、ティーから・ピンまでの距離が出ます</b></div>`
+      :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
        :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
+    ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}（${IL.note}）・図をタップで距離／2本指で拡大縮小</div>`}
+    ${gv||!IL?'':`${VW.length>1?`<div class="absolute left-3 top-3 z-10 flex gap-1">${VW.map((v,k)=>`<button class="rounded-full px-3 py-1 text-[12px] font-bold " style="${k===(HM.src||0)?'background:#fff;color:#111':'background:rgba(0,0,0,.45);color:#fff'}" onclick="HM.src=${k};HM.tap=null;HM.L=0;drawHoleMap()">${v.name}</button>`).join('')}</div>`:''}`}
     ${gv?'':`<div class="absolute right-3 top-3 z-10 grid gap-2">
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
    </div>
-   <div class="grid max-h-[42vh] gap-2 overflow-y-auto border-t border-line bg-surface p-3" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
+   <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     <div class="rounded-lg bg-accent-soft px-2.5 py-2 text-[13px] leading-snug"><div class="mb-0.5 font-bold text-accent">🧢 キャディ</div><ul class="grid gap-1">${caddie(x,h,m).map(t=>`<li>${t}</li>`).join('')}</ul></div>
     ${PH?`<figure class="grid gap-1"><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[10px] text-muted">写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`:''}
     <div class="text-[13px] leading-snug"><b class="text-accent">狙い</b>　${esc(h[6])}</div>
     ${m.n?`<div class="text-[12px] leading-snug text-muted"><b>コース</b>　${esc(m.n)}</div>`:''}
     ${IL?'<div class="text-[11px] text-muted">下の距離はショットナビの図からの目安。公式イラストをタップして測る方が正確です。</div>':''}
     <div class="flex flex-wrap gap-1">${hazList(m,h[2]).map(t=>`<span class="rounded-md bg-field px-1.5 py-0.5 text-[11px] ring-1 ring-line">${t}</span>`).join('')}</div>
-    <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;HM.tap=null;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;HM.tap=null;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
+    <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
+   </div>
    </div>`;
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
-  if(IL){const sv=$('hm-in').querySelector('svg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());HM.tap=[q.x,q.y];const sc0=$('hm-scroll'),st=sc0.scrollTop,sl=sc0.scrollLeft;drawHoleMap();const sc1=$('hm-scroll');requestAnimationFrame(()=>{sc1.scrollTop=st;sc1.scrollLeft=sl;});});}
-  const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH+(VW.length>1?40:14)}:sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-24)*vb.width/vb.height);
-  $('hm-in').style.width=HM.base*HM.z+'px';
+  const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*vb.width/vb.height);
+  $('hm-in').style.width=HM.base*HM.z+'px';hmGestures(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]}};hmOverlay();}
   if(!HM.tap)requestAnimationFrame(()=>{sc.scrollTop=sc.scrollHeight;sc.scrollLeft=(sc.scrollWidth-sc.clientWidth)/2;});
 }
-function zoomHoleMap(d){
-  const sc=$('hm-scroll');const cx=(sc.scrollLeft+sc.clientWidth/2)/sc.scrollWidth,cy=(sc.scrollTop+sc.clientHeight/2)/sc.scrollHeight;
-  HM.z=Math.max(1,Math.min(5,HM.z+d));$('hm-in').style.width=HM.base*HM.z+'px';
-  requestAnimationFrame(()=>{sc.scrollLeft=cx*sc.scrollWidth-sc.clientWidth/2;sc.scrollTop=cy*sc.scrollHeight-sc.clientHeight/2;});
-}
+// 拡大縮小：（px,py）＝画面上の基準点（その点が動かないように拡大する）
+function hmZoomTo(z,px,py){const sc=$('hm-scroll');const inn=$('hm-in');if(!sc||!inn)return;const r=sc.getBoundingClientRect();
+  if(px==null){px=r.left+sc.clientWidth/2;py=r.top+sc.clientHeight/2;}
+  const ir=inn.getBoundingClientRect();const fx=(px-ir.left)/ir.width,fy=(py-ir.top)/ir.height;
+  HM.z=Math.max(1,Math.min(6,z));inn.style.width=HM.base*HM.z+'px';
+  const nr=inn.getBoundingClientRect();sc.scrollLeft+=(nr.left+fx*nr.width)-px;sc.scrollTop+=(nr.top+fy*nr.height)-py;
+  cancelAnimationFrame(HM_RAF);HM_RAF=requestAnimationFrame(hmOverlay);}
+function hmOverlay(){const c=HM&&HM.ctx;const inn=$('hm-in');if(!c||!inn)return;const L=Math.max(0.8,Math.min(3.2,2.3/(inn.offsetWidth/c.IL.w)));if(HM.L&&Math.abs(HM.L-L)<0.05&&inn.querySelector('svg'))return;HM.L=L;
+  const old=inn.querySelector('svg');const tmp=document.createElement('div');tmp.innerHTML=illusView(c.IL,c.hi,c.m,{...c.opt,L});const nv=tmp.firstElementChild;old.replaceWith(nv);
+  nv.addEventListener('click',e=>{if(HM.pinchAt&&Date.now()-HM.pinchAt<400)return;const pt=nv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(nv.getScreenCTM().inverse());HM.tap=[q.x,q.y];HM.L=0;hmOverlay();});}
+let HM_RAF=0;
+function zoomHoleMap(d){hmZoomTo(HM.z*(d>0?1.5:1/1.5));}
+function hmGestures(sc){let d0=0,z0=1;const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);const mid=t=>[(t[0].clientX+t[1].clientX)/2,(t[0].clientY+t[1].clientY)/2];
+  sc.addEventListener('touchstart',e=>{if(e.touches.length===2){d0=dist(e.touches);z0=HM.z;e.preventDefault();}},{passive:false});
+  sc.addEventListener('touchmove',e=>{if(e.touches.length===2&&d0){e.preventDefault();const m=mid(e.touches);hmZoomTo(z0*dist(e.touches)/d0,m[0],m[1]);HM.pinchAt=Date.now();}},{passive:false});
+  sc.addEventListener('touchend',e=>{if(e.touches.length<2)d0=0;});
+  sc.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();hmZoomTo(HM.z*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY);}},{passive:false});
+  sc.addEventListener('dblclick',e=>{e.preventDefault();hmZoomTo(HM.z>=2.5?1:HM.z*2,e.clientX,e.clientY);});}
 function closeHoleMap(){const el=$('holemap');if(el)el.remove();document.body.style.overflow='';HM=null;}
