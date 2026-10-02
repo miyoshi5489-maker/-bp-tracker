@@ -90,7 +90,7 @@ let ROUND_PLAN={};try{ROUND_PLAN=JSON.parse(localStorage.getItem('roundPlan')||'
 function applyPlan(x){if(!x)return x;const k=ROUND_PLAN[x.date];const P=k&&x.plans&&x.plans[k];if(!P)return x;
   return {...x,planKey:k,target:P.target,limit:P.limit,summary:P.summary,rules:P.rules,checks:P.checks,teeClub:P.tee,
     holes:x.holes.map(h=>{const o=P.holes[h[0]];if(!o)return h;const n=[...h];n[4]=o[0];n[6]=o[1];if(P.tee&&h[1]>3)n[5]=P.tee;return n;})};}
-function setPlan(d,k){ROUND_PLAN[d]=k;try{localStorage.setItem('roundPlan',JSON.stringify(ROUND_PLAN));}catch{}renderRounds();}
+function setPlan(d,k){ROUND_PLAN[d]=k;try{localStorage.setItem('roundPlan',JSON.stringify(ROUND_PLAN));}catch{}if(typeof HM!=='undefined'&&HM){HM.L=0;HM.tap=null;drawHoleMap();}renderRounds();}
 const ROUND_BASE=d=>applyPlan(ROUND_DEFS.find(x=>x.date===d));
 const isRoundPlan=r=>(r.exercises||[]).some(e=>e.kind==='roundplan');
 const roundPlanId=d=>Number(d.replace(/-/g,''))*100+70;

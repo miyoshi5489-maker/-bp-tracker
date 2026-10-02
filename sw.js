@@ -1,5 +1,5 @@
 // ネット優先（新しい版をすぐ反映）＋オフライン時はキャッシュ
-const CACHE='yohei-training-v29';
+const CACHE='yohei-training-v30';
 const CORE=['./','./index.html','./app.js','./plan.js','./exercises.js','./theme.js','./actual.js','./voice.js','./study.js','./auth.js','./rounds.js','./holemaps.js','./clubs.js','./app.css','./manifest.json','./icon-192.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).catch(()=>{}));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
