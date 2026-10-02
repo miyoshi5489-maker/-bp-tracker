@@ -59,12 +59,15 @@ function sideKind(t){if(!t||/^情報なし/.test(t))return 'na';if(/記載なし
 function sideCls(t){return {na:'text-muted',neutral:'text-fg',good:'text-accent',bad:'text-warn'}[sideKind(t)];}
 function sideMark(t){return {na:'？',neutral:'△',good:'◯',bad:'✕'}[sideKind(t)];}
 
+// 1打目の位置を、トラックマンのトータル距離に合わせる（向きはそのまま）
+function tmAdjust(m){const t=m.t||[];if(!t[0]||typeof MYCLUBS==='undefined')return m;const code=clubCode(t[0][2]);const c=code&&MYCLUBS[code];if(!c||c.src==='仮')return m;
+  const D=c.total||c.carry,L=Math.hypot(t[0][0],t[0][1]);if(!L)return m;const k=D/L;return {...m,t:[[t[0][0]*k,t[0][1]*k,t[0][2]],...t.slice(1)]};}
 // ── 図を描く ──
 function holeLen(c){let s=0;for(let i=1;i<c.length;i++)s+=Math.hypot(c[i][0]-c[i-1][0],c[i][1]-c[i-1][1]);return s;}
 function alongPt(c,d){ // 中心線上でティーから d ヤードの点
   for(let i=1;i<c.length;i++){const L=Math.hypot(c[i][0]-c[i-1][0],c[i][1]-c[i-1][1]);if(d<=L){const r=d/L;return[c[i-1][0]+(c[i][0]-c[i-1][0])*r,c[i-1][1]+(c[i][1]-c[i-1][1])*r];}d-=L;}
   return c[c.length-1];}
-function holeSVG(m,par,yards,opt){
+function holeSVG(m,par,yards,opt){m=tmAdjust(m);
   const c=m.c,G=c[c.length-1];const P=([x,y])=>`${x},${-y}`;
   const xs=[...c.map(p=>p[0]),...m.hz.map(h=>h.x||0)];let minX=Math.min(...xs)-72,maxX=Math.max(...xs)+72;if(maxX-minX<230){const e=(230-(maxX-minX))/2;minX-=e;maxX+=e;}
   const top=G[1]+34;const W=maxX-minX,H=top+30;
@@ -172,7 +175,7 @@ const ILLUS={tojo:[Object.assign({"base": "https://i.gimg.jp/resource/reserve/co
 const PHOTOS={taka:{1:'https://www.takarazuka-cgc.com/_src/96801238/photo01.jpg',3:'https://www.takarazuka-cgc.com/_src/96801240/photo02.jpg',5:'https://www.takarazuka-cgc.com/_src/96801242/photo03.jpg',7:'https://www.takarazuka-cgc.com/_src/96801244/photo04.jpg',8:'https://www.takarazuka-cgc.com/_src/96801246/photo05.jpg'}};
 function routeAt(r,d){for(let i=1;i<r.length;i++){const L=Math.hypot(r[i][0]-r[i-1][0],r[i][1]-r[i-1][1]);if(d<=L||i===r.length-1){const k=Math.min(1,d/L);const ux=(r[i][0]-r[i-1][0])/L,uy=(r[i][1]-r[i-1][1])/L;return{p:[r[i-1][0]+(r[i][0]-r[i-1][0])*k,r[i-1][1]+(r[i][1]-r[i-1][1])*k],u:[ux,uy]};}d-=L;}}
 // 公式イラストの上に狙いを重ねる
-function illusView(I,hi,m,opt){const L=(opt&&opt.L)||1;const DT=(opt&&opt.dt)||0;const SC=(x,y)=>`translate(${x} ${y}) scale(${L}) translate(${-x} ${-y})`;
+function illusView(I,hi,m,opt){m=tmAdjust(m);const L=(opt&&opt.L)||1;const DT=(opt&&opt.dt)||0;const SC=(x,y)=>`translate(${x} ${y}) scale(${L}) translate(${-x} ${-y})`;
   const r=hi.r,s=hi.s,G=r[r.length-1];const T=m.t||[];const T0=(()=>{if(DT>=0)return routeAt(r,DT*s).p;const u=routeAt(r,0).u;return [r[0][0]-u[0]*(-DT)*s,r[0][1]-u[1]*(-DT)*s];})();
   const toPx=(x,y)=>{const a=routeAt(r,y*s);return [a.p[0]-a.u[1]*x*s,a.p[1]+a.u[0]*x*s];}; // 右＝進行方向の右
   const last=routeAt(r,1e9).u;const pin=(opt&&opt.pin)||{x:0,y:0};const P=[G[0]-last[1]*pin.x*s+last[0]*pin.y*s,G[1]+last[0]*pin.x*s+last[1]*pin.y*s];
@@ -236,9 +239,9 @@ function greenSVG(g,pin){ // グリーンを上から大きく
   s+=`<line x1="${pin.x}" y1="${-pin.y}" x2="${pin.x}" y2="${-pin.y-5}" stroke="#fff" stroke-width=".4"/><path d="M${pin.x} ${-pin.y-5} l3 1 l-3 1z" fill="#e53935"/><circle cx="${pin.x}" cy="${-pin.y}" r=".7" fill="#111"/>`;
   return s+'</svg>';}
 function drawHoleMap(){
-  const x=ROUND_BASE(HM.date);const h=x.holes.find(r=>r[0]===HM.no);const m=HOLE_MAPS[x.mapKey][HM.no];
+  const x=ROUND_BASE(HM.date);const h=x.holes.find(r=>r[0]===HM.no);let m=HOLE_MAPS[x.mapKey][HM.no];
   const g=greenOf(x.mapKey,h[0]),pin=pinOf(HM.date,h[0]);
-  const code=m.t&&m.t[0]?(clubCode(m.t[0][2])||clubCode(h[5])):null;const club=typeof MYCLUBS!=='undefined'&&code&&MYCLUBS[code]&&MYCLUBS[code].src!=='仮'?MYCLUBS[code]:null;
+  m=tmAdjust(m);const code=m.t&&m.t[0]?(clubCode(m.t[0][2])||clubCode(h[5])):null;const club=typeof MYCLUBS!=='undefined'&&code&&MYCLUBS[code]&&MYCLUBS[code].src!=='仮'?MYCLUBS[code]:null;
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}
