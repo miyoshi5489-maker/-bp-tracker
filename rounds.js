@@ -9,6 +9,7 @@ const ROUND_DEFS=[
   diff:{stars:4,cr:71.6,par:72,yards:6261,bunkers:76,water:5,green:'姫高麗グリーン（秋は8フィート前後）',terrain:'丘陵（坂あり）',why:['コースレートがParに近い（3つの中で一番難しい）','バンカー76個','姫高麗グリーンは芝目が強く、読みにくい']},
  },
  {date:'2026-10-20',course:'東条湖カントリー倶楽部',time:'OUT 7:08',tee:'レギュラー 6,198y・Par72',members:'3名',plan:'セルフ・4人乗りカート付き（昼食は別料金）　1人 5,100円',
+  plans:{p90:{"name": "90切り", "target": 87, "limit": 89, "tee": "5W", "summary": "全ホールボギーなら90。<b>パーを4つ（1・9・16・17番）</b>取り、ダブルボギーを10番の1つだけにすると87。予備2打で89以内。前提は「ティーショットは全部5W・OB0・3パット0」。", "holes": {"1": [4, "パーを取るホール。5W（トータル197y）で右寄りに構えて真ん中へ→残り約110y。PWでグリーン真ん中、2パットでパー。"], "2": [6, "5W→8Iで池の手前に刻む（公式：2打目は池越え）→残り約130yを8Iで池越え。4オン2パットのボギーでOK。奥は危険（公式）。"], "3": [5, "池越えの左ドッグレッグ（公式）。5Wで池を越えて右寄りの真ん中→残り約135y。7Iで手前から。ボギーでOK、乗ればパーチャンス。"], "4": [5, "5Wでフェアウェイ中央→残り約220y。7Iで残り約75yに刻み、3打目で乗せてボギー。グリーン手前が狭い（公式）。"], "5": [5, "右はOB（公式）。右に行かない5Wで真ん中→残り約150y。6Iで乗らなくても手前に。ボギー確保、乗ればパー。"], "6": [4, "右に池。5Wでグリーン左手前に運び、寄せて2パットのボギー。右だけは避ける。"], "7": [5, "OUTで一番長いミドル。5W→7I→残り約85yの3オンでボギー。左はセーフ（公式）。"], "8": [6, "2打目から右はOB（公式）。5W→7Iで左側→残り約140yを7Iで。ボギー、乗ればパーチャンス。"], "9": [3, "パーを取るホール。7I（キャリー140y・ブレ±3y）で真ん中。2パットでパー。"], "10": [6, "難易度3位（GDO）。5Wでクロスバンカーの右（公式）→残り約165y。グリーン左は深い谷（公式）なので右手前に刻む。ダブルボギーまでOKなのはここだけ。"], "11": [5, "5Wで左のクロスバンカー方向（公式）→残り約175y。2打目は打ち下ろしなので6Iで手前から。奥は禁物（公式）。ボギー。"], "12": [6, "難易度2位（GDO）。5W→7I（2打目はフェアウェイ左が有利・公式）→残り約140yを7Iで。4オンでもボギー。"], "13": [5, "右はOB（公式）。右に行かない5Wで中央より左（公式）→残り約155y。ボギー、乗ればパー。"], "14": [4, "打ち上げでピンが見えない。5Iで右側へ（公式：右側が安全）。ボギーでOK。"], "15": [6, "左右に落とし穴（公式）。5W→7I→残り約135yを7Iで。3打目は前下がりでグリーンも速いので手前から（公式）。ボギー。"], "16": [4, "パーを取るホール。5Wでフェアウェイ右側（公式の狙い目）→残り約115y。PWでグリーン右寄りへ（左はトラブル・公式）。"], "17": [3, "パーを取るホール。6I（キャリー148y）で真ん中。2段グリーン（公式）なので1パット目は手前から丁寧に。"], "18": [5, "打ち下ろし。5Wで正面の楠の木を狙う（公式）→残り約215y。7Iで刻んで3オン。グリーン右は要注意（公式）。ボギー。"]}, "rules": [["ティーショットは全ホール5W", "トラックマンでは1Wとの差はトータル19yだけ。5Wの方が左右のブレが小さく、右へのミスも0本。"], ["パーは1・9・16・17番で取る", "短いミドル2つ（5W→PW）と、易しいショート2つ（7I・6I）。ここだけはピンを見てよい。"], ["3パットを0に", "90切りの一番の近道。1パット目は「カップの周り1mに止める」距離感で打つ。"], ["100y以内は3打で上がる", "寄せ1打＋2パット。迷ったら転がす。"], ["ダブルボギーは10番だけ", "OBと池さえなければ届く。池が絡む2・3・6番は「越えない」選択も正解。"]], "checks": ["9番を終えて<b>43以内</b>なら予定どおり。", "<b>44〜45</b>なら、INは16・17番のパーだけ狙い、残りは確実にボギー（IN44で89）。", "<b>46以上</b>なら、その場で100切りプランに切り替えて守る。"]}},
   target:95,limit:99,link:'https://claude.ai/artifact/Cq7XPSVNLmbx1azX5LmUY4',mapKey:'tojo',
   diff:{stars:3,cr:69.2,par:72,yards:6198,bunkers:65,water:9,green:'ベントグリーン（秋は8.5フィート前後）',terrain:'丘陵（ブラインドは2・14・16番）',why:['コースレートはやさしめ（GORA 69.2・GDO 69.1）','池が絡むホールが9つ（天然の池を生かしたコース）','フェアウェイが狭いという口コミが多い']},
   summary:'全ホールをボギーで回ると90。難しい4ホールはダブルボギーでよしとして、目標は95。予備が4打あるので、大叩きが1〜2回あっても100を切れる計算です。',
@@ -84,7 +85,13 @@ const ROUND_DEFS=[
   note:'ハンデはGDO／楽天GORAで違うので両方載せています。ホールの形と狙いは、ショットナビ・じゃらんゴルフのホール解説をもとにしています。10/20の結果を入れたら、ここを直します。',
  },
 ];
-const ROUND_BASE=d=>ROUND_DEFS.find(x=>x.date===d);
+let ROUND_PLAN={};try{ROUND_PLAN=JSON.parse(localStorage.getItem('roundPlan')||'{}');}catch{}
+// 選んでいるプラン（100切り＝標準／90切り）を当てはめる
+function applyPlan(x){if(!x)return x;const k=ROUND_PLAN[x.date];const P=k&&x.plans&&x.plans[k];if(!P)return x;
+  return {...x,planKey:k,target:P.target,limit:P.limit,summary:P.summary,rules:P.rules,checks:P.checks,teeClub:P.tee,
+    holes:x.holes.map(h=>{const o=P.holes[h[0]];if(!o)return h;const n=[...h];n[4]=o[0];n[6]=o[1];if(P.tee&&h[1]>3)n[5]=P.tee;return n;})};}
+function setPlan(d,k){ROUND_PLAN[d]=k;try{localStorage.setItem('roundPlan',JSON.stringify(ROUND_PLAN));}catch{}renderRounds();}
+const ROUND_BASE=d=>applyPlan(ROUND_DEFS.find(x=>x.date===d));
 const isRoundPlan=r=>(r.exercises||[]).some(e=>e.kind==='roundplan');
 const roundPlanId=d=>Number(d.replace(/-/g,''))*100+70;
 let ROUND_OPEN=null,ROUND_EDIT=null;
@@ -92,7 +99,7 @@ let ROUND_OPEN=null,ROUND_EDIT=null;
 // 決まっている作戦＋アプリで追加・直した分をまとめる
 function roundList(recs){
   const m={};
-  ROUND_DEFS.forEach(x=>{m[x.date]={...x,builtin:true};});
+  ROUND_DEFS.forEach(x=>{m[x.date]={...applyPlan(x),builtin:true};});
   recs.filter(isRoundPlan).forEach(r=>{const e=r.exercises.find(x=>x.kind==='roundplan');const d=r.date;
     const b=m[d]||{date:d};const o={...b,recId:r.id};
     ['course','time','tee','members','plan','memo','link'].forEach(k=>{if(e[k])o[k]=e[k];});
@@ -149,10 +156,11 @@ function roundCard(x,t){
 }
 
 function roundStrategy(x){
+  const planBar=x.plans?`<div class="grid gap-1"><div class="seg !p-1 text-[13px]"><button class="${x.planKey?'':'on'}" onclick="setPlan('${x.date}','')">100切りプラン（目標${ROUND_DEFS.find(r=>r.date===x.date).target}）</button>${Object.entries(x.plans).map(([k,P])=>`<button class="${x.planKey===k?'on':''}" onclick="setPlan('${x.date}','${k}')">${P.name}プラン（目標${P.target}）</button>`).join('')}</div>${x.planKey?'<div class="text-[11px] text-muted">マップ・キャディ欄も、このプランの目標とクラブに切り替わります。</div>':''}</div>`:'';
   const H=x.holes||[];const half=k=>H.filter(h=>k==='out'?h[0]<=9:h[0]>=10);
   const sum=(a,i)=>a.reduce((s,h)=>s+h[i],0);
   const memo=(x.memo||'').split('\n').map(s=>s.trim()).filter(Boolean);
-  let out=x.diff?`<div data-sec="rs-diff">${roundDiff(x)}</div>`:'';
+  let out=planBar+(x.diff?`<div data-sec="rs-diff">${roundDiff(x)}</div>`:'');
   if(x.summary)out+=`<p class="text-[14px] [&_b]:text-accent">${x.summary}</p>`;
   if(H.length){const o=x.order||['out','in'];
     out+=`<div class="grid grid-cols-3 gap-2 text-center">${o.map(k=>`<div class="rounded-xl bg-accent-soft p-2"><div class="num text-2xl font-semibold text-accent">${sum(half(k),4)}</div><div class="lbl">${k==='out'?'OUT':'IN'}の目標</div></div>`).join('')}<div class="rounded-xl bg-warn-soft p-2"><div class="num text-2xl font-semibold text-warn">${x.limit||99}</div><div class="lbl">上限</div></div></div>`;}

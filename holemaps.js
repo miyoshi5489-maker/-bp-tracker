@@ -239,7 +239,7 @@ function greenSVG(g,pin){ // グリーンを上から大きく
   s+=`<line x1="${pin.x}" y1="${-pin.y}" x2="${pin.x}" y2="${-pin.y-5}" stroke="#fff" stroke-width=".4"/><path d="M${pin.x} ${-pin.y-5} l3 1 l-3 1z" fill="#e53935"/><circle cx="${pin.x}" cy="${-pin.y}" r=".7" fill="#111"/>`;
   return s+'</svg>';}
 function drawHoleMap(){
-  const x=ROUND_BASE(HM.date);const h=x.holes.find(r=>r[0]===HM.no);let m=HOLE_MAPS[x.mapKey][HM.no];
+  const x=ROUND_BASE(HM.date);const h=x.holes.find(r=>r[0]===HM.no);let m=HOLE_MAPS[x.mapKey][HM.no];if(x.teeClub&&h[1]>3&&m.t&&m.t[0])m={...m,t:[[m.t[0][0],m.t[0][1],x.teeClub],...m.t.slice(1)]};
   const g=greenOf(x.mapKey,h[0]),pin=pinOf(HM.date,h[0]);
   m=tmAdjust(m);const code=m.t&&m.t[0]?(clubCode(m.t[0][2])||clubCode(h[5])):null;const club=typeof MYCLUBS!=='undefined'&&code&&MYCLUBS[code]&&MYCLUBS[code].src!=='仮'?MYCLUBS[code]:null;
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
