@@ -285,7 +285,7 @@ function drawHoleMap(){
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
   const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*vb.width/vb.height);
-  const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.round(sc.clientHeight*0.5)}px ${Math.round(sc.clientWidth*0.5)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
+  const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
   inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
   if(HM.pos){const p=HM.pos;HM.pos=null;requestAnimationFrame(()=>{sc.scrollLeft=p[0];sc.scrollTop=p[1];});}
   else if(!HM.tap)requestAnimationFrame(()=>{const i=$('hm-in'),pd=$('hm-pad');sc.scrollTop=pd.offsetTop+i.offsetTop+i.offsetHeight-sc.clientHeight+8;sc.scrollLeft=pd.offsetLeft+i.offsetLeft+i.offsetWidth/2-sc.clientWidth/2;});
