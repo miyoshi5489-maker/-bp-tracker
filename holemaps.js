@@ -262,7 +262,7 @@ function drawHoleMap(){
       :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
        :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
-    ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}（${IL.note}）・図をタップで距離／2本指で拡大縮小</div>`}
+    ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}（${IL.note}）・図をタップで距離／ドラッグで移動／2本指で拡大縮小</div>`}
     ${gv||!IL?'':`${VW.length>1?`<div class="absolute left-3 top-3 z-10 flex gap-1">${VW.map((v,k)=>`<button class="rounded-full px-3 py-1 text-[12px] font-bold " style="${k===(HM.src||0)?'background:#fff;color:#111':'background:rgba(0,0,0,.45);color:#fff'}" onclick="HM.src=${k};HM.tap=null;HM.L=0;drawHoleMap()">${v.name}</button>`).join('')}</div>`:''}`}
     ${gv?'':`<div class="absolute right-3 top-3 z-10 grid gap-2">
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
@@ -285,8 +285,10 @@ function drawHoleMap(){
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
   const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*vb.width/vb.height);
-  $('hm-in').style.width=HM.base*HM.z+'px';hmGestures(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
-  if(!HM.tap)requestAnimationFrame(()=>{sc.scrollTop=sc.scrollHeight;sc.scrollLeft=(sc.scrollWidth-sc.clientWidth)/2;});
+  const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.round(sc.clientHeight*0.5)}px ${Math.round(sc.clientWidth*0.5)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
+  inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
+  if(HM.pos){const p=HM.pos;HM.pos=null;requestAnimationFrame(()=>{sc.scrollLeft=p[0];sc.scrollTop=p[1];});}
+  else if(!HM.tap)requestAnimationFrame(()=>{const i=$('hm-in'),pd=$('hm-pad');sc.scrollTop=pd.offsetTop+i.offsetTop+i.offsetHeight-sc.clientHeight+8;sc.scrollLeft=pd.offsetLeft+i.offsetLeft+i.offsetWidth/2-sc.clientWidth/2;});
 }
 // 拡大縮小：（px,py）＝画面上の基準点（その点が動かないように拡大する）
 function hmZoomTo(z,px,py){const sc=$('hm-scroll');const inn=$('hm-in');if(!sc||!inn)return;const r=sc.getBoundingClientRect();
@@ -297,7 +299,7 @@ function hmZoomTo(z,px,py){const sc=$('hm-scroll');const inn=$('hm-in');if(!sc||
   cancelAnimationFrame(HM_RAF);HM_RAF=requestAnimationFrame(hmOverlay);}
 function hmOverlay(){const c=HM&&HM.ctx;const inn=$('hm-in');if(!c||!inn)return;const L=Math.max(0.8,Math.min(3.2,2.3/(inn.offsetWidth/c.IL.w)));if(HM.L&&Math.abs(HM.L-L)<0.05&&inn.querySelector('svg'))return;HM.L=L;
   const old=inn.querySelector('svg');const tmp=document.createElement('div');tmp.innerHTML=illusView(c.IL,c.hi,c.m,{...c.opt,L});const nv=tmp.firstElementChild;old.replaceWith(nv);
-  nv.addEventListener('click',e=>{if(HM.pinchAt&&Date.now()-HM.pinchAt<400)return;const pt=nv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(nv.getScreenCTM().inverse());HM.tap=[q.x,q.y];HM.L=0;hmOverlay();});}
+  nv.addEventListener('click',e=>{if(HM.pinchAt&&Date.now()-HM.pinchAt<400)return;if(HM.dragAt&&Date.now()-HM.dragAt<300)return;const pt=nv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(nv.getScreenCTM().inverse());HM.tap=[q.x,q.y];HM.L=0;hmOverlay();});}
 let HM_RAF=0;
 function zoomHoleMap(d){hmZoomTo(HM.z*(d>0?1.5:1/1.5));}
 function hmGestures(sc){let d0=0,z0=1;const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);const mid=t=>[(t[0].clientX+t[1].clientX)/2,(t[0].clientY+t[1].clientY)/2];
@@ -306,4 +308,10 @@ function hmGestures(sc){let d0=0,z0=1;const dist=t=>Math.hypot(t[0].clientX-t[1]
   sc.addEventListener('touchend',e=>{if(e.touches.length<2)d0=0;});
   sc.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();hmZoomTo(HM.z*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY);}},{passive:false});
   sc.addEventListener('dblclick',e=>{e.preventDefault();hmZoomTo(HM.z>=2.5?1:HM.z*2,e.clientX,e.clientY);});}
+// PC：マウスでつかんで好きな位置へ動かす（動かした時は距離タップにしない）
+function hmDrag(sc){let st=null;sc.style.cursor='grab';
+  sc.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||e.target.closest('button'))return;st={x:e.clientX,y:e.clientY,l:sc.scrollLeft,t:sc.scrollTop,mv:false};});
+  sc.addEventListener('pointermove',e=>{if(!st)return;const dx=e.clientX-st.x,dy=e.clientY-st.y;if(!st.mv&&Math.hypot(dx,dy)<5)return;if(!st.mv){st.mv=true;try{sc.setPointerCapture(e.pointerId);}catch(_){}sc.style.cursor='grabbing';document.body.style.userSelect='none';}sc.scrollLeft=st.l-dx;sc.scrollTop=st.t-dy;e.preventDefault();});
+  const up=()=>{if(!st)return;if(st.mv){HM.dragAt=Date.now();sc.style.cursor='grab';document.body.style.userSelect='';}st=null;};sc.addEventListener('pointerup',up);sc.addEventListener('pointercancel',up);
+  sc.addEventListener('dragstart',e=>e.preventDefault());}
 function closeHoleMap(){const el=$('holemap');if(el)el.remove();document.body.style.overflow='';HM=null;}
