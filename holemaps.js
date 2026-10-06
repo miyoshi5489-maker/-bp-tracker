@@ -159,11 +159,11 @@ function caddie(x,h,m){
         const sd=(c.sdCarry||8)*1.5;if(f<=tot+sd&&b>=car-sd-10){const x0=alongPt(m.c,(f+b)/2+dt0)[0];const sdd=(z.x||0)-x0;warn.push(`${sdd<-6?'左':sdd>6?'右':'正面'}の${nm}（${Math.round(f)}〜${Math.round(b)}y）`);}
         else if(z.t!=='b'&&b<car-sd)out.push(`${nm}（越え${Math.round(b)}y）はキャリーで越える`);});
       if(warn.length)out.push(`<span class="text-warn">⚠ 届く範囲：${warn.join('・')}</span> → 1番手落とすか、反対側を狙う`);
-      if(c.side!=null&&Math.abs(c.side)>=6)out.push(`平均で<b>${c.side>0?'右':'左'}に${Math.abs(Math.round(c.side))}y</b>曲がる → その分${c.side>0?'左':'右'}に向けて構える`);}}
+      if(c.side!=null&&Math.abs(c.side)>=6)out.push(`打ち出しが平均で<b>${c.side>0?'右':'左'}に約${Math.abs(Math.round(c.side))}y</b>ずれる${c.date?`（${+c.date.slice(5,7)}/${+c.date.slice(8)}のトラックマン）`:''} → その分${c.side>0?'左':'右'}を向いて構える`);}}
   const last=T.length?T[T.length-1]:[0,teeShift(x.mapKey,h[0])];const dist=Math.round(Math.hypot(P[0]-last[0],P[1]-last[1]));
   const toC=Math.hypot(G[0]-last[0],G[1]-last[1]);const fr=Math.round(toC-g.d/2),bk=Math.round(toC+g.d/2);
-  const cf=hasClubs&&clubFor(dist);
-  out.push(`<b>${T.length?(T.length+1)+'打目':'ティーショット'}</b>：ピンまで<b>${dist}y</b>（手前${fr}y・奥${bk}y）${cf?` → <b class="text-accent">${cf.c}</b>（キャリー${Math.round(cf.carry)}y）`:''}`);
+  const pc=!T.length&&hasClubs&&teeCodeOf(x,h);const cf=pc&&MYCLUBS[pc]?MYCLUBS[pc]:hasClubs&&clubFor(dist,['1W']);
+  out.push(`<b>${T.length?(T.length+1)+'打目':'ティーショット'}</b>：ピンまで<b>${dist}y</b>（手前${fr}y・奥${bk}y）${cf?` → <b class="text-accent">${cf.c}</b>（キャリー${Math.round(cf.carry)}y${cf.carry<dist-3&&(cf.total||0)>=dist-5?`・トータル${Math.round(cf.total)}y＝転がして届く`:''}）`:''}`);
   if(g.note)out.push(`グリーン：${esc(g.note)}`);
   return out;
 }
@@ -238,8 +238,10 @@ function greenSVG(g,pin){ // グリーンを上から大きく
   s+=`<text x="0" y="${H/2-1.5}" font-size="2.6" fill="#fff" text-anchor="middle">▼ 手前（ティー側）</text>`;
   s+=`<line x1="${pin.x}" y1="${-pin.y}" x2="${pin.x}" y2="${-pin.y-5}" stroke="#fff" stroke-width=".4"/><path d="M${pin.x} ${-pin.y-5} l3 1 l-3 1z" fill="#e53935"/><circle cx="${pin.x}" cy="${-pin.y}" r=".7" fill="#111"/>`;
   return s+'</svg>';}
+// 作戦で決めた1打目のクラブ（プランのteeBy → ホールのクラブ欄の先頭）
+function teeCodeOf(x,h){const v=(x.teeBy&&x.teeBy[h[0]])||(x.teeClub&&h[1]>3?x.teeClub:null)||String(h[5]||'').split(/[ \/／]/)[0];return v==='ドライバー'?'1W':(typeof clubCode==='function'&&clubCode(v))||null;}
 function drawHoleMap(){
-  const x=ROUND_BASE(HM.date);const h=x.holes.find(r=>r[0]===HM.no);let m=HOLE_MAPS[x.mapKey][HM.no];if(x.teeClub&&h[1]>3&&m.t&&m.t[0])m={...m,t:[[m.t[0][0],m.t[0][1],(x.teeBy&&x.teeBy[h[0]])||x.teeClub],...m.t.slice(1)]};
+  const x=ROUND_BASE(HM.date);const h=x.holes.find(r=>r[0]===HM.no);let m=HOLE_MAPS[x.mapKey][HM.no];{const tc=teeCodeOf(x,h);if(tc&&h[1]>3&&m.t&&m.t[0])m={...m,t:[[m.t[0][0],m.t[0][1],tc],...m.t.slice(1)]};}
   const g=greenOf(x.mapKey,h[0]),pin=pinOf(HM.date,h[0]);
   m=tmAdjust(m);const code=m.t&&m.t[0]?(clubCode(m.t[0][2])||clubCode(h[5])):null;const club=typeof MYCLUBS!=='undefined'&&code&&MYCLUBS[code]&&MYCLUBS[code].src!=='仮'?MYCLUBS[code]:null;
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];

@@ -7,8 +7,8 @@
 const CLUB_ORDER=['1W','3W','5W','7W','4H','4I','5I','6I','7I','8I','9I','PW','52°','58°'];
 // トラックマンを入れるまでの仮の値（聞いた話：ドライバー約250y・7番170y）
 // トラックマン（2026-10-01の練習・スクショから読み取り）。PW・52°はまだ測っていないので仮
-// トラックマン：10/6（1W・5W・4H・8I・9I・PW・52°）＋10/1（5I・6I・7I）＋10/3（58°）。10/6の左右は打ち出し方向×キャリーからの推定（曲がりは含まない）。大きなミス（キャリーが中央値の85%未満）は平均から除外
-const TM_BUILTIN={date:'2026-10-06',clubs:[{"c": "1W", "n": 13, "miss": 2, "carry": 205, "sdCarry": 9, "total": 236, "side": 17.0, "sdSide": 11, "left": 0, "right": 13, "wide": 3}, {"c": "5W", "n": 10, "miss": 0, "carry": 177, "sdCarry": 12, "total": 199, "side": 18.9, "sdSide": 7, "left": 0, "right": 10, "wide": 5}, {"c": "4H", "n": 12, "miss": 2, "carry": 161, "sdCarry": 9, "total": 176, "side": 18.7, "sdSide": 6, "left": 0, "right": 12, "wide": 4}, {"c": "5I", "n": 6, "miss": 0, "carry": 152, "sdCarry": 8, "total": 165, "side": 7.8, "sdSide": 20, "left": 1, "right": 3, "wide": 2}, {"c": "6I", "n": 6, "miss": 0, "carry": 148, "sdCarry": 8, "total": 161, "side": 7.6, "sdSide": 12, "left": 0, "right": 3, "wide": 0}, {"c": "7I", "n": 6, "miss": 0, "carry": 140, "sdCarry": 3, "total": 148, "side": 7.0, "sdSide": 18, "left": 1, "right": 3, "wide": 1}, {"c": "8I", "n": 14, "miss": 4, "carry": 114, "sdCarry": 11, "total": 125, "side": 7.8, "sdSide": 5, "left": 0, "right": 14, "wide": 0}, {"c": "9I", "n": 7, "miss": 0, "carry": 117, "sdCarry": 4, "total": 123, "side": 6.0, "sdSide": 4, "left": 0, "right": 7, "wide": 0}, {"c": "PW", "n": 7, "miss": 0, "carry": 102, "sdCarry": 5, "total": 107, "side": 6.4, "sdSide": 1, "left": 0, "right": 7, "wide": 0}, {"c": "52°", "n": 7, "miss": 2, "carry": 87, "sdCarry": 7, "total": 90, "side": 4.3, "sdSide": 5, "left": 1, "right": 6, "wide": 0}, {"c": "58°", "n": 6, "miss": 0, "carry": 74, "sdCarry": 5, "total": 78, "side": null, "sdSide": null, "left": 0, "right": 0, "wide": 0}]};
+// トラックマン：10/6（1W・5W・4H・8I・9I・PW・52°）＋10/1（5I・6I・7I）＋10/3（58°）。10/6の左右は打ち出し方向×キャリーからの推定（曲がりは含まない）。大きなミス（キャリーが中央値の85%未満）は平均から除外。8Iはボールスピード38m/s未満の薄い当たり・加減した球6球を除いたフルショット8球の平均
+const TM_BUILTIN={date:'2026-10-06',clubs:[{"c": "1W", "n": 13, "miss": 2, "carry": 205, "sdCarry": 9, "total": 236, "side": 17.0, "sdSide": 11, "left": 0, "right": 13, "wide": 3}, {"c": "5W", "n": 10, "miss": 0, "carry": 177, "sdCarry": 12, "total": 199, "side": 18.9, "sdSide": 7, "left": 0, "right": 10, "wide": 5}, {"c": "4H", "n": 12, "miss": 2, "carry": 161, "sdCarry": 9, "total": 176, "side": 18.7, "sdSide": 6, "left": 0, "right": 12, "wide": 4}, {"c": "5I", "n": 6, "miss": 0, "carry": 152, "sdCarry": 8, "total": 165, "side": 7.8, "sdSide": 20, "left": 1, "right": 3, "wide": 2}, {"c": "6I", "n": 6, "miss": 0, "carry": 148, "sdCarry": 8, "total": 161, "side": 7.6, "sdSide": 12, "left": 0, "right": 3, "wide": 0}, {"c": "7I", "n": 6, "miss": 0, "carry": 140, "sdCarry": 3, "total": 148, "side": 7.0, "sdSide": 18, "left": 1, "right": 3, "wide": 1}, {"c": "8I", "n": 14, "miss": 6, "carry": 118, "sdCarry": 7, "total": 129, "side": 7.4, "sdSide": 5, "left": 0, "right": 14, "wide": 0}, {"c": "9I", "n": 7, "miss": 0, "carry": 117, "sdCarry": 4, "total": 123, "side": 6.0, "sdSide": 4, "left": 0, "right": 7, "wide": 0}, {"c": "PW", "n": 7, "miss": 0, "carry": 102, "sdCarry": 5, "total": 107, "side": 6.4, "sdSide": 1, "left": 0, "right": 7, "wide": 0}, {"c": "52°", "n": 7, "miss": 2, "carry": 87, "sdCarry": 7, "total": 90, "side": 4.3, "sdSide": 5, "left": 1, "right": 6, "wide": 0}, {"c": "58°", "n": 6, "miss": 0, "carry": 74, "sdCarry": 5, "total": 78, "side": null, "sdSide": null, "left": 0, "right": 0, "wide": 0}]};
 
 const CLUB_DEFAULT={'PW':{carry:115,total:120},'52°':{carry:100,total:104}};
 const isClubRec=r=>(r.exercises||[]).some(e=>e.kind==='tm'||e.kind==='clubs');
@@ -65,8 +65,23 @@ function buildClubs(recs){
 const clubList=()=>CLUB_ORDER.filter(c=>MYCLUBS[c]).map(c=>MYCLUBS[c]);
 function clubCode(s){const m=String(s||'').match(/1W|3W|5W|7W|UT|4H|[4-9]I|PW|AW|SW|LW|52°|58°/);if(!m)return null;return {UT:'4H',AW:'52°',SW:'58°',LW:'58°'}[m[0]]||m[0];}
 // 残り距離にいちばん合うクラブ（キャリーが残り距離以上で一番短いもの）
-function clubFor(dist){const L=clubList().filter(x=>x.carry>0).sort((a,b)=>a.carry-b.carry);if(!L.length)return null;
+function clubFor(dist,skip){const L=clubList().filter(x=>x.carry>0&&!(skip||[]).includes(x.c)).sort((a,b)=>a.carry-b.carry);if(!L.length)return null;
   return L.find(x=>x.carry>=dist-3)||L[L.length-1];}
+
+// ── 作戦の文章の数字を、最新の飛距離（MYCLUBS）で書き換える ──
+const LIVE_CL='(1W|ドライバー|3W|5W|7W|4H|4UT|[4-9]I|PW|52°|58°)';
+function liveClub(n){if(typeof MYCLUBS==='undefined')return null;const c=n==='ドライバー'?'1W':n==='4UT'?'4H':clubCode(n);return c&&MYCLUBS[c]||null;}
+function liveNum(v,k){return Math.round(k==='キャリー'?v.carry:k==='トータル'?(v.total||v.carry):v.sdCarry);}
+function liveTxt(s,yd){if(!s||typeof s!=='string'||typeof MYCLUBS==='undefined'||!Object.keys(MYCLUBS).length)return s;
+  s=s.replace(new RegExp(LIVE_CL+'（([^）]*)）','g'),(a,c,in_)=>{const v=liveClub(c);if(!v)return a;return `${c}（${in_.replace(/(キャリー|トータル)(\d+)y/g,(b,k)=>`${k}${liveNum(v,k)}y`).replace(/ブレ±(\d+)y/g,b=>v.sdCarry?`ブレ±${liveNum(v,'ブレ')}y`:b)}）`;});
+  s=s.replace(new RegExp(LIVE_CL+'(は|の|で|＝)?(キャリー|トータル)(\\d+)y','g'),(a,c,j,k)=>{const v=liveClub(c);return v?`${c}${j||''}${k}${liveNum(v,k)}y`:a;});
+  if(yd){const re=/残り約(\d+)y/g;let out='',last=0,m;
+    while((m=re.exec(s))){const before=s.slice(0,m.index);const seg=before.slice(Math.max(before.lastIndexOf('。'),before.lastIndexOf('：'))+1);let rest=null;
+      if(seg.endsWith('→')){let sum=0,ok=true,n=0;for(const e of seg.slice(0,-1).split('→')){if(/刻/.test(e)){ok=false;break;}const cs=[...e.matchAll(new RegExp(LIVE_CL,'g'))];if(!cs.length){if(!n){ok=false;break;}continue;}for(const cm of cs){const v=liveClub(cm[1]);if(!v){ok=false;break;}sum+=v.total||v.carry;n++;}if(!ok)break;}
+        if(ok&&n){const r=Math.round((yd-sum)/5)*5;if(r>=10)rest=r;}}
+      out+=s.slice(last,m.index)+(rest!=null?`残り約${rest}y`:m[0]);last=m.index+m[0].length;}
+    s=out+s.slice(last);}
+  return s;}
 
 // ── 画面 ──
 let TM_OPEN=false,CLUB_EDIT=false;
