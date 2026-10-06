@@ -232,6 +232,7 @@ function getChk(d,r){try{return JSON.parse(localStorage.getItem(chkKey(d,r))||'[
 function setChk(d,r,a){try{localStorage.setItem(chkKey(d,r),JSON.stringify(a));}catch{}}
 function renderGolf(req){
   if(req){const[r,part]=req.split(':');GOLF_R=r;GOLF_PART=part||'';}
+  if(GOLF_R==='swing'||req==='swing'){GOLF_R='swing';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='swing'));return renderSwing();}
   if(GOLF_R==='clubs'||req==='clubs'){GOLF_R='clubs';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='clubs'));return renderClubs();}
   if(GOLF_R==='rounds'||req==='rounds'){GOLF_R='rounds';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='rounds'));return renderRounds();}
   if(!GOLF_R){const it=planFor(today()).items.find(i=>i.routine);GOLF_R=it?it.routine:'genie';GOLF_PART=it&&it.part||'';}
