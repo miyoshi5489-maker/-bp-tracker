@@ -68,6 +68,9 @@ function clubCode(s){const m=String(s||'').match(/1W|3W|5W|7W|UT|4H|[4-9]I|PW|AW
 function clubFor(dist,skip){const L=clubList().filter(x=>x.carry>0&&!(skip||[]).includes(x.c)).sort((a,b)=>a.carry-b.carry);if(!L.length)return null;
   return L.find(x=>x.carry>=dist-3)||L[L.length-1];}
 
+// パーの呼び方（ショート・ミドル・ロング）
+const PAR_NAME=p=>({3:'ショート',4:'ミドル',5:'ロング'})[p]||'';
+const PAR_BADGE=p=>`<span class="rounded px-1.5 py-0.5 text-[11px] font-bold leading-none" style="${p===3?'background:#e3f2fd;color:#1565c0':p===5?'background:#fce4ec;color:#ad1457':'background:#e8f5e9;color:#2e7d32'}">${PAR_NAME(p)}</span>`;
 // ── 作戦の文章の数字を、最新の飛距離（MYCLUBS）で書き換える ──
 const LIVE_CL='(1W|ドライバー|3W|5W|7W|4H|4UT|[4-9]I|PW|52°|58°)';
 function liveClub(n){if(typeof MYCLUBS==='undefined')return null;const c=n==='ドライバー'?'1W':n==='4UT'?'4H':clubCode(n);return c&&MYCLUBS[c]||null;}
