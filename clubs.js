@@ -149,3 +149,14 @@ async function saveClubEdit(){
   const clubs=CLUB_ORDER.filter(c=>document.querySelector(`[data-cl="${c}"]`)).map(c=>({c,carry:parseFloat(document.querySelector(`[data-cl="${c}"][data-k=carry]`).value)||0,total:parseFloat(document.querySelector(`[data-cl="${c}"][data-k=total]`).value)||0}));
   const rec={id:uid(),date:today(),cat:'full',exercises:[{name:'マイ飛距離',kind:'clubs',clubs}],runDist:0,runTime:0,walkDist:0,walkTime:0,note:'[マイ飛距離]'};
   if(await upsertRec(rec)){CLUB_EDIT=false;toast('保存しました');renderClubs();}}
+// ── 画面のゴルフ表記を日本語に（1W→ドライバー など）。ゴルフの画面・ホールマップ・ヤーデージブックだけ
+const JP_CLUB={'1W':'ドライバー','3W':'3番ウッド','5W':'5番ウッド','7W':'7番ウッド','4H':'4番ユーティリティ','UT':'ユーティリティ','4UT':'4番ユーティリティ','4I':'4番アイアン','5I':'5番アイアン','6I':'6番アイアン','7I':'7番アイアン','8I':'8番アイアン','9I':'9番アイアン','PW':'ピッチング','AW':'アプローチ','SW':'サンド','FW':'フェアウェイ','HC':'ハンデ'};
+const JP_RE=/(?<![A-Za-z0-9])(4UT|1W|3W|5W|7W|4H|UT|[4-9]I|PW|AW|SW|FW|HC)(?![A-Za-z])|(?<![A-Za-z])Par(?=\s*\d|の|$)|(?<![0-9])(52|58)°/g;
+function jpGolf(s){return s.replace(JP_RE,(m,c,d)=>c?JP_CLUB[c]:d?d+'度':'パー');}
+function jpWalk(root){if(!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const p=n.parentNode&&n.parentNode.nodeName;return /^(SCRIPT|STYLE|TEXTAREA|OPTION)$/.test(p)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;}});
+  const L=[];while(w.nextNode())L.push(w.currentNode);L.forEach(n=>{const v=n.nodeValue;if(!/[A-Z]|°/.test(v))return;const t=jpGolf(v);if(t!==v)n.nodeValue=t;});}
+if(typeof MutationObserver!=='undefined'&&typeof document!=='undefined'&&document.addEventListener){
+  const JP_ROOTS=['golf-body','holemap','yb'];let jpT=0;
+  const jpRun=()=>{jpT=0;JP_ROOTS.forEach(id=>jpWalk(document.getElementById(id)));};
+  document.addEventListener('DOMContentLoaded',()=>{new MutationObserver(()=>{if(!jpT)jpT=requestAnimationFrame(jpRun);}).observe(document.body,{childList:true,subtree:true,characterData:true});jpRun();});
+}

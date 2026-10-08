@@ -119,6 +119,7 @@ function drawYardageBook(){
    <div class="yb-help">A4で<b>倍率100％（実際のサイズ）・余白なし</b>で印刷 → ${S}枚を重ねて点線で十字に切る → <b>左上→右上→左下→右下</b>の束の順に重ねると、表紙・1〜18番・スコアの順になります → 左はじをホッチキスで留める。</div>
    <div class="yb-screen">${cards.join('')}</div>
    <div class="yb-print">${sheets.map(c=>`<div class="yb-sheet">${c.join('')}<i class="yb-cut-v"></i><i class="yb-cut-h"></i></div>`).join('')}</div>`;
+  if(typeof jpWalk==='function')jpWalk(el);
   const fit=()=>{const sc=el.querySelector('.yb-screen');if(!sc)return;const pw=YB_CARD_W*96/25.4;sc.style.zoom=Math.min(1.4,(el.clientWidth-16)/pw);};fit();
   // 文字があふれるカードは文字を小さくする（印刷用にも同じ大きさを写す）
   requestAnimationFrame(()=>{const sc=[...el.querySelectorAll('.yb-screen .yb-txt')];const fs=sc.map(t=>{let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}return f;});
