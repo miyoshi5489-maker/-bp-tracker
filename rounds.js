@@ -170,6 +170,7 @@ function roundStrategy(x){
   if(H.length){const o=x.order||['out','in'];
     out+=`<div class="grid grid-cols-3 gap-2 text-center">${o.map(k=>`<div class="rounded-xl bg-accent-soft p-2"><div class="num text-2xl font-semibold text-accent">${sum(half(k),4)}</div><div class="lbl">${k==='out'?'OUT':'IN'}の目標</div></div>`).join('')}<div class="rounded-xl bg-warn-soft p-2"><div class="num text-2xl font-semibold text-warn">${x.limit||99}</div><div class="lbl">上限</div></div></div>`;}
   if(x.mapKey)out+=`<div class="rounded-xl bg-accent-soft px-3 py-2 text-[13px] text-accent"><b>⛳ ホールをタップするとマップが開きます。</b>1打目・2打目の狙いと残りの距離、池・バンカー・OBの位置が見られます。</div>`;
+  if(x.mapKey&&typeof openYardageBook==='function'&&(ILLUS[x.mapKey]||[]).length)out+=`<button class="btn w-full" onclick="openYardageBook('${x.date}')">📒 ヤーデージブック（手帳サイズで印刷）</button>`;
   if(x.info)out+=`<ul class="grid gap-1 pl-4 text-[13px] text-muted list-disc">${x.info.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;
   if(memo.length)out+=`<div class="grid gap-2"><h3 class="font-bold">作戦メモ</h3><ul class="grid gap-1 pl-4 text-[14px] list-disc">${memo.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`;
   if(x.rules)out+=`<div data-sec="rs-rules" class="grid gap-2"><h3 class="font-bold">当日の${x.rules.length}つの約束</h3>${x.rules.map((r,i)=>`<div class="rounded-xl border border-line p-3"><div class="font-bold"><span class="text-accent">${'①②③④⑤⑥⑦'[i]}</span> ${esc(r[0])}</div><div class="text-[13px] text-muted">${esc(r[1])}</div></div>`).join('')}</div>`;
