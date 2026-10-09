@@ -1,11 +1,11 @@
 // ── 300ヤードへの道（ドライバーの飛距離アップ・プログラム）
 // 数字の目安：キャリー ≒ ボールスピード(mph)×1.6（打ち出し・スピンが良い時の一般的な目安）。トータルはキャリー＋約35y（10/9の実測の差）。
 const D300_LOG=[ // ドライバーのトラックマン（フルスイング・当たった球の平均）
-  {d:'2026-10-03',bs:59.6,bsMax:63.0,carry:194,total:231,best:247,note:''},
-  {d:'2026-10-05',bs:59.1,bsMax:62.5,carry:199,total:234,best:256,note:'Qi35試打'},
-  {d:'2026-10-06',bs:60.2,bsMax:62.4,carry:205,total:236,best:245,note:''},
-  {d:'2026-10-09',bs:62.1,bsMax:65.6,carry:213,total:249,best:265,note:'Qi35新品・初日'},
-  {d:'2026-10-10',bs:62.8,bsMax:67.0,carry:217,total:251,best:269,note:'Qi35・2日目'},
+  {d:'2026-10-03',bestC:221.1,bs:59.6,bsMax:63.0,carry:194,total:231,best:247,note:''},
+  {d:'2026-10-05',bestC:227.2,bs:59.1,bsMax:62.5,carry:199,total:234,best:256,note:'Qi35試打'},
+  {d:'2026-10-06',bestC:216.4,bs:60.2,bsMax:62.4,carry:205,total:236,best:245,note:''},
+  {d:'2026-10-09',bestC:230.1,bs:62.1,bsMax:65.6,carry:213,total:249,best:265,note:'Qi35新品・初日'},
+  {d:'2026-10-10',bestC:240.2,bs:62.8,bsMax:67.0,carry:217,total:251,best:269,note:'Qi35・2日目'},
 ];
 const D300_GOAL=74; // 平均ボールスピード（m/s）
 const D300_STAGES=[
@@ -45,10 +45,12 @@ function renderD300(){
   el.innerHTML=`
   <div class="grid gap-1"><div class="font-display text-2xl">300ヤードへの道</div><div class="text-[12px] text-muted">ドライバーの平均トータル300yまでのプログラム。数字はトラックマン、目標の距離は一般的な目安からの計算です。</div></div>
   <div class="card grid gap-3 p-4">
-   <div class="flex items-end justify-between gap-2"><div><div class="lbl">いまの平均トータル（${+L.d.slice(5,7)}/${+L.d.slice(8)}）</div><div class="flex items-baseline gap-1"><span class="num text-4xl font-semibold text-accent">${L.total}</span><span class="text-sm text-muted">y</span><span class="ml-2 text-[13px] text-muted">ベスト ${L.best}y</span></div></div>
+   <div class="flex items-end justify-between gap-2"><div><div class="lbl">いまの平均トータル（${+L.d.slice(5,7)}/${+L.d.slice(8)}）</div><div class="flex items-baseline gap-1"><span class="num text-4xl font-semibold text-accent">${L.total}</span><span class="text-sm text-muted">y</span></div></div>
     <div class="text-right"><div class="lbl">目標</div><div class="num text-2xl font-semibold">300<span class="text-sm text-muted">y</span></div></div></div>
    <div><div class="mb-1 flex justify-between text-[12px]"><span>平均ボールスピード <b>${L.bs}</b> m/s</span><span class="text-muted">目標 ${D300_GOAL} m/s（あと${(D300_GOAL-L.bs).toFixed(1)}）</span></div>
     <div class="h-3 overflow-hidden rounded-full bg-line"><div class="h-full rounded-full bg-accent" style="width:${pct}%"></div></div></div>
+   ${(()=>{const mx=k=>D300_LOG.reduce((b,r)=>r[k]>b[k]?r:b);const md=r=>`${+r.d.slice(5,7)}/${+r.d.slice(8)}`;const bt=mx('best'),bc=mx('bestC'),bs=mx('bsMax');
+     return `<div class="grid grid-cols-3 gap-2 text-center">${[['ベスト トータル',bt.best,'y',bt],['ベスト キャリー',Math.round(bc.bestC),'y',bc],['最速 打球速度',bs.bsMax.toFixed(1),'m/s',bs]].map(([l,v,u,r])=>`<div class="rounded-xl bg-accent-soft px-1 py-2"><div class="text-[11px] font-bold text-muted">${l}</div><div class="num text-2xl font-semibold text-accent leading-tight">${v}<span class="text-[11px] text-muted">${u}</span></div><div class="text-[10px] text-muted">${md(r)}</div></div>`).join('')}</div>`;})()}
    <div class="text-[13px]">10月の伸び：平均トータル <b>${first.total}→${L.total}y</b>（＋${L.total-first.total}y）。ほとんどが「当たり方」の改善で、ボールスピードは${first.bs}→${L.bs} m/s。</div>
   </div>
   <div class="grid gap-2"><h3 class="h2 border-b-2 border-fg pb-1">ステップ</h3>
@@ -65,8 +67,8 @@ function renderD300(){
     <p class="text-[13px] text-muted">${esc(m.d)}</p>
     <div class="grid gap-2 sm:grid-cols-2">${m.ex.map(([a,b])=>`<div class="rounded-lg bg-field px-3 py-2 ring-1 ring-line"><div class="text-[14px] font-bold">${esc(a)}</div><div class="text-[13px] leading-snug text-muted">${esc(b)}</div></div>`).join('')}</div></div>`).join('')}
   <div class="grid gap-2"><h3 class="h2 border-b-2 border-fg pb-1">記録（ドライバー・フルスイング）</h3>
-   <div class="overflow-x-auto"><table class="w-full text-center text-[13px]"><tr class="text-[11px] text-muted"><th class="py-1">日付</th><th>ボールスピード</th><th>最速</th><th>キャリー</th><th>トータル</th><th>ベスト</th></tr>
-   ${D300_LOG.map(r=>`<tr class="border-t border-line"><td class="py-1.5">${+r.d.slice(5,7)}/${+r.d.slice(8)}${r.note?`<div class="text-[10px] text-muted">${esc(r.note)}</div>`:''}</td><td>${r.bs}</td><td>${r.bsMax}</td><td>${r.carry}</td><td><b>${r.total}</b></td><td>${r.best}</td></tr>`).join('')}</table></div>
+   <div class="overflow-x-auto"><table class="w-full text-center text-[13px]"><tr class="text-[11px] text-muted"><th class="py-1">日付</th><th>ボールスピード</th><th>最速</th><th>キャリー</th><th>トータル</th><th>ベスト</th><th>ベスト<br>キャリー</th></tr>
+   ${D300_LOG.map(r=>`<tr class="border-t border-line"><td class="py-1.5">${+r.d.slice(5,7)}/${+r.d.slice(8)}${r.note?`<div class="text-[10px] text-muted">${esc(r.note)}</div>`:''}</td><td>${r.bs}</td><td>${r.bsMax}</td><td>${r.carry}</td><td><b>${r.total}</b></td><td>${r.best}</td><td>${Math.round(r.bestC)}</td></tr>`).join('')}</table></div>
    <div class="rounded-lg bg-accent-soft px-3 py-2 text-[13px]"><b class="text-accent">測るもの：</b>2週間に1回、トラックマンで <b>ヘッドスピード・ボールスピード・ミート率・打ち出し角・スピン量</b> の画面を撮って送る → ここに追加して、ステップを更新します。</div>
   </div>`;
 }
