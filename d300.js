@@ -4,8 +4,8 @@ const D300_LOG=[ // ドライバーのトラックマン（フルスイング・
   {d:'2026-10-03',bestC:221.1,bs:59.6,bsMax:63.0,carry:194,total:231,best:247,note:''},
   {d:'2026-10-05',bestC:227.2,bs:59.1,bsMax:62.5,carry:199,total:234,best:256,note:'Qi35試打'},
   {d:'2026-10-06',bestC:216.4,bs:60.2,bsMax:62.4,carry:205,total:236,best:245,note:''},
-  {d:'2026-10-09',bestC:230.1,bs:62.1,bsMax:65.6,carry:213,total:249,best:265,note:'Qi35新品・初日（スリーブLOWER）'},
-  {d:'2026-10-10',bestC:240.2,bs:62.8,bsMax:67.0,carry:217,total:251,best:269,note:'Qi35・2日目（スリーブLOWER）'},
+  {d:'2026-10-09',bestC:230.1,bs:62.1,bsMax:65.6,carry:213,total:249,best:265,note:'Qi35新品・初日'},
+  {d:'2026-10-10',bestC:240.2,bs:62.8,bsMax:67.0,carry:217,total:251,best:269,note:'Qi35・2日目'},
 ];
 const D300_GOAL=74; // 平均ボールスピード（m/s）
 const D300_STAGES=[
