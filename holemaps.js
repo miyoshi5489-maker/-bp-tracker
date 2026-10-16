@@ -154,7 +154,7 @@ function caddie(x,h,m){
   const T=m.t||[];const out=[];
   const sd0=(HOLE_SIDES[x.mapKey]||{})[h[0]];if(sd0){out.push(`<span class="${sideCls(sd0.L)}">左 ${sideMark(sd0.L)} ${esc(sd0.L)}</span>`);out.push(`<span class="${sideCls(sd0.R)}">右 ${sideMark(sd0.R)} ${esc(sd0.R)}</span>`);if(sd0.F)out.push(`<span class="text-warn">前 ✕ ${esc(sd0.F)}</span>`);if(sd0.B)out.push(`<span class="text-warn">奥 ✕ ${esc(sd0.B)}</span>`);}
   const st=(HOLE_STATS[x.mapKey]||{})[h[0]];if(st)out.push(`<span class="text-muted">同じレベル（96〜105）の平均 <b class="text-fg">${st.avg.toFixed(2)}</b>・難易度${st.rank}位・OB率${Math.round(st.ob)}%${h[1]>3?`・FWキープ${Math.round(st.fw)}%`:''}（GDO）</span>`);
-  if(h[1]===3)out.push(`<b>ショートホール</b>：ティーショットで直接グリーンを狙う。ドライバーは使わない。`);
+  if(h[1]===3){const c3=typeof MYCLUBS!=='undefined'&&MYCLUBS[clubCode(h[5])];const yd3=TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2];out.push(c3&&(c3.total||c3.carry)<yd3-10?`<b>ショートホール</b>：${clubCode(h[5])}（トータル${Math.round(c3.total||c3.carry)}y）では届かないので、グリーン手前の安全な所に置いて寄せる。ドライバーは使わない。`:`<b>ショートホール</b>：ティーショットで直接グリーンを狙う。ドライバーは使わない。`);}
   const dw=h[1]>3&&(DW_WHY[x.mapKey]||{})[h[0]];if(dw){const use=teeCodeOf(x,h)==='1W';const col=use?'text-accent':dw[0]==='条件つき'?'text-sand':'text-warn';out.push(`<span class="${col}"><b>ドライバー：${use?'使う':dw[0]}</b></span>　${esc(dw[1])}`);}
   const hasClubs=typeof MYCLUBS!=='undefined'&&Object.keys(MYCLUBS).length;
   if(T[0]&&hasClubs){const code=clubCode(T[0][2])||clubCode(h[5]);const c=code&&MYCLUBS[code];
