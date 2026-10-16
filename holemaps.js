@@ -268,7 +268,7 @@ function drawHoleMap(){
       :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
        :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
-    ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}（${IL.note}）・図をタップで距離／ドラッグで移動／2本指で拡大縮小</div>`}
+    ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}（${IL.note}）・図をタップで距離／ドラッグか矢印キーで移動／2本指か＋−で拡大縮小</div>`}
     ${gv||!IL?'':`${VW.length>1?`<div class="absolute left-3 top-3 z-10 flex gap-1">${VW.map((v,k)=>`<button class="rounded-full px-3 py-1 text-[12px] font-bold " style="${k===(HM.src||0)?'background:#fff;color:#111':'background:rgba(0,0,0,.45);color:#fff'}" onclick="HM.src=${k};HM.tap=null;HM.L=0;drawHoleMap()">${v.name}</button>`).join('')}</div>`:''}`}
     ${gv?'':`<div class="absolute right-3 top-3 z-10 grid gap-2">
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
@@ -326,3 +326,14 @@ function dwGroups(x){const g={use:[],cond:[],no:[],short:[]};(x.holes||[]).forEa
   if(h[1]===3){g.short.push(n);return;}const dw=(DW_WHY[x.mapKey]||{})[n];
   if(teeCodeOf(x,h)==='1W')g.use.push(n);else if((dw&&dw[0]==='条件つき')||/1W|ドライバー/.test(h[5]))g.cond.push(n);else g.no.push(n);});return g;}
 const DW_LABEL=[['use','決まり','ドライバー','#1b5e20'],['cond','調子次第','当日決める','#a8740f'],['no','使わない','5W・4H','#c62828'],['short','ショートH','ドライバーなし','#555']];
+// キーボード：矢印キーでマップを動かす（Shift＋矢印で大きく）、＋／−で拡大縮小、Escで閉じる
+document.addEventListener('keydown',e=>{
+  if(typeof HM==='undefined'||!HM||!document.getElementById('holemap'))return;
+  const t=e.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
+  const sc=document.getElementById('hm-scroll');if(!sc)return;
+  const st=e.shiftKey?240:80;const mv={ArrowUp:[0,-st],ArrowDown:[0,st],ArrowLeft:[-st,0],ArrowRight:[st,0]}[e.key];
+  if(mv){e.preventDefault();sc.scrollBy({left:mv[0],top:mv[1],behavior:'smooth'});return;}
+  if(e.key==='+'||e.key===';'||e.key==='='){e.preventDefault();zoomHoleMap(1);return;}
+  if(e.key==='-'){e.preventDefault();zoomHoleMap(-1);return;}
+  if(e.key==='Escape'){e.preventDefault();closeHoleMap();}
+});
