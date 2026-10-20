@@ -337,3 +337,16 @@ document.addEventListener('keydown',e=>{
   if(e.key==='-'){e.preventDefault();zoomHoleMap(-1);return;}
   if(e.key==='Escape'){e.preventDefault();closeHoleMap();}
 });
+// コースの様子：航空写真（Googleマップの衛星写真）・空撮の全景写真・公式のホール写真
+const COURSE_VIEW={
+  taka:{q:'宝塚クラシックゴルフ倶楽部',pano:['https://image.gora.golf.rakuten.co.jp/img/golf/drone/panorama/280079.jpg','ゴルフ場全景写真（楽天GORA）'],drone:['https://booking.gora.golf.rakuten.co.jp/guide/course_info/drone/disp/c_id/280079','楽天GORAのドローン空撮動画を見る']},
+  tojo:{q:'東条湖カントリー倶楽部'}};
+function courseView(x){const v=COURSE_VIEW[x.mapKey];if(!v)return '';const ph=(typeof PHOTOS!=='undefined'&&PHOTOS[x.mapKey])||{};
+  const map=`https://maps.google.com/maps?q=${encodeURIComponent(v.q)}&t=k&z=16&output=embed`;
+  return `<details class="rounded-xl border border-line" open><summary class="cursor-pointer list-none px-3 py-2 font-bold">🛰 コースの様子（航空写真・写真）<span class="ml-1 text-[11px] font-normal text-muted">タップで閉じる</span></summary><div class="grid gap-2 px-3 pb-3">
+   ${v.pano?`<figure class="grid gap-1"><img src="${v.pano[0]}" alt="${esc(x.course)}の全景" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"><figcaption class="text-[10px] text-muted">${esc(v.pano[1])}</figcaption></figure>`:''}
+   <div class="overflow-hidden rounded-lg ring-1 ring-line" style="aspect-ratio:4/3"><iframe src="${map}" title="${esc(x.course)}の航空写真" class="h-full w-full" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>
+   <div class="text-[10px] text-muted">航空写真：Googleマップ（指で拡大・移動できます）</div>
+   ${Object.keys(ph).length?`<div class="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1">${Object.entries(ph).map(([n,u])=>`<figure class="w-[78%] shrink-0 snap-center"><img src="${u}" alt="${n}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[11px] font-bold">${n}番ホール<span class="font-normal text-muted">（公式サイトの写真）</span></figcaption></figure>`).join('')}</div>`:''}
+   ${v.drone?`<a class="btn-sm justify-self-start" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
+  </div></details>`;}
