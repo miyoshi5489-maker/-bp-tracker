@@ -251,18 +251,18 @@ function drawHoleMap(){
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}
-  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const gv=HM.view==='green';
+  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const pv0=HM.view==='photo'&&!!COURSE_VIEW[x.mapKey];const gv=HM.view==='green'||pv0;
   el.innerHTML=`
    <div class="flex items-center gap-2 border-b border-line bg-surface px-3 py-2" style="padding-top:calc(env(safe-area-inset-top,0px) + 8px)">
     <span class="grid h-10 w-10 place-items-center rounded-lg ${col} font-mono text-lg font-bold text-surface">${h[0]}</span>
     <div class="min-w-0 flex-1"><div class="font-bold leading-tight">${PAR_BADGE(h[1])} Par${h[1]}・${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2]}y <span class="text-[11px] font-normal text-muted">${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][0]:''}</span></div><div class="text-[12px] text-muted">目標 <b class="text-accent">${h[4]}</b>　ティー ${esc(h[5])}</div></div>
-    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button></div>
+    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv&&!pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button>${COURSE_VIEW[x.mapKey]?`<button class="${pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='photo';drawHoleMap()">空撮</button>`:''}</div>
     <button class="btn-sm !px-2" onclick="closeHoleMap()">✕</button>
    </div>
    <div class="flex min-h-0 flex-1 flex-col lg:flex-row-reverse">
    <div class="relative min-h-0 flex-1">
     <div id="hm-scroll" class="absolute inset-0 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y;overscroll-behavior:contain">
-     ${gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>${greenSVG(g,pin)}
+     ${pv0?hmPhotoView(x,h,PH):gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>${greenSVG(g,pin)}
        <div class="text-center text-[12px] text-white">ピン：${pin.y===0?'真ん中':pin.y>0?`中心から奥へ${Math.round(pin.y)}y`:`中心から手前へ${Math.round(-pin.y)}y`}${pin.x?`・${pin.x>0?'右':'左'}${Math.abs(Math.round(pin.x))}y`:''}（手前から${Math.round(g.d/2+pin.y)}y）　大きさの目安 ${g.w}×${g.d}y</div>
        <div class="flex justify-center"><button class="btn-sm !border-white !text-white" onclick="setPin(HM.date,HM.no,{x:0,y:0});drawHoleMap()">ピンを真ん中に戻す</button></div></div>`
       :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
@@ -288,13 +288,14 @@ function drawHoleMap(){
     <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
    </div>
    </div>`;
+  if(pv0)return;
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
   const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*vb.width/vb.height);
   const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
   inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
   if(HM.pos){const p=HM.pos;HM.pos=null;requestAnimationFrame(()=>{sc.scrollLeft=p[0];sc.scrollTop=p[1];});}
-  else if(!HM.tap)requestAnimationFrame(()=>{const i=$('hm-in'),pd=$('hm-pad');sc.scrollTop=pd.offsetTop+i.offsetTop+i.offsetHeight-sc.clientHeight+8;sc.scrollLeft=pd.offsetLeft+i.offsetLeft+i.offsetWidth/2-sc.clientWidth/2;});
+  else if(!HM.tap)requestAnimationFrame(()=>{const i=$('hm-in'),pd=$('hm-pad');if(!i||!pd)return;sc.scrollTop=pd.offsetTop+i.offsetTop+i.offsetHeight-sc.clientHeight+8;sc.scrollLeft=pd.offsetLeft+i.offsetLeft+i.offsetWidth/2-sc.clientWidth/2;});
 }
 // 拡大縮小：（px,py）＝画面上の基準点（その点が動かないように拡大する）
 function hmZoomTo(z,px,py){const sc=$('hm-scroll');const inn=$('hm-in');if(!sc||!inn)return;const r=sc.getBoundingClientRect();
@@ -350,3 +351,15 @@ function courseView(x){const v=COURSE_VIEW[x.mapKey];if(!v)return '';const ph=(t
    ${Object.keys(ph).length?`<div class="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1">${Object.entries(ph).map(([n,u])=>`<figure class="w-[78%] shrink-0 snap-center"><img src="${u}" alt="${n}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[11px] font-bold">${n}番ホール<span class="font-normal text-muted">（公式サイトの写真）</span></figcaption></figure>`).join('')}</div>`:''}
    ${v.drone?`<a class="btn-sm justify-self-start" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
   </div></details>`;}
+
+// ホールマップの「航空写真」：そのホールの公式写真・コース全景（空撮）・Googleマップの航空写真
+// ※ホールごとの位置データ（OpenStreetMap）が無いので、航空写真はコース全体。指で拡大して見る。
+function hmPhotoView(x,h,PH){const v=COURSE_VIEW[x.mapKey];const W='class="text-[11px] text-white/80"';
+  const map=`https://maps.google.com/maps?q=${encodeURIComponent(v.q)}&t=k&z=16&output=embed`;
+  return `<div class="mx-auto grid max-w-3xl gap-3 p-3">
+   ${PH?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">${h[0]}番ホール（ティーからの景色）</div><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" referrerpolicy="no-referrer"><figcaption ${W}>写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`
+     :`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真：情報なし（公式サイトの写真は${Object.keys((PHOTOS[x.mapKey]||{})).map(n=>n+'番').join('・')||'なし'}）</div>`}
+   ${v.pano?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">コース全体（ドローン空撮）</div><img src="${v.pano[0]}" alt="${esc(x.course)}の全景" class="w-full rounded-lg" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"><figcaption ${W}>${esc(v.pano[1])}</figcaption></figure>`:''}
+   <div class="grid gap-1"><div class="text-[13px] font-bold text-white">航空写真（指で拡大・移動）</div><div class="overflow-hidden rounded-lg" style="aspect-ratio:4/3"><iframe src="${map}" title="${esc(x.course)}の航空写真" class="h-full w-full" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div><div ${W}>Googleマップ。ホールごとの位置データが無いので、コース全体を表示しています。</div></div>
+   ${v.drone?`<a class="btn-sm justify-self-start !border-white !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
+  </div>`;}
