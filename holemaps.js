@@ -265,12 +265,12 @@ function drawHoleMap(){
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}
-  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const pv0=HM.view==='photo'&&!!COURSE_VIEW[x.mapKey];const gv=HM.view==='green'||pv0;
+  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=HM.view==='photo'&&hasView;const gv=HM.view==='green'||pv0;
   el.innerHTML=`
    <div class="flex items-center gap-2 border-b border-line bg-surface px-3 py-2" style="padding-top:calc(env(safe-area-inset-top,0px) + 8px)">
     <span class="grid h-10 w-10 place-items-center rounded-lg ${col} font-mono text-lg font-bold text-surface">${h[0]}</span>
     <div class="min-w-0 flex-1"><div class="font-bold leading-tight">${PAR_BADGE(h[1])} Par${h[1]}・${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2]}y <span class="text-[11px] font-normal text-muted">${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][0]:''}</span></div><div class="text-[12px] text-muted">目標 <b class="text-accent">${h[4]}</b>　ティー ${esc(h[5])}</div></div>
-    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv&&!pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button>${COURSE_VIEW[x.mapKey]?`<button class="${pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='photo';drawHoleMap()">空撮</button>`:''}</div>
+    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv&&!pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button>${hasView?`<button class="${pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='photo';drawHoleMap()">景色</button>`:''}</div>
     <button class="btn-sm !px-2" onclick="closeHoleMap()">✕</button>
    </div>
    <div class="flex min-h-0 flex-1 flex-col lg:flex-row-reverse">
@@ -362,27 +362,28 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){e.preventDefault();closeHoleMap();}
 });
 // コースの様子：航空写真（Googleマップの衛星写真）・空撮の全景写真・公式のホール写真
+// 実際に回った人の動画（YouTube・コタちゃんねるゴルフ日記・2021年12月・フロントティー）。各ホールのティーの景色から再生（10秒単位の目安）。
+const HOLE_VIDEOS={taka:{src:'コタちゃんねるゴルフ日記（YouTube・2021年12月・フロントティー）',
+  out:'icEQXW6fXWY',in:'Yk9uQerggPE',
+  t:{1:[10,170],2:[170,260],3:[260,350],4:[350,420],5:[420,520],6:[520,590],7:[590,720],8:[720,810],9:[810,945],
+     10:[20,150],11:[150,240],12:[240,350],13:[350,490],14:[490,570],15:[570,680],16:[680,760],17:[760,860],18:[860,950]}}};
+function holeVideo(key,n,big){const V=(HOLE_VIDEOS[key]||{});const t=V.t&&V.t[n];if(!t)return '';const id=n<=9?V.out:V.in;
+  const mm=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  return `<div class="grid gap-1"><div class="text-[13px] font-bold ${big?'text-white':''}">${n}番ホールの動画（ティーの景色から）</div><div class="overflow-hidden rounded-lg bg-black" style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${id}?start=${t[0]}&end=${t[1]}&rel=0&playsinline=1&modestbranding=1" title="${n}番ホールの動画" class="h-full w-full" style="border:0" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="text-[11px] ${big?'text-white/80':'text-muted'}">動画：${esc(V.src)}・${mm(t[0])}から（時間は目安）。季節・ティーの位置は当日と違います。</div></div>`;}
 const COURSE_VIEW={
   taka:{q:'宝塚クラシックゴルフ倶楽部',pano:['https://image.gora.golf.rakuten.co.jp/img/golf/drone/panorama/280079.jpg','ゴルフ場全景写真（楽天GORA）'],drone:['https://booking.gora.golf.rakuten.co.jp/guide/course_info/drone/disp/c_id/280079','楽天GORAのドローン空撮動画を見る']},
   tojo:{q:'東条湖カントリー倶楽部'}};
-function courseView(x){const v=COURSE_VIEW[x.mapKey];if(!v)return '';const ph=(typeof PHOTOS!=='undefined'&&PHOTOS[x.mapKey])||{};
-  const map=`https://maps.google.com/maps?q=${encodeURIComponent(v.q)}&t=k&z=16&output=embed`;
-  return `<details class="rounded-xl border border-line" open><summary class="cursor-pointer list-none px-3 py-2 font-bold">🛰 コースの様子（航空写真・写真）<span class="ml-1 text-[11px] font-normal text-muted">タップで閉じる</span></summary><div class="grid gap-2 px-3 pb-3">
-   ${v.pano?`<figure class="grid gap-1"><img src="${v.pano[0]}" alt="${esc(x.course)}の全景" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"><figcaption class="text-[10px] text-muted">${esc(v.pano[1])}</figcaption></figure>`:''}
-   <div class="overflow-hidden rounded-lg ring-1 ring-line" style="aspect-ratio:4/3"><iframe src="${map}" title="${esc(x.course)}の航空写真" class="h-full w-full" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>
-   <div class="text-[10px] text-muted">航空写真：Googleマップ（指で拡大・移動できます）</div>
+function courseView(x){const v=COURSE_VIEW[x.mapKey];if(!v)return '';const ph=(typeof PHOTOS!=='undefined'&&PHOTOS[x.mapKey])||{};if(!Object.keys(ph).length&&!v.drone)return '';
+  return `<details class="rounded-xl border border-line" open><summary class="cursor-pointer list-none px-3 py-2 font-bold">📷 コースの様子（公式のホール写真）<span class="ml-1 text-[11px] font-normal text-muted">タップで閉じる</span></summary><div class="grid gap-2 px-3 pb-3">
    ${Object.keys(ph).length?`<div class="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1">${Object.entries(ph).map(([n,u])=>`<figure class="w-[78%] shrink-0 snap-center"><img src="${u}" alt="${n}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[11px] font-bold">${n}番ホール<span class="font-normal text-muted">（公式サイトの写真）</span></figcaption></figure>`).join('')}</div>`:''}
    ${v.drone?`<a class="btn-sm justify-self-start" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
   </div></details>`;}
 
-// ホールマップの「航空写真」：そのホールの公式写真・コース全景（空撮）・Googleマップの航空写真
-// ※ホールごとの位置データ（OpenStreetMap）が無いので、航空写真はコース全体。指で拡大して見る。
-function hmPhotoView(x,h,PH){const v=COURSE_VIEW[x.mapKey];const W='class="text-[11px] text-white/80"';
-  const map=`https://maps.google.com/maps?q=${encodeURIComponent(v.q)}&t=k&z=16&output=embed`;
+// ホールマップの「景色」：そのホールの公式写真と、実際に回った人の動画（ティーの景色から）
+function hmPhotoView(x,h,PH){const v=COURSE_VIEW[x.mapKey]||{};const W='class="text-[11px] text-white/80"';
   return `<div class="mx-auto grid max-w-3xl gap-3 p-3">
    ${PH?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">${h[0]}番ホール（ティーからの景色）</div><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" referrerpolicy="no-referrer"><figcaption ${W}>写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`
-     :`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真：情報なし（公式サイトの写真は${Object.keys((PHOTOS[x.mapKey]||{})).map(n=>n+'番').join('・')||'なし'}）</div>`}
-   ${v.pano?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">コース全体（ドローン空撮）</div><img src="${v.pano[0]}" alt="${esc(x.course)}の全景" class="w-full rounded-lg" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"><figcaption ${W}>${esc(v.pano[1])}</figcaption></figure>`:''}
-   <div class="grid gap-1"><div class="text-[13px] font-bold text-white">航空写真（指で拡大・移動）</div><div class="overflow-hidden rounded-lg" style="aspect-ratio:4/3"><iframe src="${map}" title="${esc(x.course)}の航空写真" class="h-full w-full" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div><div ${W}>Googleマップ。ホールごとの位置データが無いので、コース全体を表示しています。</div></div>
+     :''}
+   ${holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
    ${v.drone?`<a class="btn-sm justify-self-start !border-white !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
   </div>`;}
