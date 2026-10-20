@@ -167,7 +167,7 @@ function caddie(x,h,m){
   const last=T.length?T[T.length-1]:[0,teeShift(x.mapKey,h[0])];const dist=Math.round(Math.hypot(P[0]-last[0],P[1]-last[1]));
   const toC=Math.hypot(G[0]-last[0],G[1]-last[1]);const fr=Math.round(toC-g.d/2),bk=Math.round(toC+g.d/2);
   const pc=!T.length&&hasClubs&&teeCodeOf(x,h);const cf=pc&&MYCLUBS[pc]?MYCLUBS[pc]:hasClubs&&clubFor(dist,['1W']);
-  out.push(`<b>${T.length?(T.length+1)+'打目':'ティーショット'}</b>：ピンまで<b>${dist}y</b>（手前${fr}y・奥${bk}y）${cf?` → <b class="text-accent">${cf.c}</b>（キャリー${Math.round(cf.carry)}y${cf.carry<dist-3&&(cf.total||0)>=dist-5?`・トータル${Math.round(cf.total)}y＝転がして届く`:''}）`:''}`);
+  out.push(`<b>${T.length?(T.length+1)+'打目':'ティーショット'}</b>：ピンまで<b>${dist}y</b>（手前${fr}y・奥${bk}y）${cf?` → <b class="text-accent">${cf.c}</b>${cf.course&&!pc?`（コースで${cf.course[0]}〜${cf.course[1]>=999?'':cf.course[1]}y・10/20の番手表）`:`（キャリー${Math.round(cf.carry)}y${cf.carry<dist-3&&(cf.total||0)>=dist-5?`・トータル${Math.round(cf.total)}y＝転がして届く`:''}）`}`:''}`);
   if(g.note)out.push(`グリーン：${esc(g.note)}`);
   return out;
 }

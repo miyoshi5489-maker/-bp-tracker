@@ -91,8 +91,8 @@ function ybCover(x){
    <div class="yb-big">${esc(x.planName)}プラン 目標 <b>${x.target}</b><span class="yb-mut">（OUT ${sum(out,4)}・IN ${sum(inn,4)}・上限 ${x.limit||99}）</span></div>
    ${x.rules?`<div class="yb-sec">当日の約束</div><ol>${x.rules.map(r=>`<li><b>${esc(r[0])}</b></li>`).join('')}</ol>`:''}
    ${typeof dwGroups==='function'?(()=>{const g=dwGroups(x);return `<div class="yb-sec">ドライバーの使い分け</div><table class="yb-tbl">${DW_LABEL.map(([k,l,s2,c])=>g[k].length?`<tr><th style="color:${c};width:22%">${l}</th><td style="text-align:left;font-weight:bold">${g[k].join('・')}番</td><td style="width:18%">${g[k].length}回</td></tr>`:'').join('')}</table>`;})():''}
-   <div class="yb-sec">自分の飛距離（トラックマン）</div>
-   <table class="yb-tbl"><tr><th>クラブ</th><th>キャリー</th><th>トータル</th><th>左右</th></tr>${cl.map(c=>`<tr><td>${c.c}</td><td>${Math.round(c.carry)}</td><td>${Math.round(c.total||c.carry)}</td><td>${c.side!=null?(c.side>0?'右':'左')+Math.abs(Math.round(c.side)):'－'}</td></tr>`).join('')}</table>
+   ${typeof COURSE_YARDS!=='undefined'?`<div class="yb-sec">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)}）</div><table class="yb-tbl"><tr>${COURSE_YARDS.rows.map(r=>`<th>${r[0]}</th>`).join('')}</tr><tr>${COURSE_YARDS.rows.map(r=>`<td>${r[1]===0?'〜'+r[2]:r[2]>=999?r[1]+'〜':r[1]+'〜'+r[2]}</td>`).join('')}</tr></table>`:''}
+   <div class="yb-sec">ティーショット（トラックマン）</div><table class="yb-tbl"><tr><th>クラブ</th><th>キャリー</th><th>トータル</th><th>左右</th></tr>${cl.filter(c=>['1W','5W','4H'].includes(c.c)).map(c=>`<tr><td>${c.c}</td><td>${Math.round(c.carry)}</td><td>${Math.round(c.total||c.carry)}</td><td>${c.side!=null?(c.side>0?'右':'左')+Math.abs(Math.round(c.side)):'－'}</td></tr>`).join('')}</table>
    <div class="yb-foot">作成 ${new Date().toLocaleDateString('ja-JP')}・最新データで作り直すには、アプリで開き直して印刷<span>表紙</span></div>
   </div>`;
 }

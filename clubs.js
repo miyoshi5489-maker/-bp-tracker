@@ -65,7 +65,12 @@ function buildClubs(recs){
 const clubList=()=>CLUB_ORDER.filter(c=>MYCLUBS[c]).map(c=>MYCLUBS[c]);
 function clubCode(s){const m=String(s||'').match(/1W|3W|5W|7W|UT|4H|[4-9]I|PW|AW|SW|LW|52°|58°/);if(!m)return null;return {UT:'4H',AW:'52°',SW:'58°',LW:'58°'}[m[0]]||m[0];}
 // 残り距離にいちばん合うクラブ（キャリーが残り距離以上で一番短いもの）
-function clubFor(dist,skip){const L=clubList().filter(x=>x.carry>0&&!(skip||[]).includes(x.c)).sort((a,b)=>a.carry-b.carry);if(!L.length)return null;
+// コースで実際に使った番手の距離（10/20 東条湖のラウンド後に洋平さんが決めた表）。残り距離からのクラブ選びはこれを優先する
+const COURSE_YARDS={date:'2026-10-20',rows:[['58°',0,90],['52°',90,110],['PW',110,120],['9I',120,130],['8I',130,140],['7I',140,150],['6I',150,160],['4H',160,180],['5W',180,999]]};
+function clubFor(dist,skip){
+  if(typeof COURSE_YARDS!=='undefined'&&typeof MYCLUBS!=='undefined'){const row=COURSE_YARDS.rows.find(r=>dist<r[2]&&!(skip||[]).includes(r[0]))||COURSE_YARDS.rows.filter(r=>!(skip||[]).includes(r[0])).slice(-1)[0];
+    if(row){const c=MYCLUBS[row[0]]||{c:row[0],carry:(row[1]+Math.min(row[2],row[1]+20))/2};return {...c,c:row[0],course:[row[1],row[2]]};}}
+const L=clubList().filter(x=>x.carry>0&&!(skip||[]).includes(x.c)).sort((a,b)=>a.carry-b.carry);if(!L.length)return null;
   return L.find(x=>x.carry>=dist-3)||L[L.length-1];}
 
 // パーの呼び方（ショート・ミドル・ロング）
@@ -94,6 +99,8 @@ async function renderClubs(){
   const tmN=L.filter(x=>x.src.startsWith('TM')).length;
   el.innerHTML=`
   <div class="grid gap-1"><div class="font-display text-2xl">マイ飛距離</div><div class="text-[12px] text-muted">ラウンドのマップのクラブ選び・残り距離のおすすめ・ブレの範囲は、この表を使います。</div></div>
+  <div class="card grid gap-2 p-4"><div class="font-bold">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)} 東条湖のラウンドから）</div><div class="text-[12px] text-muted">残り距離からのクラブ選び（キャディ）は、この表を優先します。</div>
+   <div class="grid grid-cols-3 gap-1.5 text-center sm:grid-cols-9">${COURSE_YARDS.rows.map(r=>`<div class="rounded-lg bg-accent-soft px-1 py-1.5"><div class="text-[13px] font-bold">${r[0]}</div><div class="num text-[12px] text-muted">${r[1]===0?'〜'+r[2]:r[2]>=999?r[1]+'〜':r[1]+'〜'+r[2]}y</div></div>`).join('')}</div></div>
   ${tmN?'':`<div class="rounded-xl bg-warn-soft px-3 py-2 text-[13px] text-warn">まだトラックマンのデータがありません。いまは<b>仮の距離</b>です。セット：D・5W・4H・5〜9I・PW・52°・58°</div>`}
   <div class="card overflow-hidden">
    <div class="grid grid-cols-[3rem_1fr_1fr_1.3fr] gap-2 border-b border-line bg-field px-3 py-2 text-[11px] font-bold text-muted"><span>クラブ</span><span class="text-right">キャリー</span><span class="text-right">トータル</span><span class="text-right">左右のブレ</span></div>
