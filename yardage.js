@@ -43,6 +43,9 @@ function ybShots(I,hi,m,dt){const r=hi.r,s=hi.s,G=r[r.length-1];const T=m.t||[];
   let pv=[0,0];return T.map((t,i)=>{const q=toPx(t[0],t[1]);const d=i===0?Math.round(Math.hypot(q[0]-T0[0],q[1]-T0[1])/s):Math.round(Math.hypot(t[0]-pv[0],t[1]-pv[1]));pv=t;
     return {n:i+1,club:t[2]||'',d,rest:Math.round(Math.hypot(G[0]-q[0],G[1]-q[1])/s)};});}
 
+// 結果（ホールごとの打数）があれば、ヤーデージブックに自動で書き込む
+function ybScore(x,n){const r=x.result;return r&&r.holes&&r.holes[n-1]?r.holes[n-1]:null;}
+function ybDiffCol(d){return d<=0?'#1b5e20':d===1?'#a8740f':'#c62828';}
 const YB_CARD_W=105,YB_CARD_H=148.5,YB_IMG_H=98,YB_IMG_MAXW=46;
 function ybCard(x,h,x2){
   const key=x.mapKey;const IL=(ILLUS[key]||[]).find(v=>v.holes[h[0]]);
@@ -71,14 +74,14 @@ function ybCard(x,h,x2){
   return `<div class="yb-card">
    <div class="yb-head"><div class="yb-num" style="background:${col}">${h[0]}</div>
     <div class="yb-ttl"><div><b>${PAR_NAME(h[1])}</b> Par${h[1]}・<b>${yd}y</b><span class="yb-mut">（${esc(teeName)}）</span></div><div class="yb-mut">HC${h[3]}${st?`・難易度${st.rank}位・OB率${Math.round(st.ob)}%`:''}</div></div>
-    <div class="yb-goal"><div class="yb-mut">目標</div><b>${h[4]}</b>${other?`<div class="yb-mut">${esc(x2.planName)} ${other[4]}</div>`:''}</div></div>
+    ${(()=>{const sc=ybScore(x,h[0]);return sc?`<div class="yb-goal"><div class="yb-mut">結果</div><b style="color:${ybDiffCol(sc-h[4])}">${sc}</b><div class="yb-mut">目標${h[4]}（${sc-h[4]>0?'+':''}${sc-h[4]}）</div></div>`:'';})()}<div class="yb-goal"><div class="yb-mut">目標</div><b>${h[4]}</b>${other?`<div class="yb-mut">${esc(x2.planName)} ${other[4]}</div>`:''}</div></div>
    <div class="yb-body">${fig}
     <div class="yb-txt">
      <div class="yb-tee">1打目 <b>${esc(h[5])}</b></div>${shotLines}${aim}
      <ul>${cad.map(t=>`<li>${t}</li>`).join('')}</ul>
      <div class="yb-plan"><b>狙い</b> ${esc(h[6])}</div>
     </div></div>
-   <div class="yb-score">${['打数','パット','FW','OB・池','メモ'].map(t=>`<div><span>${t}</span></div>`).join('')}</div>
+   <div class="yb-score">${['打数','パット','FW','OB・池','メモ'].map((t,i)=>{const sc=i===0?ybScore(x,h[0]):null;return `<div><span>${t}</span>${sc?`<b style="display:block;text-align:center;font-size:15pt;line-height:1;color:${ybDiffCol(sc-h[4])}">${sc}</b>`:''}</div>`;}).join('')}</div>
    <div class="yb-foot">${IL?esc(IL.credit)+'（縮図・距離は目安）':''}<span>${h[0]}</span></div>
   </div>`;
 }
@@ -88,21 +91,21 @@ function ybCover(x){
   return `<div class="yb-card yb-cover">
    <div class="yb-ctitle">${esc(x.course)}</div>
    <div class="yb-mut">${+x.date.slice(5,7)}/${+x.date.slice(8)}（${'日月火水木金土'[new Date(x.date+'T00:00').getDay()]}）${esc(x.time||'')}・${esc(x.tee||'')}</div>
-   <div class="yb-big">${esc(x.planName)}プラン 目標 <b>${x.target}</b><span class="yb-mut">（OUT ${sum(out,4)}・IN ${sum(inn,4)}・上限 ${x.limit||99}）</span></div>
+   ${x.result&&x.result.score?`<div class="yb-big" style="border:.4mm solid #111;border-radius:1.5mm;padding:1mm 2mm">結果 <b style="color:#c62828">${x.result.score}</b><span class="yb-mut">${x.result.out?`（OUT ${x.result.out}・IN ${x.result.in}）`:''}</span></div>`:''}<div class="yb-big">${esc(x.planName)}プラン 目標 <b>${x.target}</b><span class="yb-mut">（OUT ${sum(out,4)}・IN ${sum(inn,4)}・上限 ${x.limit||99}）</span></div>
    ${x.rules?`<div class="yb-sec">当日の約束</div><ol>${x.rules.map(r=>`<li><b>${esc(r[0])}</b></li>`).join('')}</ol>`:''}
    ${typeof dwGroups==='function'?(()=>{const g=dwGroups(x);return `<div class="yb-sec">ドライバーの使い分け</div><table class="yb-tbl">${DW_LABEL.map(([k,l,s2,c])=>g[k].length?`<tr><th style="color:${c};width:22%">${l}</th><td style="text-align:left;font-weight:bold">${g[k].join('・')}番</td><td style="width:18%">${g[k].length}回</td></tr>`:'').join('')}</table>`;})():''}
    ${typeof COURSE_YARDS!=='undefined'?`<div class="yb-sec">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)}）</div><table class="yb-tbl"><tr>${COURSE_YARDS.rows.map(r=>`<th>${r[0]}</th>`).join('')}</tr><tr>${COURSE_YARDS.rows.map(r=>`<td>${r[1]===0?'〜'+r[2]:r[2]>=999?r[1]+'〜':r[1]+'〜'+r[2]}</td>`).join('')}</tr></table>`:''}
-   <div class="yb-sec">ティーショット（トラックマン）</div><table class="yb-tbl"><tr><th>クラブ</th><th>キャリー</th><th>トータル</th><th>左右</th></tr>${cl.filter(c=>['1W','5W','4H'].includes(c.c)).map(c=>`<tr><td>${c.c}</td><td>${Math.round(c.carry)}</td><td>${Math.round(c.total||c.carry)}</td><td>${c.side!=null?(c.side>0?'右':'左')+Math.abs(Math.round(c.side)):'－'}</td></tr>`).join('')}</table>
+   ${x.result&&x.result.score?'':`<div class="yb-sec">ティーショット（トラックマン）</div><table class="yb-tbl"><tr><th>クラブ</th><th>キャリー</th><th>トータル</th><th>左右</th></tr>${cl.filter(c=>['1W','5W','4H'].includes(c.c)).map(c=>`<tr><td>${c.c}</td><td>${Math.round(c.carry)}</td><td>${Math.round(c.total||c.carry)}</td><td>${c.side!=null?(c.side>0?'右':'左')+Math.abs(Math.round(c.side)):'－'}</td></tr>`).join('')}</table>`}
    <div class="yb-foot">作成 ${new Date().toLocaleDateString('ja-JP')}・最新データで作り直すには、アプリで開き直して印刷<span>表紙</span></div>
   </div>`;
 }
 function ybScoreCard(x){
-  const H=x.holes;const row=hs=>`<tr><th>H</th>${hs.map(h=>`<td>${h[0]}</td>`).join('')}<th>計</th></tr><tr><th>Par</th>${hs.map(h=>`<td>${h[1]}</td>`).join('')}<th>${hs.reduce((s,h)=>s+h[1],0)}</th></tr><tr><th>目標</th>${hs.map(h=>`<td>${h[4]}</td>`).join('')}<th>${hs.reduce((s,h)=>s+h[4],0)}</th></tr><tr class="yb-w"><th>打数</th>${hs.map(()=>'<td></td>').join('')}<th></th></tr><tr class="yb-w"><th>パット</th>${hs.map(()=>'<td></td>').join('')}<th></th></tr>`;
+  const H=x.holes;const row=hs=>`<tr><th>H</th>${hs.map(h=>`<td>${h[0]}</td>`).join('')}<th>計</th></tr><tr><th>Par</th>${hs.map(h=>`<td>${h[1]}</td>`).join('')}<th>${hs.reduce((s,h)=>s+h[1],0)}</th></tr><tr><th>目標</th>${hs.map(h=>`<td>${h[4]}</td>`).join('')}<th>${hs.reduce((s,h)=>s+h[4],0)}</th></tr><tr class="yb-w"><th>打数</th>${hs.map(h=>{const sc=ybScore(x,h[0]);return `<td style="font-weight:bold;${sc?'color:'+ybDiffCol(sc-h[4]):''}">${sc||''}</td>`;}).join('')}<th>${hs.every(h=>ybScore(x,h[0]))?hs.reduce((t,h)=>t+ybScore(x,h[0]),0):''}</th></tr>${hs.every(h=>ybScore(x,h[0]))?`<tr><th>目標差</th>${hs.map(h=>{const d=ybScore(x,h[0])-h[4];return `<td style="color:${ybDiffCol(d)}">${d>0?'+':''}${d}</td>`;}).join('')}<th>${(()=>{const d=hs.reduce((t,h)=>t+ybScore(x,h[0])-h[4],0);return (d>0?'+':'')+d;})()}</th></tr>`:''}<tr class="yb-w"><th>パット</th>${hs.map(()=>'<td></td>').join('')}<th></th></tr>`;
   return `<div class="yb-card yb-cover"><div class="yb-ctitle">スコア</div>
    <div class="yb-sec">OUT</div><table class="yb-tbl yb-sc">${row(H.filter(h=>h[0]<=9))}</table>
    <div class="yb-sec">IN</div><table class="yb-tbl yb-sc">${row(H.filter(h=>h[0]>=10))}</table>
-   <div class="yb-big">合計 ＿＿＿＿　パット ＿＿＿＿</div>
-   <div class="yb-sec">今日よかったこと・次の課題</div><div class="yb-lines">${'<div></div>'.repeat(6)}</div>
+   ${x.result&&x.result.score?`<div class="yb-big">合計 <b>${x.result.score}</b>　目標 ${x.target}（${x.result.score-x.target>0?'+':''}${x.result.score-x.target}）</div>`:'<div class="yb-big">合計 ＿＿＿＿　パット ＿＿＿＿</div>'}
+   <div class="yb-sec">今日よかったこと・次の課題</div>${(()=>{const L=typeof SWING_LOG!=='undefined'&&SWING_LOG.find(c=>c.date===x.date);return L?`<ul style="margin:0;padding-left:4mm;font-size:7pt;line-height:1.5">${L.good.map(g=>`<li>◎ ${esc(g)}</li>`).join('')}${L.fix.map(f=>`<li style="color:#c62828">課題：${esc(f.t)}</li>`).join('')}</ul>`:`<div class="yb-lines">${'<div></div>'.repeat(6)}</div>`;})()}
    <div class="yb-foot"><span>裏表紙</span></div></div>`;
 }
 function drawYardageBook(){

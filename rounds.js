@@ -110,10 +110,11 @@ function roundList(recs){
     ['course','time','tee','members','plan','memo','link'].forEach(k=>{if(e[k])o[k]=e[k];});
     if(parseInt(e.target))o.target=parseInt(e.target);
     if(parseInt(e.stars)||parseFloat(e.cr))o.diff={...(b.diff||{}),...(parseInt(e.stars)?{stars:parseInt(e.stars)}:{}),...(parseFloat(e.cr)?{cr:parseFloat(e.cr)}:{})};
-    if(parseInt(e.score))o.result={score:parseInt(e.score),putts:0};
+    if(parseInt(e.score))o.result={...(b.result||{}),score:parseInt(e.score),putts:0};
+    {const hs=String(e.holes||'').split(/[\s,、・]+/).map(v=>parseInt(v)).filter(v=>v>0);if(hs.length===18){const out=hs.slice(0,9).reduce((a,b)=>a+b,0),inn=hs.slice(9).reduce((a,b)=>a+b,0);o.result={...(o.result||b.result||{}),holes:hs,out,in:inn,score:(o.result&&o.result.score)||out+inn};}}
     m[d]=o;});
   // 結果（今日の記入欄で入れたスコア）
-  recs.forEach(r=>(r.exercises||[]).forEach(e=>{if(e.kind==='round'&&num(e.score)>0&&m[r.date])m[r.date].result={score:num(e.score),putts:num(e.putts)};}));
+  recs.forEach(r=>(r.exercises||[]).forEach(e=>{if(e.kind==='round'&&num(e.score)>0&&m[r.date])m[r.date].result={...(m[r.date].result||{}),score:num(e.score),putts:num(e.putts)};}));
   return Object.values(m).sort((a,b)=>a.date.localeCompare(b.date));
 }
 // 予定表（ホームの「次のゴルフ」）にも追加したラウンドを反映
@@ -203,6 +204,7 @@ function roundForm(list){
    ${f('plan','プラン内容','text',v('plan'),'例：セルフ・カート付き・昼食別')}
    <div class="grid grid-cols-2 gap-3">${f('target','目標スコア','number',v('target'),'例：95')}${f('link','作戦ページのURL','url',x.builtin?'':v('link'),'なくてもOK')}</div>
    <div class="grid grid-cols-3 gap-3">${f('stars','難易度（1〜5）','number',x.diff&&x.diff.stars||'','例：3')}${f('cr','コースレート','number',x.diff&&x.diff.cr||'','例：70.1')}${f('score','スコア（終わったら）','number',x.result?x.result.score:'','例：98')}</div>
+   ${f('holes','ホールごとの打数（1番から18個・スペース区切り。入れるとヤーデージブックに自動で記入）','text',x.result&&x.result.holes?x.result.holes.join(' '):'','例：6 7 5 6 8 7 7 10 5 5 6 7 6 3 6 7 5 6')}
    <label class="grid gap-1"><span class="lbl">作戦メモ（1行に1つ）</span><textarea id="rf-memo" rows="4" class="inp" placeholder="例：OBを0にする&#10;短いミドルは5番ウッド">${v('memo')}</textarea></label>
    <div class="flex gap-2"><button class="btn-main flex-1" onclick="busy(this,roundSave)">保存</button><button class="btn-sub" onclick="ROUND_EDIT=null;renderRounds()">やめる</button></div>
   </div>`;
@@ -231,7 +233,7 @@ async function roundSave(){
   const g=k=>($('rf-'+k)?$('rf-'+k).value.trim():'');
   const d=g('date');if(!d){toast('日付を入れてください',true);return;}
   if(!g('course')&&!ROUND_BASE(d)){toast('ゴルフ場を入れてください',true);return;}
-  const e={name:'ラウンド予定',kind:'roundplan',course:g('course'),time:g('time'),tee:g('tee'),members:g('members'),plan:g('plan'),target:parseInt(g('target'))||0,link:g('link'),memo:g('memo'),stars:Math.min(5,Math.max(0,parseInt(g('stars'))||0)),cr:parseFloat(g('cr'))||0,score:parseInt(g('score'))||0};
+  const e={name:'ラウンド予定',kind:'roundplan',course:g('course'),time:g('time'),tee:g('tee'),members:g('members'),plan:g('plan'),target:parseInt(g('target'))||0,link:g('link'),memo:g('memo'),stars:Math.min(5,Math.max(0,parseInt(g('stars'))||0)),cr:parseFloat(g('cr'))||0,score:parseInt(g('score'))||0,holes:(g('holes')||'').trim()};
   const old=ROUND_EDIT&&ROUND_EDIT!=='new'&&ROUND_EDIT!==d?roundPlanId(ROUND_EDIT):null;
   const rec={id:roundPlanId(d),date:d,cat:'full',exercises:[e],runDist:0,runTime:0,walkDist:0,walkTime:0,note:`[ラウンド予定] ${e.course||ROUND_BASE(d).course}`};
   if(await upsertRec(rec)){
