@@ -125,7 +125,7 @@ function syncRounds(recs){
 async function renderRounds(){
   const el=$('golf-body');const recs=await getRecs();if(typeof buildClubs==='function')buildClubs(recs);syncRounds(recs);
   const list=roundList(recs);const t=today();
-  const up=list.filter(x=>x.date>=t),past=list.filter(x=>x.date<t).reverse();
+  const done=x=>!!(x.result&&x.result.score);const up=list.filter(x=>x.date>=t&&!done(x)),past=list.filter(x=>x.date<t||done(x)).sort((a,b)=>a.date<b.date?1:-1);
   if(ROUND_OPEN===null&&up.length)ROUND_OPEN=up[0].date;
   el.innerHTML=`
   <div class="flex flex-wrap items-end justify-between gap-2"><div><div class="font-display text-2xl">ラウンド</div><div class="text-[12px] text-muted">予定と作戦。タップで作戦を開きます。</div></div>
@@ -146,7 +146,7 @@ function roundCard(x,t){
      ${secs.length?`<div class="no-scrollbar -mx-1 flex gap-1 overflow-x-auto px-1">${secs.map(([id,l])=>`<button class="shrink-0 rounded-full bg-field px-2.5 py-1 text-[12px] font-bold ring-1 ring-line" onclick="roundJump('${id}-${x.date}')">${l}</button>`).join('')}</div>`:''}
     </div>`:''}
    <button class="grid w-full gap-1.5 p-4 text-left" onclick="roundToggle('${x.date}')" aria-expanded="${open}">
-    <div class="flex items-center gap-2"><span class="font-bold">${md(x.date)}</span>${left>=0?`<span class="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">${left===0?'今日':'あと'+left+'日'}</span>`:''}
+    <div class="flex items-center gap-2"><span class="font-bold">${md(x.date)}</span>${left>=0&&!x.result?`<span class="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">${left===0?'今日':'あと'+left+'日'}</span>`:''}
      ${x.result?`<span class="ml-auto num text-xl font-semibold ${x.result.score<100?'text-accent':''}">${x.result.score}</span>`:x.target?`<span class="ml-auto text-[12px] text-muted">目標 <b class="num text-base text-accent">${x.target}</b></span>`:''}<span class="text-muted ${x.result||x.target?'':'ml-auto'}">${open?'▲':'▼'}</span></div>
     <div class="text-lg font-bold leading-snug">${esc(x.course||'コース未定')}</div>
     ${tags.length||x.diff?`<div class="flex flex-wrap items-center gap-1">${x.diff&&x.diff.stars?`<span class="chip k-event">難易度 ${stars(x.diff.stars)}</span>`:''}${tags.map(s=>`<span class="chip k-off">${esc(s)}</span>`).join('')}</div>`:''}

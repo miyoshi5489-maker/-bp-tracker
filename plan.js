@@ -129,7 +129,7 @@ function planFor(s){
   return{phase:ph,items,note};
 }
 
-function nextRound(t){return ROUNDS.find(r=>r>=t)||null;}
+function nextRound(t){return ROUNDS.find(r=>r>=t&&!(typeof ROUND_DEFS!=='undefined'&&((ROUND_DEFS.find(x=>x.date===r)||{}).result||{}).score))||null;}
 function plannedKm(from,to){let s=from,t=0;while(s<=to){planFor(s).items.forEach(i=>{if(i.km&&i.kind!=='event')t+=i.km;});s=addDays(s,1);}return t;}
 
 function longRuns(){
