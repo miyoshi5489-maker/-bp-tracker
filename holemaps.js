@@ -143,7 +143,20 @@ const GREEN_INFO={
 };
 function greenOf(key,no){return {...GREEN_BASE[key],...((GREEN_INFO[key]||{})[no]||{})};}
 const pinKey=(d,n)=>`pin:${d}:${n}`;
-function pinOf(d,n){try{return JSON.parse(localStorage.getItem(pinKey(d,n))||'null')||{x:0,y:0};}catch{return{x:0,y:0};}}
+// ── その日のピン位置（ピンシート）。f＝グリーン手前からのヤード、x＝中心から左右（－左／＋右）。
+//    ラウンド当日にピンシートの写真をもらって、ここに入れる（またはアプリの「ピンシート入力」で入れる）。日付で自動に切り替わる。
+const PIN_SHEETS={
+};
+function pinSheetOf(d,n){const k=pinKey(d,n);try{const v=JSON.parse(localStorage.getItem('pinsheet:'+d)||'null');if(v&&v[n])return v[n];}catch{}return (PIN_SHEETS[d]||{})[n]||null;}
+function pinOf(d,n){try{const v=JSON.parse(localStorage.getItem(pinKey(d,n))||'null');if(v)return v;}catch{}
+  const ps=pinSheetOf(d,n);if(ps&&typeof ROUND_BASE==='function'){try{const x=ROUND_BASE(d);const g=greenOf(x.mapKey,n);return {x:ps.x||0,y:Math.max(-g.d/2,Math.min(g.d/2,(ps.f||0)-g.d/2)),sheet:1};}catch{}}
+  return{x:0,y:0};}
+function pinSheetSet(d,n,f,xx){let v={};try{v=JSON.parse(localStorage.getItem('pinsheet:'+d)||'{}')||{};}catch{}
+  if(f==null||f==='')delete v[n];else v[n]={f:+f,x:+xx||0};try{localStorage.setItem('pinsheet:'+d,JSON.stringify(v));localStorage.removeItem(pinKey(d,n));}catch{}}
+// グリーンまでの距離（キャディと同じ計算）：今いる場所（ティー or 作戦の最後の落とし所）から、手前・ピン・奥
+function greenYards(x,h,m){const G=m.c[m.c.length-1],g=greenOf(x.mapKey,h[0]),pin=pinOf(x.date,h[0]);const P=[G[0]+pin.x,G[1]+pin.y];const T=m.t||[];
+  const last=T.length?T[T.length-1]:[0,teeShift(x.mapKey,h[0])];const toC=Math.hypot(G[0]-last[0],G[1]-last[1]);
+  return {from:T.length?`${T.length+1}打目の地点（作戦の落とし所）`:'ティー',fr:Math.round(toC-g.d/2),pin:Math.round(Math.hypot(P[0]-last[0],P[1]-last[1])),c:Math.round(toC),bk:Math.round(toC+g.d/2),pf:Math.round(g.d/2+pin.y)};}
 function setPin(d,n,p){try{localStorage.setItem(pinKey(d,n),JSON.stringify(p));}catch{}}
 
 // キャディのアドバイス
@@ -233,13 +246,14 @@ function openHoleMap(date,no){
   drawHoleMap();
 }
 function greenSVG(g,pin){ // グリーンを上から大きく
-  const W=g.w+16,H=g.d+16;let s=`<svg id="gsvg" xmlns="http://www.w3.org/2000/svg" viewBox="${-W/2} ${-H/2} ${W} ${H}" class="block h-auto w-full touch-none" font-family="sans-serif">`;
+  const W=g.w+24,H=g.d+16;let s=`<svg id="gsvg" xmlns="http://www.w3.org/2000/svg" viewBox="${-W/2} ${-H/2} ${W} ${H}" class="block h-auto w-full touch-none" font-family="sans-serif">`;
   s+=`<rect x="${-W/2}" y="${-H/2}" width="${W}" height="${H}" fill="#4d8a43"/><ellipse cx="0" cy="0" rx="${g.w/2}" ry="${g.d/2}" fill="#9be07f" stroke="#e8f7df" stroke-width=".5"/>`;
   for(let v=-Math.floor(g.d/2/5)*5;v<=g.d/2;v+=5)s+=`<line x1="${-g.w/2}" y1="${-v}" x2="${g.w/2}" y2="${-v}" stroke="#fff" stroke-opacity=".25" stroke-width=".2"/>`;
   if(g.tiers>1)for(let k=1;k<g.tiers;k++){const yy=-g.d/2+g.d*k/g.tiers;s+=`<line x1="${-g.w/2+1}" y1="${-yy}" x2="${g.w/2-1}" y2="${-yy}" stroke="#3f7f35" stroke-width=".6" stroke-dasharray="1.5 1"/><text x="${g.w/2-1}" y="${-yy-1}" font-size="2.2" fill="#2e6b2a" text-anchor="end">段</text>`;}
   if(g.slope!=null){const a=g.slope*Math.PI/180;for(const [ox,oy] of [[-g.w/4,0],[g.w/4,0],[0,g.d/4],[0,-g.d/4]]){const dx=Math.sin(a)*2.5,dy=Math.cos(a)*2.5;s+=`<line x1="${ox+dx}" y1="${-(oy+dy)}" x2="${ox-dx}" y2="${-(oy-dy)}" stroke="#2e6b2a" stroke-width=".5" marker-end="url(#ar2)"/>`;}
     s+=`<defs><marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2e6b2a"/></marker></defs>`;}
-  s+=`<text x="0" y="${H/2-1.5}" font-size="2.6" fill="#fff" text-anchor="middle">▼ 手前（ティー側）</text>`;
+  s+=`<text x="0" y="${H/2-1.5}" font-size="2.6" fill="#fff" text-anchor="middle">▼ 手前（ティー側）</text><text x="0" y="${-H/2+3.2}" font-size="2.2" fill="#fff" fill-opacity=".8" text-anchor="middle">奥</text>`;
+  {const pf=Math.round(g.d/2+pin.y);s+=`<line x1="${-g.w/2-5}" y1="${g.d/2}" x2="${-g.w/2-5}" y2="${-pin.y}" stroke="#fff" stroke-width=".3"/><line x1="${-g.w/2-6}" y1="${g.d/2}" x2="${-g.w/2-4}" y2="${g.d/2}" stroke="#fff" stroke-width=".3"/><line x1="${-g.w/2-6}" y1="${-pin.y}" x2="${pin.x}" y2="${-pin.y}" stroke="#fff" stroke-width=".2" stroke-dasharray=".8 .6"/><text x="${-g.w/2-5.6}" y="${(g.d/2-pin.y)/2+0.8}" font-size="2.2" fill="#fff" text-anchor="end" transform="">${pf}y</text>`;}
   s+=`<line x1="${pin.x}" y1="${-pin.y}" x2="${pin.x}" y2="${-pin.y-5}" stroke="#fff" stroke-width=".4"/><path d="M${pin.x} ${-pin.y-5} l3 1 l-3 1z" fill="#e53935"/><circle cx="${pin.x}" cy="${-pin.y}" r=".7" fill="#111"/>`;
   return s+'</svg>';}
 // 作戦で決めた1打目のクラブ（プランのteeBy → ホールのクラブ欄の先頭）
@@ -262,9 +276,18 @@ function drawHoleMap(){
    <div class="flex min-h-0 flex-1 flex-col lg:flex-row-reverse">
    <div class="relative min-h-0 flex-1">
     <div id="hm-scroll" class="absolute inset-0 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y;overscroll-behavior:contain">
-     ${pv0?hmPhotoView(x,h,PH):gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>${greenSVG(g,pin)}
-       <div class="text-center text-[12px] text-white">ピン：${pin.y===0?'真ん中':pin.y>0?`中心から奥へ${Math.round(pin.y)}y`:`中心から手前へ${Math.round(-pin.y)}y`}${pin.x?`・${pin.x>0?'右':'左'}${Math.abs(Math.round(pin.x))}y`:''}（手前から${Math.round(g.d/2+pin.y)}y）　大きさの目安 ${g.w}×${g.d}y</div>
-       <div class="flex justify-center"><button class="btn-sm !border-white !text-white" onclick="setPin(HM.date,HM.no,{x:0,y:0});drawHoleMap()">ピンを真ん中に戻す</button></div></div>`
+     ${pv0?hmPhotoView(x,h,PH):gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>
+       ${(()=>{const gy=greenYards(x,h,m);const ps=pinSheetOf(x.date,h[0]);const src=ps&&!localStorage.getItem(pinKey(x.date,h[0]))?'📋 ピンシート':pin.y||pin.x?'✋ 自分で置いた位置':'⚠ ピン情報なし（真ん中で計算）';
+         return `<div class="grid grid-cols-3 gap-1 text-center">${[['手前',gy.fr],['ピン',gy.pin],['奥',gy.bk]].map(([l,v],k)=>`<div class="rounded-lg ${k===1?'bg-white text-[#1b5e20]':'bg-black/25 text-white'} py-1.5"><div class="text-[11px] font-bold">${l}</div><div class="num text-2xl font-semibold leading-none">${v}<span class="text-[11px]">y</span></div></div>`).join('')}</div>
+         ${greenSVG(g,pin)}
+         <div class="text-center text-[12px] text-white">${gy.from}から　ピンは手前から<b>${gy.pf}y</b>${pin.x?`・${pin.x>0?'右':'左'}${Math.abs(Math.round(pin.x))}y`:'・左右は真ん中'}　<span class="opacity-80">${src}</span></div>
+         <div class="rounded-lg bg-black/25 p-2 text-white"><div class="mb-1 text-[12px] font-bold">📋 ピンシートを入れる（${+x.date.slice(5,7)}/${+x.date.slice(8)}・${h[0]}番）</div>
+          <div class="flex flex-wrap items-center gap-1 text-[13px]">手前から<input id="ps-f" type="number" inputmode="numeric" class="w-16 rounded px-1 py-1 text-center text-[#111]" value="${ps?ps.f:''}" placeholder="y">y
+           ${[['左',-1],['中',0],['右',1]].map(([l,sg])=>`<button class="rounded px-2 py-1 text-[12px] font-bold" style="${(ps?Math.sign(ps.x||0):0)===sg&&ps?'background:#fff;color:#1b5e20':'border:1px solid #fff'}" onclick="pinSheetSet(HM.date,HM.no,document.getElementById('ps-f').value||${Math.round(g.d/2)},${sg}*${Math.round(g.w/4)});drawHoleMap()">${l}</button>`).join('')}
+           <button class="rounded bg-white px-2 py-1 text-[12px] font-bold text-[#1b5e20]" onclick="pinSheetSet(HM.date,HM.no,document.getElementById('ps-f').value,${ps?ps.x||0:0});drawHoleMap()">決定</button>
+           <button class="rounded px-2 py-1 text-[12px]" style="border:1px solid #fff" onclick="pinSheetSet(HM.date,HM.no,null);setPin(HM.date,HM.no,null);localStorage.removeItem(pinKey(HM.date,HM.no));drawHoleMap()">消す</button></div>
+          <div class="mt-1 text-[11px] opacity-80">当日もらうピンシートの写真をClaudeに送れば、18ホール分まとめて入れます。グリーンをタップして置いてもOK。</div></div>`;})()}
+       <div class="text-center text-[11px] text-white/80">グリーンの大きさの目安 ${g.w}×${g.d}y（形は楕円で表示。実際の形とは違います）</div></div>`
       :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
        :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
