@@ -285,7 +285,7 @@ function drawHoleMap(){
     <button class="btn-sm !px-2" onclick="closeHoleMap()">✕</button>
    </div>
    <div class="flex min-h-0 flex-1 flex-col lg:flex-row-reverse">
-   <div class="flex min-h-0 flex-1 flex-col md:flex-row"><div class="relative min-h-0 flex-1">
+   <div id="hm-split" class="flex min-h-0 flex-1 flex-col md:flex-row"><div class="relative min-h-0 min-w-0 flex-1">
     <div id="hm-scroll" class="absolute inset-0 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y;overscroll-behavior:contain">
      ${pv0?hmPhotoView(x,h,PH):gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>
        ${(()=>{const gy=greenYards(x,h,m);const ps=pinSheetOf(x.date,h[0]);const src=ps&&!localStorage.getItem(pinKey(x.date,h[0]))?'📋 ピンシート':pin.y||pin.x?'✋ 自分で置いた位置':'⚠ ピン情報なし（真ん中で計算）';
@@ -308,7 +308,7 @@ function drawHoleMap(){
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
-   </div>${side?`<div id="hm-side" class="max-h-[42%] shrink-0 overflow-y-auto border-t border-white/20 bg-[#24492a] md:max-h-none md:w-[44%] md:border-l md:border-t-0">${hmPhotoView(x,h,PH)}</div>`:''}</div>
+   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex h-3 shrink-0 cursor-row-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a] md:h-auto md:w-3 md:cursor-col-resize"><span class="block h-1 w-10 rounded bg-white/70 md:h-12 md:w-1"></span></div><div id="hm-side" class="max-h-[42%] shrink-0 overflow-y-auto border-t border-white/20 bg-[#24492a] md:max-h-none md:w-[44%] md:border-l md:border-t-0">${hmPhotoView(x,h,PH)}</div>`:''}</div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     ${x.plans?`<div class="grid grid-cols-2 gap-1 rounded-xl bg-line p-1">${[['','100切り',ROUND_DEFS.find(r=>r.date===x.date).target],...Object.entries(x.plans).map(([k,P])=>[k,P.name,P.target])].map(([k,n,t])=>`<button class="min-h-[40px] rounded-lg text-[13px] font-bold" style="${(x.planKey||'')===k?'background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)':'color:var(--muted)'}" onclick="setPlan('${x.date}','${k}')">${n}プラン（目標${t}）</button>`).join('')}</div>`:''}
     ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
@@ -325,7 +325,7 @@ function drawHoleMap(){
   if(pv0)return;
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
-  const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*vb.width/vb.height);
+  if(side)hmSideSetup();const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.vb={width:vb.width,height:vb.height};HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*vb.width/vb.height);
   const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
   inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
   if(HM.pos){const p=HM.pos;HM.pos=null;requestAnimationFrame(()=>{sc.scrollLeft=p[0];sc.scrollTop=p[1];});}
@@ -402,3 +402,24 @@ function hmPhotoView(x,h,PH){const v=COURSE_VIEW[x.mapKey]||{};const W='class="t
 // 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
 function hmSideOn(){try{return localStorage.getItem('hm:side')==='1';}catch{return false;}}
 function hmSideToggle(){try{localStorage.setItem('hm:side',hmSideOn()?'0':'1');}catch{}if(HM){HM.view='hole';HM.tap=null;HM.L=0;drawHoleMap();}}
+
+// マップと景色の境目をドラッグして幅（スマホ縦は高さ）を変える。割合を覚えておく
+const hmWide=()=>window.matchMedia('(min-width:768px)').matches;
+function hmSideApply(){const sd=$('hm-side');if(!sd)return;let v={};try{v=JSON.parse(localStorage.getItem('hm:sidesz')||'{}')||{};}catch{}
+  if(hmWide()){sd.style.height='';sd.style.maxHeight='';sd.style.width=(v.w||44)+'%';}else{sd.style.width='';sd.style.maxHeight='none';sd.style.height=(v.h||42)+'%';}}
+function hmRefit(){const sc=$('hm-scroll'),inn=$('hm-in'),pad=$('hm-pad');if(!sc||!inn||!HM||!HM.vb)return;
+  const cx=sc.scrollLeft+sc.clientWidth/2-(pad?pad.offsetLeft:0)-inn.offsetLeft,cy=sc.scrollTop+sc.clientHeight/2-(pad?pad.offsetTop:0)-inn.offsetTop;const fx=cx/inn.offsetWidth,fy=cy/inn.offsetHeight;
+  HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*HM.vb.width/HM.vb.height);inn.style.width=HM.base*HM.z+'px';
+  if(pad)pad.style.padding=`${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;if(HM.IL&&typeof hmOverlay==='function')hmOverlay();
+  requestAnimationFrame(()=>{sc.scrollLeft=(pad?pad.offsetLeft:0)+inn.offsetLeft+fx*inn.offsetWidth-sc.clientWidth/2;sc.scrollTop=(pad?pad.offsetTop:0)+inn.offsetTop+fy*inn.offsetHeight-sc.clientHeight/2;});}
+function hmSideSetup(){hmSideApply();const dv=$('hm-div'),sd=$('hm-side'),sp=$('hm-split');if(!dv||!sd||!sp)return;
+  const save=()=>{let v={};try{v=JSON.parse(localStorage.getItem('hm:sidesz')||'{}')||{};}catch{}const r=sp.getBoundingClientRect(),q=sd.getBoundingClientRect();
+    if(hmWide())v.w=Math.round(q.width/r.width*100);else v.h=Math.round(q.height/r.height*100);try{localStorage.setItem('hm:sidesz',JSON.stringify(v));}catch{}};
+  let drag=false;
+  dv.addEventListener('pointerdown',e=>{drag=true;dv.setPointerCapture(e.pointerId);sd.style.pointerEvents='none';e.preventDefault();});
+  dv.addEventListener('pointermove',e=>{if(!drag)return;const r=sp.getBoundingClientRect();
+    if(hmWide()){const p=Math.max(20,Math.min(75,(r.right-e.clientX)/r.width*100));sd.style.width=p+'%';}
+    else{const p=Math.max(15,Math.min(60,(r.bottom-e.clientY)/r.height*100));sd.style.maxHeight='none';sd.style.height=p+'%';}});
+  const end=()=>{if(!drag)return;drag=false;sd.style.pointerEvents='';save();hmRefit();};
+  dv.addEventListener('pointerup',end);dv.addEventListener('pointercancel',end);
+  dv.addEventListener('dblclick',()=>{try{localStorage.removeItem('hm:sidesz');}catch{}hmSideApply();hmRefit();});}
