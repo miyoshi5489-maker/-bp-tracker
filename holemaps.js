@@ -276,16 +276,16 @@ function drawHoleMap(){
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}
-  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=HM.view==='photo'&&hasView;const gv=HM.view==='green'||pv0;
+  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=false;const side=hasView&&hmSideOn();const gv=HM.view==='green'||pv0;
   el.innerHTML=`
    <div class="flex items-center gap-2 border-b border-line bg-surface px-3 py-2" style="padding-top:calc(env(safe-area-inset-top,0px) + 8px)">
     <span class="grid h-10 w-10 place-items-center rounded-lg ${col} font-mono text-lg font-bold text-surface">${h[0]}</span>
     <div class="min-w-0 flex-1"><div class="font-bold leading-tight">${PAR_BADGE(h[1])} Par${h[1]}・${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2]}y <span class="text-[11px] font-normal text-muted">${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][0]:''}</span></div><div class="text-[12px] text-muted">目標 <b class="text-accent">${h[4]}</b>　ティー ${esc(h[5])}</div></div>
-    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv&&!pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button>${hasView?`<button class="${pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='photo';drawHoleMap()">景色</button>`:''}</div>
+    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv&&!pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button>${hasView?`<button class="${side?'on':''} !min-h-[36px] !px-2" onclick="hmSideToggle()" aria-pressed="${side}">景色${side?' ✓':''}</button>`:''}</div>
     <button class="btn-sm !px-2" onclick="closeHoleMap()">✕</button>
    </div>
    <div class="flex min-h-0 flex-1 flex-col lg:flex-row-reverse">
-   <div class="relative min-h-0 flex-1">
+   <div class="flex min-h-0 flex-1 flex-col md:flex-row"><div class="relative min-h-0 flex-1">
     <div id="hm-scroll" class="absolute inset-0 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y;overscroll-behavior:contain">
      ${pv0?hmPhotoView(x,h,PH):gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>
        ${(()=>{const gy=greenYards(x,h,m);const ps=pinSheetOf(x.date,h[0]);const src=ps&&!localStorage.getItem(pinKey(x.date,h[0]))?'📋 ピンシート':pin.y||pin.x?'✋ 自分で置いた位置':'⚠ ピン情報なし（真ん中で計算）';
@@ -308,7 +308,7 @@ function drawHoleMap(){
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
-   </div>
+   </div>${side?`<div id="hm-side" class="max-h-[42%] shrink-0 overflow-y-auto border-t border-white/20 bg-[#24492a] md:max-h-none md:w-[44%] md:border-l md:border-t-0">${hmPhotoView(x,h,PH)}</div>`:''}</div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     ${x.plans?`<div class="grid grid-cols-2 gap-1 rounded-xl bg-line p-1">${[['','100切り',ROUND_DEFS.find(r=>r.date===x.date).target],...Object.entries(x.plans).map(([k,P])=>[k,P.name,P.target])].map(([k,n,t])=>`<button class="min-h-[40px] rounded-lg text-[13px] font-bold" style="${(x.planKey||'')===k?'background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)':'color:var(--muted)'}" onclick="setPlan('${x.date}','${k}')">${n}プラン（目標${t}）</button>`).join('')}</div>`:''}
     ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
@@ -398,3 +398,7 @@ function hmPhotoView(x,h,PH){const v=COURSE_VIEW[x.mapKey]||{};const W='class="t
    ${holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
    ${v.drone?`<a class="btn-sm justify-self-start !border-white !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
   </div>`;}
+
+// 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
+function hmSideOn(){try{return localStorage.getItem('hm:side')==='1';}catch{return false;}}
+function hmSideToggle(){try{localStorage.setItem('hm:side',hmSideOn()?'0':'1');}catch{}if(HM){HM.view='hole';HM.tap=null;HM.L=0;drawHoleMap();}}
