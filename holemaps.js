@@ -276,12 +276,12 @@ function drawHoleMap(){
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}
-  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=false;const side=hasView&&hmSideOn();const gv=HM.view==='green'||pv0;
+  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=false;const side0=hasView&&hmSideOn();const flt=side0&&hmFloatOn()&&!!hmVid(x.mapKey,h[0]);const side=side0&&!flt;const gv=HM.view==='green'||pv0;
   el.innerHTML=`
    <div class="flex items-center gap-2 border-b border-line bg-surface px-3 py-2" style="padding-top:calc(env(safe-area-inset-top,0px) + 8px)">
     <span class="grid h-10 w-10 place-items-center rounded-lg ${col} font-mono text-lg font-bold text-surface">${h[0]}</span>
     <div class="min-w-0 flex-1"><div class="font-bold leading-tight">${PAR_BADGE(h[1])} Par${h[1]}・${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2]}y <span class="text-[11px] font-normal text-muted">${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][0]:''}</span></div><div class="text-[12px] text-muted">目標 <b class="text-accent">${h[4]}</b>　ティー ${esc(h[5])}</div></div>
-    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv&&!pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button>${hasView?`<button class="${side?'on':''} !min-h-[36px] !px-2" onclick="hmSideToggle()" aria-pressed="${side}">景色${side?' ✓':''}</button>`:''}</div>
+    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv&&!pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button>${hasView?`<button class="${side0?'on':''} !min-h-[36px] !px-2" onclick="hmSideToggle()" aria-pressed="${side0}">景色${side0?' ✓':''}</button>`:''}</div>
     <button class="btn-sm !px-2" onclick="closeHoleMap()">✕</button>
    </div>
    <div class="flex min-h-0 flex-1 flex-col lg:flex-row-reverse">
@@ -308,7 +308,7 @@ function drawHoleMap(){
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
-   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex h-3 shrink-0 cursor-row-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a] md:h-auto md:w-3 md:cursor-col-resize"><span class="block h-1 w-10 rounded bg-white/70 md:h-12 md:w-1"></span></div><div id="hm-side" class="max-h-[42%] shrink-0 overflow-y-auto border-t border-white/20 bg-[#24492a] md:max-h-none md:w-[44%] md:border-l md:border-t-0">${hmPhotoView(x,h,PH)}</div>`:''}</div>
+   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex h-3 shrink-0 cursor-row-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a] md:h-auto md:w-3 md:cursor-col-resize"><span class="block h-1 w-10 rounded bg-white/70 md:h-12 md:w-1"></span></div><div id="hm-side" class="max-h-[42%] shrink-0 overflow-y-auto border-t border-white/20 bg-[#24492a] md:max-h-none md:w-[44%] md:border-l md:border-t-0">${hmVid(x.mapKey,h[0])?`<div class="px-3 pt-3"><button class="rounded-full border border-white px-3 py-1 text-[12px] font-bold text-white" onclick="hmFloatToggle()">🪟 動画を浮かせて、大きさと位置を自由に変える</button></div>`:''}${hmPhotoView(x,h,PH)}</div>`:''}</div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     ${x.plans?`<div class="grid grid-cols-2 gap-1 rounded-xl bg-line p-1">${[['','100切り',ROUND_DEFS.find(r=>r.date===x.date).target],...Object.entries(x.plans).map(([k,P])=>[k,P.name,P.target])].map(([k,n,t])=>`<button class="min-h-[40px] rounded-lg text-[13px] font-bold" style="${(x.planKey||'')===k?'background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)':'color:var(--muted)'}" onclick="setPlan('${x.date}','${k}')">${n}プラン（目標${t}）</button>`).join('')}</div>`:''}
     ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
@@ -322,6 +322,7 @@ function drawHoleMap(){
     <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
    </div>
    </div>`;
+  if(flt){el.insertAdjacentHTML('beforeend',hmFloatHTML(x,h));hmFloatSetup();}
   if(pv0)return;
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
@@ -423,3 +424,25 @@ function hmSideSetup(){hmSideApply();const dv=$('hm-div'),sd=$('hm-side'),sp=$('
   const end=()=>{if(!drag)return;drag=false;sd.style.pointerEvents='';save();hmRefit();};
   dv.addEventListener('pointerup',end);dv.addEventListener('pointercancel',end);
   dv.addEventListener('dblclick',()=>{try{localStorage.removeItem('hm:sidesz');}catch{}hmSideApply();hmRefit();});}
+
+// 動画を浮かせる：ドラッグで位置（上のバー）・大きさ（右下の角）を変える。位置と大きさを覚えておく
+function hmVid(key,n){const V=HOLE_VIDEOS[key];const t=V&&V.t&&V.t[n];if(!t)return null;return {id:n<=9?V.out:V.in,t,src:V.src};}
+function hmFloatOn(){try{return localStorage.getItem('hm:float')==='1';}catch{return false;}}
+function hmFloatToggle(){try{localStorage.setItem('hm:float',hmFloatOn()?'0':'1');}catch{}if(HM){HM.tap=null;HM.L=0;drawHoleMap();}}
+function hmFloatPos(){let v=null;try{v=JSON.parse(localStorage.getItem('hm:floatpos')||'null');}catch{}const W=innerWidth,H=innerHeight;
+  let w=v&&v.w||Math.min(480,W-24);w=Math.max(220,Math.min(w,W-16));const hh=w*9/16+30;let l=v&&v.l!=null?v.l:W-w-16,t=v&&v.t!=null?v.t:Math.max(70,H-hh-16);
+  l=Math.max(8,Math.min(l,W-w-8));t=Math.max(8,Math.min(t,H-hh-8));return {l,t,w};}
+function hmFloatHTML(x,h){const v=hmVid(x.mapKey,h[0]);const p=hmFloatPos();
+  return `<div id="hm-float" class="fixed z-50 overflow-hidden rounded-lg bg-black shadow-2xl ring-1 ring-white/30" style="left:${p.l}px;top:${p.t}px;width:${p.w}px">
+   <div id="hm-fbar" class="flex cursor-move touch-none select-none items-center gap-2 bg-[#1b3a20] px-2 text-[12px] text-white" style="height:30px"><span class="opacity-70">⠿</span><b class="flex-1 truncate">${h[0]}番ホールの動画（ドラッグで移動）</b>
+    <button class="rounded px-1.5 py-0.5 text-[11px] font-bold" style="border:1px solid #fff" onclick="hmFloatToggle()">右に戻す</button></div>
+   <div style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${v.id}?start=${v.t[0]}&end=${v.t[1]}&rel=0&playsinline=1&modestbranding=1" title="${h[0]}番ホールの動画" class="h-full w-full" style="border:0" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+   <div id="hm-fres" title="ドラッグで大きさを変える" class="absolute bottom-0 right-0 h-6 w-6 cursor-nwse-resize touch-none" style="background:linear-gradient(135deg,transparent 55%,rgba(255,255,255,.85) 55%)"></div></div>`;}
+function hmFloatSetup(){const f=$('hm-float'),bar=$('hm-fbar'),rs=$('hm-fres');if(!f)return;const ifr=f.querySelector('iframe');
+  const save=()=>{try{localStorage.setItem('hm:floatpos',JSON.stringify({l:f.offsetLeft,t:f.offsetTop,w:f.offsetWidth}));}catch{}};
+  const drag=(el,mv)=>{let st=null;el.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;st={x:e.clientX,y:e.clientY,l:f.offsetLeft,t:f.offsetTop,w:f.offsetWidth};el.setPointerCapture(e.pointerId);ifr.style.pointerEvents='none';e.preventDefault();});
+    el.addEventListener('pointermove',e=>{if(st)mv(st,e.clientX-st.x,e.clientY-st.y);});
+    const end=()=>{if(!st)return;st=null;ifr.style.pointerEvents='';save();};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);};
+  drag(bar,(s,dx,dy)=>{const W=innerWidth,H=innerHeight;f.style.left=Math.max(8,Math.min(s.l+dx,W-f.offsetWidth-8))+'px';f.style.top=Math.max(8,Math.min(s.t+dy,H-f.offsetHeight-8))+'px';});
+  drag(rs,(s,dx)=>{const w=Math.max(220,Math.min(s.w+dx,innerWidth-s.l-8));f.style.width=w+'px';});
+  bar.addEventListener('dblclick',()=>{try{localStorage.removeItem('hm:floatpos');}catch{}const p=hmFloatPos();f.style.left=p.l+'px';f.style.top=p.t+'px';f.style.width=p.w+'px';});}
