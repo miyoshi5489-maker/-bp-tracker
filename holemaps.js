@@ -276,7 +276,7 @@ function drawHoleMap(){
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}
-  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=false;const side0=hasView&&hmSideOn();const flt=side0&&hmFloatOn()&&!!hmVid(x.mapKey,h[0]);const side=side0&&!flt;const gv=HM.view==='green'||pv0;
+  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=false;const side0=hasView&&hmSideOn();const flt=false;const side=side0&&!flt;const gv=HM.view==='green'||pv0;
   el.innerHTML=`
    <div class="flex items-center gap-2 border-b border-line bg-surface px-3 py-2" style="padding-top:calc(env(safe-area-inset-top,0px) + 8px)">
     <span class="grid h-10 w-10 place-items-center rounded-lg ${col} font-mono text-lg font-bold text-surface">${h[0]}</span>
@@ -308,7 +308,7 @@ function drawHoleMap(){
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
-   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex h-3 shrink-0 cursor-row-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a] md:h-auto md:w-3 md:cursor-col-resize"><span class="block h-1 w-10 rounded bg-white/70 md:h-12 md:w-1"></span></div><div id="hm-side" class="max-h-[42%] shrink-0 overflow-y-auto border-t border-white/20 bg-[#24492a] md:max-h-none md:w-[44%] md:border-l md:border-t-0">${hmVid(x.mapKey,h[0])?`<div class="px-3 pt-3"><button class="rounded-full border border-white px-3 py-1 text-[12px] font-bold text-white" onclick="hmFloatToggle()">🪟 動画を浮かせて、大きさと位置を自由に変える</button></div>`:''}${hmPhotoView(x,h,PH)}</div>`:''}</div>
+   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex h-3 shrink-0 cursor-row-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a] md:h-auto md:w-3 md:cursor-col-resize"><span class="block h-1 w-10 rounded bg-white/70 md:h-12 md:w-1"></span></div><div id="hm-side" class="max-h-[42%] shrink-0 overflow-y-auto border-t border-white/20 bg-[#24492a] md:max-h-none md:w-[44%] md:border-l md:border-t-0 relative">${hmVid(x.mapKey,h[0])?hmBoxHTML(x,h):''}${hmPhotoView(x,h,PH,!!hmVid(x.mapKey,h[0]))}</div>`:''}</div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     ${x.plans?`<div class="grid grid-cols-2 gap-1 rounded-xl bg-line p-1">${[['','100切り',ROUND_DEFS.find(r=>r.date===x.date).target],...Object.entries(x.plans).map(([k,P])=>[k,P.name,P.target])].map(([k,n,t])=>`<button class="min-h-[40px] rounded-lg text-[13px] font-bold" style="${(x.planKey||'')===k?'background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)':'color:var(--muted)'}" onclick="setPlan('${x.date}','${k}')">${n}プラン（目標${t}）</button>`).join('')}</div>`:''}
     ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
@@ -392,11 +392,12 @@ function courseView(x){const v=COURSE_VIEW[x.mapKey];if(!v)return '';const ph=(t
   </div></details>`;}
 
 // ホールマップの「景色」：そのホールの公式写真と、実際に回った人の動画（ティーの景色から）
-function hmPhotoView(x,h,PH){const v=COURSE_VIEW[x.mapKey]||{};const W='class="text-[11px] text-white/80"';
-  return `<div class="mx-auto grid max-w-3xl gap-3 p-3">
+function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='class="text-[11px] text-white/80"';
+  const bv=boxed?hmVid(x.mapKey,h[0]):null;const mm=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  return `<div class="mx-auto grid max-w-3xl gap-3 p-3">${bv?`<div id="hm-vspace"></div><div ${W}>動画：${esc(bv.src)}・${mm(bv.t[0])}から（時間は目安）。季節・ティーの位置は当日と違います。動画は上のバーで移動、右下の角で大きさを変えられます（ダブルクリックで元に戻す）。</div>`:''}
    ${PH?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">${h[0]}番ホール（ティーからの景色）</div><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" referrerpolicy="no-referrer"><figcaption ${W}>写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`
      :''}
-   ${holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
+   ${boxed?'':holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
    ${v.drone?`<a class="btn-sm justify-self-start !border-white !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
   </div>`;}
 
@@ -413,7 +414,7 @@ function hmRefit(){const sc=$('hm-scroll'),inn=$('hm-in'),pad=$('hm-pad');if(!sc
   HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*HM.vb.width/HM.vb.height);inn.style.width=HM.base*HM.z+'px';
   if(pad)pad.style.padding=`${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;if(HM.IL&&typeof hmOverlay==='function')hmOverlay();
   requestAnimationFrame(()=>{sc.scrollLeft=(pad?pad.offsetLeft:0)+inn.offsetLeft+fx*inn.offsetWidth-sc.clientWidth/2;sc.scrollTop=(pad?pad.offsetTop:0)+inn.offsetTop+fy*inn.offsetHeight-sc.clientHeight/2;});}
-function hmSideSetup(){hmSideApply();const dv=$('hm-div'),sd=$('hm-side'),sp=$('hm-split');if(!dv||!sd||!sp)return;
+function hmSideSetup(){hmSideApply();hmBoxSetup();const dv=$('hm-div'),sd=$('hm-side'),sp=$('hm-split');if(!dv||!sd||!sp)return;
   const save=()=>{let v={};try{v=JSON.parse(localStorage.getItem('hm:sidesz')||'{}')||{};}catch{}const r=sp.getBoundingClientRect(),q=sd.getBoundingClientRect();
     if(hmWide())v.w=Math.round(q.width/r.width*100);else v.h=Math.round(q.height/r.height*100);try{localStorage.setItem('hm:sidesz',JSON.stringify(v));}catch{}};
   let drag=false;
@@ -421,7 +422,7 @@ function hmSideSetup(){hmSideApply();const dv=$('hm-div'),sd=$('hm-side'),sp=$('
   dv.addEventListener('pointermove',e=>{if(!drag)return;const r=sp.getBoundingClientRect();
     if(hmWide()){const p=Math.max(20,Math.min(75,(r.right-e.clientX)/r.width*100));sd.style.width=p+'%';}
     else{const p=Math.max(15,Math.min(60,(r.bottom-e.clientY)/r.height*100));sd.style.maxHeight='none';sd.style.height=p+'%';}});
-  const end=()=>{if(!drag)return;drag=false;sd.style.pointerEvents='';save();hmRefit();};
+  const end=()=>{if(!drag)return;drag=false;sd.style.pointerEvents='';save();hmRefit();hmBoxClamp();};
   dv.addEventListener('pointerup',end);dv.addEventListener('pointercancel',end);
   dv.addEventListener('dblclick',()=>{try{localStorage.removeItem('hm:sidesz');}catch{}hmSideApply();hmRefit();});}
 
@@ -446,3 +447,24 @@ function hmFloatSetup(){const f=$('hm-float'),bar=$('hm-fbar'),rs=$('hm-fres');i
   drag(bar,(s,dx,dy)=>{const W=innerWidth,H=innerHeight;f.style.left=Math.max(8,Math.min(s.l+dx,W-f.offsetWidth-8))+'px';f.style.top=Math.max(8,Math.min(s.t+dy,H-f.offsetHeight-8))+'px';});
   drag(rs,(s,dx)=>{const w=Math.max(220,Math.min(s.w+dx,innerWidth-s.l-8));f.style.width=w+'px';});
   bar.addEventListener('dblclick',()=>{try{localStorage.removeItem('hm:floatpos');}catch{}const p=hmFloatPos();f.style.left=p.l+'px';f.style.top=p.t+'px';f.style.width=p.w+'px';});}
+
+// 景色の動画：右の画面の中だけで、上のバーをドラッグで移動・右下の角で大きさを変える（位置と大きさを覚えておく）
+function hmBoxHTML(x,h){const v=hmVid(x.mapKey,h[0]);
+  return `<div id="hm-box" class="absolute z-10 overflow-hidden rounded-lg bg-black shadow-xl ring-1 ring-white/30" style="left:12px;top:12px;width:calc(100% - 24px)">
+   <div id="hm-bbar" class="flex cursor-move touch-none select-none items-center gap-2 bg-[#1b3a20] px-2 text-[12px] text-white" style="height:28px"><span class="opacity-70">⠿</span><b class="truncate">${h[0]}番ホールの動画（ティーの景色から）</b></div>
+   <div style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${v.id}?start=${v.t[0]}&end=${v.t[1]}&rel=0&playsinline=1&modestbranding=1" title="${h[0]}番ホールの動画" class="h-full w-full" style="border:0" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+   <div id="hm-bres" title="ドラッグで大きさを変える" class="absolute bottom-0 right-0 h-6 w-6 cursor-nwse-resize touch-none" style="background:linear-gradient(135deg,transparent 55%,rgba(255,255,255,.85) 55%)"></div></div>`;}
+function hmBoxClamp(save){const b=$('hm-box'),sd=$('hm-side');if(!b||!sd)return;const W=sd.clientWidth,H=sd.clientHeight;
+  let w=Math.max(200,Math.min(b.offsetWidth,W-8));b.style.width=w+'px';const bh=b.offsetHeight;
+  b.style.left=Math.max(4,Math.min(b.offsetLeft,W-w-4))+'px';b.style.top=Math.max(4,Math.min(b.offsetTop,Math.max(4,H-bh-4)))+'px';
+  if(save)try{localStorage.setItem('hm:boxpos',JSON.stringify({l:b.offsetLeft/W,t:b.offsetTop,w:w/W}));}catch{}}
+function hmBoxSetup(){const b=$('hm-box'),sd=$('hm-side'),bar=$('hm-bbar'),rs=$('hm-bres');if(!b||!sd)return;const ifr=b.querySelector('iframe');const sp=$('hm-vspace');
+  let v=null;try{v=JSON.parse(localStorage.getItem('hm:boxpos')||'null');}catch{}
+  const W=sd.clientWidth;if(v){b.style.width=(v.w*W)+'px';b.style.left=(v.l*W)+'px';b.style.top=v.t+'px';}else{b.style.width=(W-24)+'px';}
+  hmBoxClamp();if(sp)sp.style.height=Math.round((W-24)*9/16+28-8)+'px';
+  const drag=(el,mv)=>{let st=null;el.addEventListener('pointerdown',e=>{st={x:e.clientX,y:e.clientY,l:b.offsetLeft,t:b.offsetTop,w:b.offsetWidth};el.setPointerCapture(e.pointerId);ifr.style.pointerEvents='none';e.preventDefault();});
+    el.addEventListener('pointermove',e=>{if(st)mv(st,e.clientX-st.x,e.clientY-st.y);});
+    const end=()=>{if(!st)return;st=null;ifr.style.pointerEvents='';hmBoxClamp(true);};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);};
+  drag(bar,(s,dx,dy)=>{b.style.left=(s.l+dx)+'px';b.style.top=(s.t+dy)+'px';hmBoxClamp();});
+  drag(rs,(s,dx)=>{b.style.width=Math.max(200,Math.min(s.w+dx,sd.clientWidth-s.l-4))+'px';hmBoxClamp();});
+  bar.addEventListener('dblclick',()=>{try{localStorage.removeItem('hm:boxpos');}catch{}b.style.left='12px';b.style.top='12px';b.style.width=(sd.clientWidth-24)+'px';});}
