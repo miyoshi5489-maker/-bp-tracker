@@ -7,8 +7,8 @@ const D300_LOG=[ // ドライバーのトラックマン（フルスイング・
   {d:'2026-10-09',bestC:230.1,bs:62.1,bsMax:65.6,carry:213,total:249,best:265,note:'Qi35新品・初日'},
   {d:'2026-10-10',bestC:240.2,bs:62.8,bsMax:67.0,carry:217,total:251,best:269,note:'Qi35・2日目'},
   {d:'2026-10-16',bestC:229.8,bs:63.3,bsMax:66.5,carry:220,total:249,best:256.5,note:'当たった8球（画面に写った分）'},
-  {d:'2026-10-21',bestC:245.9,bs:64.7,bsMax:67.9,carry:213,total:249,best:268.1,note:'飛距離アップ練習・コック意識（しっかり振った26球）'},
-  {d:'2026-10-24',bestC:236.1,bs:62.2,bsMax:65.8,carry:221,total:252,best:267.7,note:'右脚の前で止める・右手で押す（当たった13球）・打ち出し平均13.3°'},
+  {d:'2026-10-21',bestC:245.9,bs:64.7,bsMax:67.9,carry:213,total:249,best:268.1,note:'シャフトをZERO SOLID 40 Sに交換・コック意識（しっかり振った26球）'},
+  {d:'2026-10-24',bestC:236.1,bs:62.2,bsMax:65.8,carry:221,total:252,best:267.7,note:'ZERO SOLID 40 S・右脚の前で止める（当たった13球）・打ち出し平均13.3°'},
 ];
 const D300_GOAL=74; // 平均ボールスピード（m/s）
 const D300_STAGES=[
