@@ -49,7 +49,7 @@ function ybDiffCol(d){return d<=0?'#1b5e20':d===1?'#a8740f':'#c62828';}
 const YB_CARD_W=105,YB_CARD_H=148.5,YB_IMG_H=98,YB_IMG_MAXW=46;
 function ybCard(x,h,x2){
   const key=x.mapKey;const IL=(ILLUS[key]||[]).find(v=>v.holes[h[0]]);
-  let m=HOLE_MAPS[key][h[0]];{const tc=teeCodeOf(x,h);if(tc&&h[1]>3&&m.t&&m.t[0])m={...m,t:[[m.t[0][0],m.t[0][1],tc],...m.t.slice(1)]};}
+  let m=HOLE_MAPS[key][h[0]];{const tc=teeCodeOf(x,h);if(tc&&h[1]>3&&m.t&&m.t[0])m={...m,t:[[m.t[0][0],m.t[0][1],tc,m.t[0][3]],...m.t.slice(1)]};}
   m=tmAdjust(m);
   // 2打目以降も、自分のトータル飛距離の位置に置き直す（グリーンの20y手前まで）
   {const IL0=(ILLUS[key]||[]).find(v=>v.holes[h[0]]);const T=m.t||[];if(IL0&&T.length>1&&typeof MYCLUBS!=='undefined'){const hi=IL0.holes[h[0]];const Lr=hi.r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-hi.r[i-1][0],q[1]-hi.r[i-1][1]):0,0)/hi.s;
