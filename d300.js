@@ -10,7 +10,7 @@ const D300_LOG=[ // ドライバーのトラックマン（フルスイング・
   {d:'2026-10-21',bestC:245.9,bs:64.7,bsMax:67.9,carry:213,total:249,best:268.1,note:'シャフトをZERO SOLID 40 Sに交換・コック意識（しっかり振った26球）'},
   {d:'2026-10-24',bestC:236.1,bs:62.2,bsMax:65.8,carry:221,total:252,best:267.7,note:'ZERO SOLID 40 S・右脚の前で止める（当たった13球）・打ち出し平均13.3°'},
   {d:'2026-11-02',bestC:241.1,bs:63.8,bsMax:67.5,carry:222,total:250,best:267.2,note:'ZERO SOLID 40 S（当たった15球）・打ち出し平均11.9°'},
-  {d:'2026-11-05',bestC:247.2,bs:64.1,bsMax:67.2,carry:222,total:255,best:276.4,note:'ZERO SOLID 40 S（しっかり振った26球）・ベストトータル276y'},
+  {d:'2026-11-05',bestC:247.2,bs:64.1,bsMax:67.2,carry:222,total:255,best:276.4,note:'純正シャフト（Diamana SILVER TM55 S）に戻して・しっかり振った26球・ベストトータル276y'},
 ];
 const D300_GOAL=74; // 平均ボールスピード（m/s）
 const D300_STAGES=[
