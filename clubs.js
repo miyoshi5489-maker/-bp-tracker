@@ -57,9 +57,9 @@ let MYCLUBS={};
 function buildClubs(recs){
   const T={};Object.entries(CLUB_DEFAULT).forEach(([c,v])=>T[c]={c,...v,src:'仮'});TM_BUILTIN.clubs.forEach(x=>{T[x.c]={...x,src:'TM',date:x.date||TM_BUILTIN.date};});
   recs.filter(r=>(r.exercises||[]).some(e=>e.kind==='tm')).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id).forEach(r=>{
-    const e=r.exercises.find(x=>x.kind==='tm');(e.clubs||[]).forEach(x=>{T[x.c]={...(T[x.c]||{}),...x,src:'TM',date:r.date};});});
+    const e=r.exercises.find(x=>x.kind==='tm');(e.clubs||[]).forEach(x=>{const cur=T[x.c];if(cur&&cur.src==='TM'&&cur.date&&r.date<cur.date)return;T[x.c]={...(cur||{}),...x,src:'TM',date:r.date};});});
   const man=recs.filter(r=>(r.exercises||[]).some(e=>e.kind==='clubs')).sort((a,b)=>b.id-a.id)[0];
-  if(man)(man.exercises.find(x=>x.kind==='clubs').clubs||[]).forEach(x=>{if(x.carry>0)T[x.c]={...(T[x.c]||{c:x.c}),carry:x.carry,total:x.total||T[x.c]&&T[x.c].total||x.carry,src:T[x.c]&&T[x.c].src==='TM'?'TM+手':'手'};});
+  if(man)(man.exercises.find(x=>x.kind==='clubs').clubs||[]).forEach(x=>{const cur=T[x.c];if(cur&&cur.src==='TM'&&cur.date&&man.date&&man.date<cur.date)return;if(x.carry>0)T[x.c]={...(T[x.c]||{c:x.c}),carry:x.carry,total:x.total||T[x.c]&&T[x.c].total||x.carry,src:T[x.c]&&T[x.c].src==='TM'?'TM+手':'手'};});
   MYCLUBS=T;return T;
 }
 const clubList=()=>CLUB_ORDER.filter(c=>MYCLUBS[c]).map(c=>MYCLUBS[c]);
