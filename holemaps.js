@@ -338,7 +338,7 @@ function drawHoleMap(){
     ${PH?`<figure class="grid gap-1"><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[10px] text-muted">写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`:''}
     <div class="text-[13px] leading-snug"><b class="text-accent">狙い</b>　${esc(h[6])}</div>
     ${m.n?`<div class="text-[12px] leading-snug text-muted"><b>コース</b>　${esc(m.n)}</div>`:''}
-    ${IL?'<div class="text-[11px] text-muted">下の距離はショットナビの図からの目安。公式イラストをタップして測る方が正確です。</div>':''}
+    ${IL?`<div class="text-[11px] text-muted">下の距離は${x.mapKey==='arima'?'動画で言っていた距離（グリーン周りは情報なし）':'ショットナビの図からの目安'}。ホール図をタップして測る方が正確です。</div>`:''}
     <div class="flex flex-wrap gap-1">${hazList(m,TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2],teeShift(x.mapKey,h[0])).map(t=>`<span class="rounded-md bg-field px-1.5 py-0.5 text-[11px] ring-1 ring-line">${t}</span>`).join('')}</div>
     <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
    </div>
