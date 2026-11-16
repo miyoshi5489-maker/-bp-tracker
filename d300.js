@@ -4,14 +4,21 @@ const D300_LOG=[ // ドライバーのトラックマン（フルスイング・
   {d:'2026-10-03',bestC:221.1,bs:59.6,bsMax:63.0,carry:194,total:231,best:247,note:''},
   {d:'2026-10-05',bestC:227.2,bs:59.1,bsMax:62.5,carry:199,total:234,best:256,note:'Qi35試打'},
   {d:'2026-10-06',bestC:216.4,bs:60.2,bsMax:62.4,carry:205,total:236,best:245,note:''},
-  {d:'2026-10-09',bestC:230.1,bs:62.1,bsMax:65.6,carry:213,total:249,best:265,note:'Qi35新品・初日'},
-  {d:'2026-10-10',bestC:240.2,bs:62.8,bsMax:67.0,carry:217,total:251,best:269,note:'Qi35・2日目'},
-  {d:'2026-10-16',bestC:229.8,bs:63.3,bsMax:66.5,carry:220,total:249,best:256.5,note:'当たった8球（画面に写った分）'},
+  {d:'2026-10-09',bestC:230.1,bs:62.1,bsMax:65.6,carry:213,total:249,best:265,note:'Qi35新品・初日（純正 Diamana SILVER TM55 S・55g）'},
+  {d:'2026-10-10',bestC:240.2,bs:62.8,bsMax:67.0,carry:217,total:251,best:269,note:'Qi35・2日目（純正55g）'},
+  {d:'2026-10-16',bestC:229.8,bs:63.3,bsMax:66.5,carry:220,total:249,best:256.5,note:'純正55g・当たった8球（画面に写った分）'},
   {d:'2026-10-21',bestC:245.9,bs:64.7,bsMax:67.9,carry:213,total:249,best:268.1,note:'シャフトをZERO SOLID 40 Sに交換・コック意識（しっかり振った26球）'},
   {d:'2026-10-24',bestC:236.1,bs:62.2,bsMax:65.8,carry:221,total:252,best:267.7,note:'ZERO SOLID 40 S・右脚の前で止める（当たった13球）・打ち出し平均13.3°'},
   {d:'2026-11-02',bestC:241.1,bs:63.8,bsMax:67.5,carry:222,total:250,best:267.2,note:'ZERO SOLID 40 S（当たった15球）・打ち出し平均11.9°'},
-  {d:'2026-11-05',bestC:247.2,bs:64.1,bsMax:67.2,carry:222,total:255,best:276.4,note:'ZERO SOLID 40 S（しっかり振った26球）・ベストトータル276y'},
-  {d:'2026-11-16',bestC:242.9,bs:63.8,bsMax:65.5,carry:227,total:261,best:274.0,note:'しっかり振った14球（ハーフショット・トップは除外）・打ち出し平均12.9°・キャリー平均は過去最高'},
+  {d:'2026-11-05',bestC:247.2,bs:64.1,bsMax:67.2,carry:222,total:255,best:276.4,note:'40g（ZERO SOLID）と55g（純正）を打ち比べ。276.4yは40g、272.0yは55g（55gの方が方向のブレが少ない）'},
+  {d:'2026-11-16',bestC:242.9,bs:63.8,bsMax:65.5,carry:227,total:261,best:274.0,note:'55g（純正）に戻して計測する予定の日（シャフトは未確認）・しっかり振った14球・キャリー平均は過去最高'},
+];
+// ドライバーのシャフトの履歴（洋平さんの話から）
+const SHAFT_LOG=[
+  ['2026-10-09','Qi35（10.5°）を新品で購入。純正 Diamana SILVER TM55 S（55g）'],
+  ['2026-10-21','中古の Design Tuning ZERO SOLID 40 S（40g）に交換'],
+  ['2026-11-05','40gと55g（純正）を打ち比べ。40gの方が飛ぶ（276.4y）、55gの方が方向のブレが少ない（272.0y）'],
+  ['2026-11-06','次の計測は55gでやると決める'],
 ];
 const D300_GOAL=74; // 平均ボールスピード（m/s）
 const D300_STAGES=[
@@ -72,6 +79,8 @@ function renderD300(){
   ${D300_MENU.map(m=>`<div class="grid gap-2"><div class="flex items-center gap-2 border-b-2 border-fg pb-1"><h3 class="h2">${m.t}</h3><label class="ml-auto flex items-center gap-1 text-[12px]"><input type="checkbox" class="h-5 w-5 accent-[var(--accent)]" ${d300Chk(m.k)?'checked':''} onchange="d300Set('${m.k}',this.checked)">今週やった</label></div>
     <p class="text-[13px] text-muted">${esc(m.d)}</p>
     <div class="grid gap-2 sm:grid-cols-2">${m.ex.map(([a,b])=>`<div class="rounded-lg bg-field px-3 py-2 ring-1 ring-line"><div class="text-[14px] font-bold">${esc(a)}</div><div class="text-[13px] leading-snug text-muted">${esc(b)}</div></div>`).join('')}</div></div>`).join('')}
+  <div class="grid gap-2"><h3 class="h2 border-b-2 border-fg pb-1">シャフトの履歴</h3>
+   <div class="grid gap-1 text-[13px]">${SHAFT_LOG.map(([d,t])=>`<div class="flex gap-2"><span class="w-12 shrink-0 font-mono font-bold">${+d.slice(5,7)}/${+d.slice(8)}</span><span>${esc(t)}</span></div>`).join('')}</div></div>
   <div class="grid gap-2"><h3 class="h2 border-b-2 border-fg pb-1">記録（ドライバー・フルスイング）</h3>
    <div class="overflow-x-auto"><table class="w-full text-center text-[13px]"><tr class="text-[11px] text-muted"><th class="py-1">日付</th><th>ボールスピード</th><th>最速</th><th>キャリー</th><th>トータル</th><th>ベスト</th><th>ベスト<br>キャリー</th></tr>
    ${D300_LOG.map(r=>`<tr class="border-t border-line"><td class="py-1.5">${+r.d.slice(5,7)}/${+r.d.slice(8)}${r.note?`<div class="text-[10px] text-muted">${esc(r.note)}</div>`:''}</td><td>${r.bs}</td><td>${r.bsMax}</td><td>${r.carry}</td><td><b>${r.total}</b></td><td>${r.best}</td><td>${Math.round(r.bestC)}</td></tr>`).join('')}</table></div>
