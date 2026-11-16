@@ -8,10 +8,10 @@ const D300_LOG=[ // ドライバーのトラックマン（フルスイング・
   {d:'2026-10-10',bestC:240.2,bs:62.8,bsMax:67.0,carry:217,total:251,best:269,note:'Qi35・2日目（純正55g）'},
   {d:'2026-10-16',bestC:229.8,bs:63.3,bsMax:66.5,carry:220,total:249,best:256.5,note:'純正55g・当たった8球（画面に写った分）'},
   {d:'2026-10-21',bestC:245.9,bs:64.7,bsMax:67.9,carry:213,total:249,best:268.1,note:'シャフトをZERO SOLID 40 Sに交換・コック意識（しっかり振った26球）'},
-  {d:'2026-10-24',bestC:236.1,bs:62.2,bsMax:65.8,carry:221,total:252,best:267.7,note:'ZERO SOLID 40 S・右脚の前で止める（当たった13球）・打ち出し平均13.3°'},
-  {d:'2026-11-02',bestC:241.1,bs:63.8,bsMax:67.5,carry:222,total:250,best:267.2,note:'ZERO SOLID 40 S（当たった15球）・打ち出し平均11.9°'},
+  {d:'2026-10-24',bestC:236.1,bs:62.2,bsMax:65.8,carry:221,total:252,best:267.7,note:'ZERO SOLID 40 S・右脚の前で止める（当たった13球）・打ち出し平均13.3°',la:13.3},
+  {d:'2026-11-02',bestC:241.1,bs:63.8,bsMax:67.5,carry:222,total:250,best:267.2,note:'ZERO SOLID 40 S（当たった15球）・打ち出し平均11.9°',la:11.9},
   {d:'2026-11-05',bestC:247.2,bs:64.1,bsMax:67.2,carry:222,total:255,best:276.4,note:'40g（ZERO SOLID）と55g（純正）を打ち比べ。276.4yは40g、272.0yは55g（55gの方が方向のブレが少ない）→この日から55g'},
-  {d:'2026-11-16',bestC:242.9,bs:63.8,bsMax:65.5,carry:227,total:261,best:274.0,note:'55g（純正）・しっかり振った14球・キャリー平均は過去最高'},
+  {d:'2026-11-16',bestC:242.9,bs:63.8,bsMax:65.5,carry:227,total:261,best:274.0,note:'55g（純正）・しっかり振った14球・キャリー平均は過去最高',la:12.9,apex:23.1,hang:6.98,side:18.3,in20:'9/14'},
 ];
 // ドライバーのシャフトの履歴（洋平さんの話から）
 const SHAFT_LOG=[
@@ -83,6 +83,10 @@ function renderD300(){
   <div class="grid gap-2"><h3 class="h2 border-b-2 border-fg pb-1">記録（ドライバー・フルスイング）</h3>
    <div class="overflow-x-auto"><table class="w-full text-center text-[13px]"><tr class="text-[11px] text-muted"><th class="py-1">日付</th><th>ボールスピード</th><th>最速</th><th>キャリー</th><th>トータル</th><th>ベスト</th><th>ベスト<br>キャリー</th></tr>
    ${D300_LOG.map(r=>`<tr class="border-t border-line"><td class="py-1.5">${+r.d.slice(5,7)}/${+r.d.slice(8)}${r.note?`<div class="text-[10px] text-muted">${esc(r.note)}</div>`:''}</td><td>${r.bs}</td><td>${r.bsMax}</td><td>${r.carry}</td><td><b>${r.total}</b></td><td>${r.best}</td><td>${Math.round(r.bestC)}</td></tr>`).join('')}</table></div>
-   <div class="rounded-lg bg-accent-soft px-3 py-2 text-[13px]"><b class="text-accent">測るもの：</b>2週間に1回、トラックマンで <b>ヘッドスピード・ボールスピード・ミート率・打ち出し角・スピン量</b> の画面を撮って送る → ここに追加して、ステップを更新します。</div>
+   <h3 class="h2 mt-2 border-b-2 border-fg pb-1">弾道（トラックマンの新しい項目・11/16から）</h3>
+   <div class="overflow-x-auto"><table class="w-full text-center text-[13px]"><tr class="text-[11px] text-muted"><th class="py-1">日付</th><th>打ち出し角</th><th>最高到達点</th><th>滞空時間</th><th>左右のずれ<br>平均</th><th>ずれ20y<br>以内</th></tr>
+   ${D300_LOG.filter(r=>r.la||r.apex).map(r=>`<tr class="border-t border-line"><td class="py-1.5">${+r.d.slice(5,7)}/${+r.d.slice(8)}</td><td>${r.la?r.la+'°':'—'}</td><td>${r.apex?r.apex+'y':'—'}</td><td>${r.hang?r.hang+'秒':'—'}</td><td>${r.side?r.side+'y':'—'}</td><td>${r.in20||'—'}</td></tr>`).join('')}</table></div>
+   <div class="text-[11px] text-muted">打ち出し角の目安は10〜15°。最高到達点＝球が一番高く上がった高さ（ヤード）、滞空時間＝打ってから落ちるまでの秒数。左右のずれ＝キャリー地点が目標から左右に何ヤードずれたか（曲がりも含む）。着地角はトラックマンの画面に数字が出ていない（「-」）。10/24・11/2は打ち出し角だけ記録あり。</div>
+   <div class="rounded-lg bg-accent-soft px-3 py-2 text-[13px]"><b class="text-accent">測るもの：</b>2週間に1回、トラックマンで <b>キャリー・トータル・ボールスピード・打ち出し角・最高到達点・滞空時間・キャリーサイド</b> の画面を撮って送る → ここに追加して、ステップを更新します。</div>
   </div>`;
 }
