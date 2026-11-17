@@ -350,7 +350,7 @@ function drawHoleMap(){
   if(pv0)return;
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
-  if(side)hmSideSetup();const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.vb={width:vb.width,height:vb.height};HM.base=Math.min(sc.clientWidth*(IL?vb.width/(vb.width+2*HZ_GUT):1),(sc.clientHeight-10)*vb.width/vb.height);
+  if(side)hmSideSetup();const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.vb={width:vb.width,height:vb.height};HM.base=Math.min((IL?sc.clientWidth-2*HZ_GUT:sc.clientWidth),(sc.clientHeight-10)*vb.width/vb.height);
   const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
   inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{hz:{key:x.mapKey,n:h[0]},pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
   if(HM.pos){const p=HM.pos;HM.pos=null;requestAnimationFrame(()=>{sc.scrollLeft=p[0];sc.scrollTop=p[1];});}
@@ -438,7 +438,7 @@ function hmSideApply(){const sd=$('hm-side');if(!sd)return;let v={};try{v=JSON.p
   if(hmWide()){sd.style.height='';sd.style.maxHeight='';sd.style.width=(v.w||44)+'%';}else{sd.style.width='';sd.style.maxHeight='none';sd.style.height=(v.h||42)+'%';}}
 function hmRefit(){const sc=$('hm-scroll'),inn=$('hm-in'),pad=$('hm-pad');if(!sc||!inn||!HM||!HM.vb)return;
   const cx=sc.scrollLeft+sc.clientWidth/2-(pad?pad.offsetLeft:0)-inn.offsetLeft,cy=sc.scrollTop+sc.clientHeight/2-(pad?pad.offsetTop:0)-inn.offsetTop;const fx=cx/inn.offsetWidth,fy=cy/inn.offsetHeight;
-  HM.base=Math.min(sc.clientWidth*(HM.IL?HM.vb.width/(HM.vb.width+2*HZ_GUT):1),(sc.clientHeight-10)*HM.vb.width/HM.vb.height);inn.style.width=HM.base*HM.z+'px';
+  HM.base=Math.min((HM.IL?sc.clientWidth-2*HZ_GUT:sc.clientWidth),(sc.clientHeight-10)*HM.vb.width/HM.vb.height);inn.style.width=HM.base*HM.z+'px';
   if(pad)pad.style.padding=`${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;if(HM.IL&&typeof hmOverlay==='function')hmOverlay();
   requestAnimationFrame(()=>{sc.scrollLeft=(pad?pad.offsetLeft:0)+inn.offsetLeft+fx*inn.offsetWidth-sc.clientWidth/2;sc.scrollTop=(pad?pad.offsetTop:0)+inn.offsetTop+fy*inn.offsetHeight-sc.clientHeight/2;});}
 function hmSideSetup(){hmSideApply();hmBoxSetup();const dv=$('hm-div'),sd=$('hm-side'),sp=$('hm-split');if(!dv||!sd||!sp)return;

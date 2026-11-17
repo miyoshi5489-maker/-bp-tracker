@@ -79,4 +79,4 @@ function hzSvg(key,n,dt,u,wrap,W,mode){
     v+=wrap?wrap(x+w/2,h.cy,g):g;});
   return v;
 }
-const HZ_GUT=40; // マップの左右に空ける余白（図の座標で）
+const HZ_GUT=82; // マップの左右に空ける余白（画面のpx）
