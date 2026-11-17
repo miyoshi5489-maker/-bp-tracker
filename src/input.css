@@ -80,6 +80,26 @@
 .yb-sheet{position:relative;width:210mm;height:297mm;display:grid;grid-template-columns:105mm 105mm;grid-template-rows:148.5mm 148.5mm;break-after:page;page-break-after:always;overflow:hidden}
 .yb-cut-v{position:absolute;left:105mm;top:0;bottom:0;border-left:.2mm dashed #aaa}
 .yb-cut-h{position:absolute;top:148.5mm;left:0;right:0;border-top:.2mm dashed #aaa}
+
+/* iPhone用：1ホール1画面・横にスワイプ */
+#yb.yb-m .yb-help{display:none}
+#yb.yb-m .yb-jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + 54px);z-index:2;display:flex;gap:4px;overflow-x:auto;padding:6px 8px;background:#d9d9d4;scrollbar-width:none}
+#yb.yb-m .yb-jump button{flex:none;min-width:36px;height:32px;border-radius:8px;background:#fff;font-weight:700;font-size:13px;color:#111}
+#yb.yb-m .yb-jump button.on{background:#111;color:#fff}
+#yb.yb-m .yb-screen{display:flex;justify-content:flex-start;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;padding:0;zoom:1!important;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#yb.yb-m .yb-screen .yb-card{flex:none;width:100vw;height:auto;min-height:calc(100vh - 110px);scroll-snap-align:start;border-radius:0;box-shadow:none;padding:12px 14px 16px;font-size:15px;gap:8px}
+#yb.yb-m .yb-card .yb-body{flex-direction:column;gap:10px}
+#yb.yb-m .yb-card .yb-fig{width:auto!important;height:52vh!important;aspect-ratio:var(--ar);max-width:100%;margin:0 auto}
+#yb.yb-m .yb-card .yb-txt{font-size:15px!important;overflow:visible;gap:6px}
+#yb.yb-m .yb-card .yb-txt ul{padding-left:18px;gap:4px}
+#yb.yb-m .yb-card .yb-head{border-bottom-width:2px;padding-bottom:6px;gap:8px}
+#yb.yb-m .yb-card .yb-num{width:40px;height:40px;font-size:22px}
+#yb.yb-m .yb-card .yb-mut{font-size:12px}
+#yb.yb-m .yb-card .yb-score{display:none}
+#yb.yb-m .yb-card .yb-foot{position:static;font-size:11px}
+#yb.yb-m .yb-cover{font-size:15px}
+#yb.yb-m .yb-cover .yb-tbl{font-size:13px}
+#yb.yb-m .yb-aim,#yb.yb-m .yb-hz{padding:6px 8px;border-radius:8px}
 @media print{
   @page{size:A4 portrait;margin:0}
   body.yb-open>*:not(#yb){display:none!important}

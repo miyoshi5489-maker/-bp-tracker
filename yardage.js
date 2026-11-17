@@ -9,8 +9,9 @@ function openYardageBook(date){
   const go=()=>{if(YB)drawYardageBook();};
   const hz=typeof hzLoadAll==='function'?hzLoadAll(x.mapKey,x.holes.map(h=>h[0])).catch(()=>{}):Promise.resolve();
   const cl=typeof buildClubs==='function'&&typeof getRecs==='function'?getRecs().then(r=>{buildClubs(r);}).catch(()=>{}):Promise.resolve();
-  Promise.all([hz,cl]).then(go,go);
+  go();Promise.all([hz,cl]).then(go,go);
 }
+function ybGo(i){const sc=document.querySelector('#yb .yb-screen');if(sc)sc.scrollTo({left:i*sc.clientWidth,behavior:'smooth'});}
 function closeYardageBook(){const el=$('yb');if(el)el.remove();document.body.style.overflow='';document.body.classList.remove('yb-open');YB=null;}
 
 // 図の上の印：ルート・落とし所（番号）・ブレの範囲・OBライン・ピン
@@ -63,7 +64,7 @@ function ybCard(x,h,x2){
   const dt=teeShift(key,h[0]);const sides=(HOLE_SIDES[key]||{})[h[0]];
   let fig='';let shots=[];
   if(IL){const hi=IL.holes[h[0]];const IH=hi.h||IL.h;let hmm=YB_IMG_H,wmm=hmm*IL.w/IH;if(wmm>YB_IMG_MAXW){wmm=YB_IMG_MAXW;hmm=wmm*IH/IL.w;}const k=IH/hmm;
-    fig=`<div class="yb-fig" style="width:${wmm}mm;height:${hmm}mm"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
+    fig=`<div class="yb-fig" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
     shots=ybShots(IL,hi,m,dt);}
   const cad0=caddie(x,h,m);const iL=cad0.findIndex(t=>/>左 /.test(t));if(iL>=0&&/>右 /.test(cad0[iL+1]||''))cad0.splice(iL,2,cad0[iL]+'　'+cad0[iL+1]);
   const cad=cad0.filter(t=>!/同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
@@ -94,6 +95,7 @@ function ybCover(x){
    <div class="yb-ctitle">${esc(x.course)}</div>
    <div class="yb-mut">${+x.date.slice(5,7)}/${+x.date.slice(8)}（${'日月火水木金土'[new Date(x.date+'T00:00').getDay()]}）${esc(x.time||'')}・${esc(x.tee||'')}</div>
    ${x.result&&x.result.score?`<div class="yb-big" style="border:.4mm solid #111;border-radius:1.5mm;padding:1mm 2mm">結果 <b style="color:#c62828">${x.result.score}</b><span class="yb-mut">${x.result.out?`（OUT ${x.result.out}・IN ${x.result.in}）`:''}</span></div>`:''}<div class="yb-big">${esc(x.planName)}プラン 目標 <b>${x.target}</b><span class="yb-mut">（OUT ${sum(out,4)}・IN ${sum(inn,4)}・上限 ${x.limit||99}）</span></div>
+   ${(()=>{if(typeof SWING_LOG==='undefined')return '';const L=SWING_LOG.filter(c=>c.date<=x.date&&/秋野コーチ/.test((c.src||'')+(c.title||''))).sort((a,b)=>a.date<b.date?1:-1)[0];if(!L)return '';return `<div class="yb-sec">コーチの今の課題（${+L.date.slice(5,7)}/${+L.date.slice(8)}）</div><ul style="margin:0;padding-left:4mm">${(L.fix||[]).slice(0,3).map(f=>`<li>${esc(f.t)}</li>`).join('')}</ul>${L.drill?`<div class="yb-mut">${esc(String(L.drill).slice(0,90))}</div>`:''}`;})()}
    ${x.rules?`<div class="yb-sec">当日の約束</div><ol>${x.rules.map(r=>`<li><b>${esc(r[0])}</b></li>`).join('')}</ol>`:''}
    ${typeof dwGroups==='function'?(()=>{const g=dwGroups(x);return `<div class="yb-sec">ドライバーの使い分け</div><table class="yb-tbl">${DW_LABEL.map(([k,l,s2,c])=>g[k].length?`<tr><th style="color:${c};width:22%">${l}</th><td style="text-align:left;font-weight:bold">${g[k].join('・')}番</td><td style="width:18%">${g[k].length}回</td></tr>`:'').join('')}</table>`;})():''}
    ${typeof COURSE_YARDS!=='undefined'?`<div class="yb-sec">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)}）</div><table class="yb-tbl"><tr>${COURSE_YARDS.rows.map(r=>`<th>${r[0]}</th>`).join('')}</tr><tr>${COURSE_YARDS.rows.map(r=>`<td>${r[1]===0?'〜'+r[2]:r[2]>=999?r[1]+'〜':r[1]+'〜'+r[2]}</td>`).join('')}</tr></table>`:''}
@@ -118,18 +120,22 @@ function drawYardageBook(){
   // 切って重ねるだけで順番になる並べ方：シートs・位置p に cards[p*S+s]
   const S=Math.ceil(cards.length/4);const sheets=[...Array(S)].map((_,s)=>[0,1,2,3].map(p=>cards[p*S+s]||'<div class="yb-card"></div>'));
   let el=$('yb');if(!el){el=document.createElement('div');el.id='yb';document.body.appendChild(el);document.body.style.overflow='hidden';document.body.classList.add('yb-open');}
+  const mob=window.innerWidth<700;el.classList.toggle('yb-m',mob);const keepX=mob&&el.querySelector('.yb-screen')?el.querySelector('.yb-screen').scrollLeft:0;
   el.innerHTML=`<div class="yb-bar">
     <button class="btn-sm" onclick="closeYardageBook()">✕ 閉じる</button>
     ${x0.plans?`<div class="seg !p-0.5 text-[12px]"><button class="${YB.plan?'':'on'} !min-h-[34px] !px-2" onclick="YB.plan='';drawYardageBook()">100切り</button>${Object.entries(x0.plans).map(([k,P])=>`<button class="${YB.plan===k?'on':''} !min-h-[34px] !px-2" onclick="YB.plan='${k}';drawYardageBook()">${P.name}</button>`).join('')}</div>`:''}
     <button class="btn !min-h-[38px] !px-3" onclick="window.print()">🖨 印刷</button></div>
    <div class="yb-help">A4で<b>倍率100％（実際のサイズ）・余白なし</b>で印刷 → ${S}枚を重ねて点線で十字に切る → <b>左上→右上→左下→右下</b>の束の順に重ねると、表紙・1〜18番・スコアの順になります → 左はじをホッチキスで留める。</div>
+   ${mob?`<div class="yb-jump">${['表紙',...order.map(h=>h[0]),'スコア'].map((t,i)=>`<button data-i="${i}" onclick="ybGo(${i})">${t}</button>`).join('')}</div>`:''}
    <div class="yb-screen">${cards.join('')}</div>
    <div class="yb-print">${sheets.map(c=>`<div class="yb-sheet">${c.join('')}<i class="yb-cut-v"></i><i class="yb-cut-h"></i></div>`).join('')}</div>`;
   if(typeof jpWalk==='function')jpWalk(el);
-  const fit=()=>{const sc=el.querySelector('.yb-screen');if(!sc)return;const pw=YB_CARD_W*96/25.4;sc.style.zoom=Math.min(1.4,(el.clientWidth-16)/pw);};fit();
+  if(mob){const sc=el.querySelector('.yb-screen');sc.scrollLeft=keepX;const mark=()=>{const i=Math.round(sc.scrollLeft/sc.clientWidth);el.querySelectorAll('.yb-jump button').forEach(b=>{const on=+b.dataset.i===i;b.classList.toggle('on',on);if(on)b.scrollIntoView({block:'nearest',inline:'nearest'});});};sc.onscroll=()=>{clearTimeout(sc._t);sc._t=setTimeout(mark,80);};mark();}
+  const fit=()=>{const sc=el.querySelector('.yb-screen');if(!sc||mob)return;const pw=YB_CARD_W*96/25.4;sc.style.zoom=Math.min(1.4,(el.clientWidth-16)/pw);};fit();
   // 文字があふれるカードは文字を小さくする（印刷用にも同じ大きさを写す）
-  requestAnimationFrame(()=>{const sc=[...el.querySelectorAll('.yb-screen .yb-txt')];const fs=sc.map(t=>{let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}return f;});
+  requestAnimationFrame(()=>{if(mob)el.classList.remove('yb-m');const sc=[...el.querySelectorAll('.yb-screen .yb-txt')];const fs=sc.map(t=>{let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}return f;});
     const pr=[...el.querySelectorAll('.yb-print .yb-card')];const idx=sheets.flatMap((c,s)=>[0,1,2,3].map(p=>p*S+s));
     const scards=[...el.querySelectorAll('.yb-screen .yb-card')];
-    pr.forEach((c,i)=>{const t=c.querySelector('.yb-txt');const ci=idx[i];const st=scards[ci]&&scards[ci].querySelector('.yb-txt');if(t&&st)t.style.fontSize=st.style.fontSize;});});
+    pr.forEach((c,i)=>{const t=c.querySelector('.yb-txt');const ci=idx[i];const st=scards[ci]&&scards[ci].querySelector('.yb-txt');if(t&&st)t.style.fontSize=st.style.fontSize;});
+    if(mob){el.classList.add('yb-m');const s2=el.querySelector('.yb-screen');s2.style.zoom='';s2.scrollLeft=keepX;}});
 }
