@@ -89,7 +89,7 @@
 #yb.yb-m .yb-screen{display:flex;justify-content:flex-start;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;padding:0;zoom:1!important;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 #yb.yb-m .yb-screen .yb-card{flex:none;width:100vw;height:auto;min-height:calc(100vh - 110px);scroll-snap-align:start;border-radius:0;box-shadow:none;padding:12px 14px 16px;font-size:15px;gap:8px}
 #yb.yb-m .yb-card .yb-body{flex-direction:column;gap:10px}
-#yb.yb-m .yb-card .yb-fig{width:auto!important;height:min(52vh,calc((100vw - 160px) * var(--hr)))!important;aspect-ratio:var(--ar);margin:0 auto;overflow:visible}
+#yb.yb-m .yb-card .yb-fig{width:auto!important;height:min(52vh,calc((100vw - 190px) * var(--hr)))!important;aspect-ratio:var(--ar);margin:0 auto;overflow:visible}
 .hzo{display:none}#yb.yb-m .yb-screen .hzo{display:inline}#yb.yb-m .yb-screen .hzi{display:none}
 #yb.yb-m .yb-card .yb-txt{font-size:15px!important;overflow:visible;gap:6px}
 #yb.yb-m .yb-card .yb-txt ul{padding-left:18px;gap:4px}
