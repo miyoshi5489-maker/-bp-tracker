@@ -63,7 +63,7 @@ function hzLines(key,n,dt){
 function hzSvg(key,n,dt,u,wrap,W){
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;let v='';
   const src=hzSrc(key,n);
-  L.forEach(h0=>{if(h0.g||h0.cx==null)return;const z=src.find(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20&&Math.sign(z.x||0)===Math.sign(h0.x||0));const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0||f>330)return;
+  L.forEach(h0=>{if(h0.g||h0.cx==null)return;const z=src.filter(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20).sort((a,b)=>Math.abs(a.f+a.c-h0.f-h0.c)+Math.abs(a.x-h0.x)/2-Math.abs(b.f+b.c-h0.f-h0.c)-Math.abs(b.x-h0.x)/2)[0];const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0||f>330)return;
     const txt=`${f}〜${c}`;const w=txt.length*2.9*u+3*u,hh=6.4*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));const y=h.cy-hh/2;
     const col=h.t==='b'?'#8d6e00':'#1565c0';
     const g=`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${1.2*u}" fill="#fff" fill-opacity=".93" stroke="${col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+hh*.74}" font-size="${4.6*u}" font-weight="bold" fill="${col}" text-anchor="middle">${txt}</text>`;
