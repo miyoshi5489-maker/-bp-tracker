@@ -44,12 +44,16 @@ function hzLoad(key,n){
 }
 function hzLoadAll(key,holes){return Promise.all(holes.map(n=>hzLoad(key,n)));}
 // 表示用の文：ティーから（ティーの位置のずれ dt を引く）
-function hzSide(x){return x>12?'右':x<-12?'左':'中央';}
+function hzSide(x){return x>8?'右':x<-8?'左':'中央';}
 function hzLines(key,n,dt){
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return null;dt=dt||0;
+  // 出典のある距離（HOLE_MAPS）を優先し、図から測ったものは重ならない分だけ足す
+  const m=(typeof HOLE_MAPS!=='undefined'&&HOLE_MAPS[key]&&HOLE_MAPS[key][n])||{};const c=m.c;
+  const src=(m.hz||[]).filter(h=>(h.t==='b'||h.t==='w')&&!h.nd&&h.y!=null).map(h=>{const e=h.t==='w'?(h.ry||10):6;let x=h.x||0;if(c&&typeof alongPt==='function')x-=alongPt(c,h.y)[0];return {t:h.t,f:h.y-e,c:h.y+e,x,src:1};});
+  const all=[...src,...L.filter(h=>h.g||!src.some(z=>z.t===h.t&&z.c>=h.f-20&&z.f<=h.c+20))];
   const tee=[],grn=[];
-  L.forEach(h=>{const f=Math.max(0,h.f-dt),c=Math.max(0,h.c-dt);const nm=(h.t==='b'?'バンカー':'池');
+  all.sort((a,b)=>a.f-b.f).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;const nm=(h.t==='b'?'バンカー':'池');
     if(h.g)grn.push(`${hzSide(h.x)}${nm}`);
-    else if(f<=320)tee.push({t:h.t,txt:`${h.t==='b'?'⛱':'💧'}${hzSide(h.x)}の${nm} <b>${f}</b>〜<b>${c}</b>y`});});
+    else if(f<=320)tee.push({t:h.t,txt:`${h.t==='b'?'⛱':'💧'}${hzSide(h.x)}の${nm} <b>${f}</b>〜<b>${cc}</b>y`});});
   return {tee,grn:[...new Set(grn)]};
 }
