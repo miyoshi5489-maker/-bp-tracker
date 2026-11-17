@@ -117,7 +117,7 @@ function drawYardageBook(){
   const x0=ybPlan(YB.date,YB.plan);const x={...x0,planName:YB.plan?(x0.plans[YB.plan].name):'100切り'};
   const alt=YB.plan?'':Object.keys(x0.plans||{})[0];const xa=x0.plans?ybPlan(YB.date,alt):null;const x2=xa?{...xa,planName:alt?(x0.plans[alt].name):'100切り'}:null;
   const order=(x.order||['out','in']).flatMap(k=>x.holes.filter(h=>k==='out'?h[0]<=9:h[0]>=10));
-  const cards=[ybCover(x),...order.map(h=>ybCard(x,h,x2)),ybScoreCard(x)];
+  const GC=typeof slopeGuideCards==='function'?slopeGuideCards():[];const cards=[ybCover(x),...order.map(h=>ybCard(x,h,x2)),...GC,ybScoreCard(x)];
   // 切って重ねるだけで順番になる並べ方：シートs・位置p に cards[p*S+s]
   const S=Math.ceil(cards.length/4);const sheets=[...Array(S)].map((_,s)=>[0,1,2,3].map(p=>cards[p*S+s]||'<div class="yb-card"></div>'));
   let el=$('yb');if(!el){el=document.createElement('div');el.id='yb';document.body.appendChild(el);document.body.style.overflow='hidden';document.body.classList.add('yb-open');}
@@ -126,8 +126,8 @@ function drawYardageBook(){
     <button class="btn-sm" onclick="closeYardageBook()">✕ 閉じる</button>
     ${x0.plans?`<div class="seg !p-0.5 text-[12px]"><button class="${YB.plan?'':'on'} !min-h-[34px] !px-2" onclick="YB.plan='';drawYardageBook()">100切り</button>${Object.entries(x0.plans).map(([k,P])=>`<button class="${YB.plan===k?'on':''} !min-h-[34px] !px-2" onclick="YB.plan='${k}';drawYardageBook()">${P.name}</button>`).join('')}</div>`:''}
     <button class="btn !min-h-[38px] !px-3" onclick="window.print()">🖨 印刷</button></div>
-   <div class="yb-help">A4で<b>倍率100％（実際のサイズ）・余白なし</b>で印刷 → ${S}枚を重ねて点線で十字に切る → <b>左上→右上→左下→右下</b>の束の順に重ねると、表紙・1〜18番・スコアの順になります → 左はじをホッチキスで留める。</div>
-   ${mob?`<div class="yb-jump">${['表紙',...order.map(h=>h[0]),'スコア'].map((t,i)=>`<button data-i="${i}" onclick="ybGo(${i})">${t}</button>`).join('')}</div>`:''}
+   <div class="yb-help">A4で<b>倍率100％（実際のサイズ）・余白なし</b>で印刷 → ${S}枚を重ねて点線で十字に切る → <b>左上→右上→左下→右下</b>の束の順に重ねると、表紙・1〜18番・傾斜とバンカーの打ち方・スコアの順になります → 左はじをホッチキスで留める。</div>
+   ${mob?`<div class="yb-jump">${['表紙',...order.map(h=>h[0]),...(typeof SLOPE_GUIDE!=='undefined'?SLOPE_GUIDE.map(g=>g.tab):[]),'スコア'].map((t,i)=>`<button data-i="${i}" onclick="ybGo(${i})">${t}</button>`).join('')}</div>`:''}
    <div class="yb-screen">${cards.join('')}</div>
    <div class="yb-print">${sheets.map(c=>`<div class="yb-sheet">${c.join('')}<i class="yb-cut-v"></i><i class="yb-cut-h"></i></div>`).join('')}</div>`;
   if(typeof jpWalk==='function')jpWalk(el);

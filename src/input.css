@@ -81,6 +81,9 @@
 .yb-cut-v{position:absolute;left:105mm;top:0;bottom:0;border-left:.2mm dashed #aaa}
 .yb-cut-h{position:absolute;top:148.5mm;left:0;right:0;border-top:.2mm dashed #aaa}
 
+.yb-guide .yb-txt ul{margin:0;padding-left:3.5mm;display:grid;gap:.3mm}
+.yb-guide .yb-gbase{background:#f3efe2;border-radius:1mm;padding:.8mm 1mm .8mm 4mm}
+.yb-guide .yb-txt{display:flex;flex-direction:column;gap:.8mm;font-size:7pt;line-height:1.4}
 /* iPhone用：1ホール1画面・横にスワイプ */
 #yb.yb-m .yb-help{display:none}
 #yb.yb-m .yb-jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + 54px);z-index:2;display:flex;gap:4px;overflow-x:auto;padding:6px 8px;background:#d9d9d4;scrollbar-width:none}
