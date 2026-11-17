@@ -256,6 +256,7 @@ function illusView(I,hi,m,opt){m=tmAdjust(m);const L=(opt&&opt.L)||1;const DT=(o
   if(HM&&HM.tap){const q=HM.tap;const ft=Math.round(Math.hypot(q[0]-T0[0],q[1]-T0[1])/s),tp=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);const bx=q[0]<I.w/2?q[0]+5:q[0]-5-50;
     v+=`<line x1="${T0[0]}" y1="${T0[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#1565c0" stroke-width=".7"/><line x1="${q[0]}" y1="${q[1]}" x2="${P[0]}" y2="${P[1]}" stroke="#1565c0" stroke-width=".7" stroke-dasharray="1.5 1"/><circle cx="${q[0]}" cy="${q[1]}" r="3" fill="#1565c0" stroke="#fff" stroke-width=".8"/>`;
     v+=`<g transform="${SC(q[0],q[1])}"><rect x="${bx}" y="${q[1]-7}" width="50" height="14" rx="2" fill="#1565c0"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#fff">ティーから ${ft}y</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">ピンまで ${tp}y</text></g>`;}
+  if(opt&&opt.hz&&typeof hzSvg==='function')v+=hzSvg(opt.hz.key,opt.hz.n,DT,1,(x,y,g)=>`<g transform="${SC(x,y)}">${g}</g>`,I.w);
   return v+'</svg>';
 }
 
@@ -320,7 +321,7 @@ function drawHoleMap(){
            <button class="rounded px-2 py-1 text-[12px]" style="border:1px solid #fff" onclick="pinSheetSet(HM.date,HM.no,null);setPin(HM.date,HM.no,null);localStorage.removeItem(pinKey(HM.date,HM.no));drawHoleMap()">消す</button></div>
           <div class="mt-1 text-[11px] opacity-80">当日もらうピンシートの写真をClaudeに送れば、18ホール分まとめて入れます。グリーンをタップして置いてもOK。</div></div>`;})()}
        <div class="text-center text-[11px] text-white/80">グリーンの大きさの目安 ${g.w}×${g.d}y（形は楕円で表示。実際の形とは違います）</div></div>`
-      :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
+      :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{hz:{key:x.mapKey,n:h[0]},pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
        :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
     ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}（${IL.note}）・図をタップで距離／ドラッグか矢印キーで移動／2本指か＋−で拡大縮小</div>`}
@@ -351,7 +352,7 @@ function drawHoleMap(){
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
   if(side)hmSideSetup();const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.vb={width:vb.width,height:vb.height};HM.base=Math.min(sc.clientWidth,(sc.clientHeight-10)*vb.width/vb.height);
   const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
-  inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
+  inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{hz:{key:x.mapKey,n:h[0]},pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
   if(HM.pos){const p=HM.pos;HM.pos=null;requestAnimationFrame(()=>{sc.scrollLeft=p[0];sc.scrollTop=p[1];});}
   else if(!HM.tap)requestAnimationFrame(()=>{const i=$('hm-in'),pd=$('hm-pad');if(!i||!pd)return;sc.scrollTop=pd.offsetTop+i.offsetTop+i.offsetHeight-sc.clientHeight+8;sc.scrollLeft=pd.offsetLeft+i.offsetLeft+i.offsetWidth/2-sc.clientWidth/2;});
 }

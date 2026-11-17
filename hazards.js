@@ -2,7 +2,7 @@
 // バンカー（白）と池（青）のかたまりを見つけて、ルート（ティー→グリーン）に沿って
 // 「手前まで」「越えるまで」の距離と左右を出す。図は縮図なので距離は目安。
 // 新しいコースも ILLUS（図とルート）を入れるだけで自動で出る。結果は端末に保存して2回目から速くする。
-const HZ_VER=3;
+const HZ_VER=4;
 const HZ_CACHE={};
 function hzKey(key,n){return 'hz:'+HZ_VER+':'+key+':'+n;}
 function hzProject(r,px,py){ // ルートへの投影：沿った距離(px)と横のずれ(px、右がプラス)
@@ -31,7 +31,7 @@ function hzDetect(img,hi){
     let a0=1e9,a1=-1e9,lat=0,dmin=1e9;for(let m=0;m<px.length;m+=Math.max(1,(px.length/400)|0)){const p=hzProject(r,xs[m]*k,ys[m]*k);a0=Math.min(a0,p.along);a1=Math.max(a1,p.along);lat+=p.lat;dmin=Math.min(dmin,p.d);}
     const nS=Math.ceil(px.length/Math.max(1,(px.length/400)|0));lat/=nS;
     if(dmin/s>70)continue; // ホールから遠すぎるもの（隣のホール）は除く
-    out.push({t:t===1?'b':'w',f:Math.round(a0/s),c:Math.round(a1/s),x:Math.round(lat/s),g:a1>=Lr-28*s});}
+    out.push({t:t===1?'b':'w',f:Math.round(a0/s),c:Math.round(a1/s),x:Math.round(lat/s),g:a1>=Lr-28*s,cx:Math.round((Math.min(...xs)+Math.max(...xs))/2*k),cy:Math.round((Math.min(...ys)+Math.max(...ys))/2*k),hw:Math.round(bw/2)});}
   return out.sort((a,b)=>a.f-b.f);
 }
 function hzLoad(key,n){
@@ -56,4 +56,15 @@ function hzLines(key,n,dt){
     if(h.g)grn.push(`${hzSide(h.x)}${nm}`);
     else if(f<=320)tee.push({t:h.t,txt:`${h.t==='b'?'⛱':'💧'}${hzSide(h.x)}の${nm} <b>${f}</b>〜<b>${cc}</b>y`});});
   return {tee,grn:[...new Set(grn)]};
+}
+
+// 図の上のラベル：バンカー・池の横に「手前〜越える」ヤード（グリーン周りは除く）
+function hzSvg(key,n,dt,u,wrap,W){
+  const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;let v='';
+  L.forEach(h=>{if(h.g||h.cx==null)return;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0||f>330)return;
+    const txt=`${f}〜${c}`;const w=txt.length*2.9*u+3*u,hh=6.4*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));const y=h.cy-hh/2;
+    const col=h.t==='b'?'#8d6e00':'#1565c0';
+    const g=`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${1.2*u}" fill="#fff" fill-opacity=".93" stroke="${col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+hh*.74}" font-size="${4.6*u}" font-weight="bold" fill="${col}" text-anchor="middle">${txt}</text>`;
+    v+=wrap?wrap(x+w/2,h.cy,g):g;});
+  return v;
 }
