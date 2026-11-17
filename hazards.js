@@ -45,11 +45,12 @@ function hzLoad(key,n){
 function hzLoadAll(key,holes){return Promise.all(holes.map(n=>hzLoad(key,n)));}
 // 表示用の文：ティーから（ティーの位置のずれ dt を引く）
 function hzSide(x){return x>8?'右':x<-8?'左':'中央';}
+function hzSrc(key,n){const m=(typeof HOLE_MAPS!=='undefined'&&HOLE_MAPS[key]&&HOLE_MAPS[key][n])||{};const c=m.c;
+  return (m.hz||[]).filter(h=>(h.t==='b'||h.t==='w')&&!h.nd&&h.y!=null).map(h=>{const e=h.t==='w'?(h.ry||10):6;let x=h.x||0;if(c&&typeof alongPt==='function')x-=alongPt(c,h.y)[0];return {t:h.t,f:h.y-e,c:h.y+e,x,src:1};});}
 function hzLines(key,n,dt){
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return null;dt=dt||0;
   // 出典のある距離（HOLE_MAPS）を優先し、図から測ったものは重ならない分だけ足す
-  const m=(typeof HOLE_MAPS!=='undefined'&&HOLE_MAPS[key]&&HOLE_MAPS[key][n])||{};const c=m.c;
-  const src=(m.hz||[]).filter(h=>(h.t==='b'||h.t==='w')&&!h.nd&&h.y!=null).map(h=>{const e=h.t==='w'?(h.ry||10):6;let x=h.x||0;if(c&&typeof alongPt==='function')x-=alongPt(c,h.y)[0];return {t:h.t,f:h.y-e,c:h.y+e,x,src:1};});
+  const src=hzSrc(key,n);
   const all=[...src,...L.filter(h=>h.g||!src.some(z=>z.t===h.t&&z.c>=h.f-20&&z.f<=h.c+20))];
   const tee=[],grn=[];
   all.sort((a,b)=>a.f-b.f).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;const nm=(h.t==='b'?'バンカー':'池');
@@ -61,7 +62,8 @@ function hzLines(key,n,dt){
 // 図の上のラベル：バンカー・池の横に「手前〜越える」ヤード（グリーン周りは除く）
 function hzSvg(key,n,dt,u,wrap,W){
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;let v='';
-  L.forEach(h=>{if(h.g||h.cx==null)return;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0||f>330)return;
+  const src=hzSrc(key,n);
+  L.forEach(h0=>{if(h0.g||h0.cx==null)return;const z=src.find(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20&&Math.sign(z.x||0)===Math.sign(h0.x||0));const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0||f>330)return;
     const txt=`${f}〜${c}`;const w=txt.length*2.9*u+3*u,hh=6.4*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));const y=h.cy-hh/2;
     const col=h.t==='b'?'#8d6e00':'#1565c0';
     const g=`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${1.2*u}" fill="#fff" fill-opacity=".93" stroke="${col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+hh*.74}" font-size="${4.6*u}" font-weight="bold" fill="${col}" text-anchor="middle">${txt}</text>`;
