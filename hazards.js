@@ -60,13 +60,23 @@ function hzLines(key,n,dt){
 }
 
 // 図の上のラベル：バンカー・池の横に「手前〜越える」ヤード（グリーン周りは除く）
-function hzSvg(key,n,dt,u,wrap,W){
-  const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;let v='';
-  const src=hzSrc(key,n);
+function hzSvg(key,n,dt,u,wrap,W,mode){
+  // mode 'out'：図の外の余白にラベルを出して、線でバンカー・池を指す（図が隠れない）
+  const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;const out=mode==='out';
+  const src=hzSrc(key,n);const items=[];
   L.forEach(h0=>{if(h0.g||h0.cx==null)return;const z=src.filter(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20).sort((a,b)=>Math.abs(a.f+a.c-h0.f-h0.c)+Math.abs(a.x-h0.x)/2-Math.abs(b.f+b.c-h0.f-h0.c)-Math.abs(b.x-h0.x)/2)[0];const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0||f>330)return;
-    const txt=`${f}〜${c}`;const w=txt.length*2.9*u+3*u,hh=6.4*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));const y=h.cy-hh/2;
-    const col=h.t==='b'?'#8d6e00':'#1565c0';
-    const g=`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${1.2*u}" fill="#fff" fill-opacity=".93" stroke="${col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+hh*.74}" font-size="${4.6*u}" font-weight="bold" fill="${col}" text-anchor="middle">${txt}</text>`;
+    items.push({h,txt:`${f}〜${c}`,col:h.t==='b'?'#8d6e00':'#1565c0'});});
+  const hh=6.4*u;let v='';
+  if(out){
+    ['L','R'].forEach(sd=>{const it=items.filter(o=>(o.h.cx<W/2)===(sd==='L')).sort((a,b)=>a.h.cy-b.h.cy);let last=-1e9;
+      it.forEach(o=>{const w=o.txt.length*2.9*u+3*u;let y=Math.max(o.h.cy-hh/2,last+hh+1.2*u);last=y;
+        const x=sd==='L'?-w-3*u:W+3*u;const ax=sd==='L'?x+w:x;const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));
+        v+=`<line x1="${ax}" y1="${y+hh/2}" x2="${bx}" y2="${o.h.cy}" stroke="#fff" stroke-width="${1.1*u}"/><line x1="${ax}" y1="${y+hh/2}" x2="${bx}" y2="${o.h.cy}" stroke="${o.col}" stroke-width="${.55*u}"/><circle cx="${bx}" cy="${o.h.cy}" r="${.9*u}" fill="${o.col}" stroke="#fff" stroke-width="${.3*u}"/>`
+          +`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${1.2*u}" fill="#fff" stroke="${o.col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+hh*.74}" font-size="${4.6*u}" font-weight="bold" fill="${o.col}" text-anchor="middle">${o.txt}</text>`;});});
+    return v;}
+  items.forEach(o=>{const h=o.h;const w=o.txt.length*2.9*u+3*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));const y=h.cy-hh/2;
+    const g=`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${1.2*u}" fill="#fff" fill-opacity=".93" stroke="${o.col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+hh*.74}" font-size="${4.6*u}" font-weight="bold" fill="${o.col}" text-anchor="middle">${o.txt}</text>`;
     v+=wrap?wrap(x+w/2,h.cy,g):g;});
   return v;
 }
+const HZ_GUT=30; // マップの左右に空ける余白（図の座標で）

@@ -36,7 +36,7 @@ function ybSvg(I,hi,m,o){
   [...pts,P].forEach(q=>{v+=`<line x1="${prev[0]}" y1="${prev[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#fff" stroke-width="${.8*K}"/><line x1="${prev[0]}" y1="${prev[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#e65100" stroke-width="${.45*K}" stroke-dasharray="${1.2*K} ${.7*K}"/>`;prev=q;});
   v+=`<circle cx="${T0[0]}" cy="${T0[1]}" r="${1.1*K}" fill="#fff" stroke="#111" stroke-width="${.3*K}"/>`;
   v+=`<line x1="${P[0]}" y1="${P[1]}" x2="${P[0]}" y2="${P[1]-3.6*K}" stroke="#111" stroke-width="${.25*K}"/><path d="M${P[0]} ${P[1]-3.6*K} l${2*K} ${.7*K} l${-2*K} ${.7*K}z" fill="#e53935"/>`;
-  if(o.hzk&&typeof hzSvg==='function')v+=hzSvg(o.hzk,o.n,DT,K*.62,null,I.w);
+  if(o.hzk&&typeof hzSvg==='function')v+=`<g class="hzi">${hzSvg(o.hzk,o.n,DT,K*.62,null,I.w)}</g><g class="hzo">${hzSvg(o.hzk,o.n,DT,K*.62,null,I.w,'out')}</g>`;
   pts.forEach((q,i)=>{v+=`<circle cx="${q[0]}" cy="${q[1]}" r="${1.9*K}" fill="#ffd54a" stroke="#e65100" stroke-width="${.35*K}"/><text x="${q[0]}" y="${q[1]+.9*K}" font-size="${2.6*K}" font-weight="bold" fill="#111" text-anchor="middle">${i+1}</text>`;});
   return v+'</svg>';
 }
@@ -65,7 +65,7 @@ function ybCard(x,h,x2){
   const dt=teeShift(key,h[0]);const sides=(HOLE_SIDES[key]||{})[h[0]];
   let fig='';let shots=[];
   if(IL){const hi=IL.holes[h[0]];const IH=hi.h||IL.h;let hmm=YB_IMG_H,wmm=hmm*IL.w/IH;if(wmm>YB_IMG_MAXW){wmm=YB_IMG_MAXW;hmm=wmm*IH/IL.w;}const k=IH/hmm;
-    fig=`<div class="yb-fig" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
+    fig=`<div class="yb-fig" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH};--hr:${(IH/IL.w).toFixed(3)}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
     shots=ybShots(IL,hi,m,dt);}
   const cad0=caddie(x,h,m);const iL=cad0.findIndex(t=>/>左 /.test(t));if(iL>=0&&/>右 /.test(cad0[iL+1]||''))cad0.splice(iL,2,cad0[iL]+'　'+cad0[iL+1]);
   const cad=cad0.filter(t=>!/同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
