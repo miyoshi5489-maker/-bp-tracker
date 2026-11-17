@@ -56,6 +56,7 @@
 .yb-shot{border-left:.8mm solid #e65100;padding-left:1.2mm}
 .yb-no{display:inline-block;width:1.35em;height:1.35em;margin-right:.6mm;border-radius:50%;background:#ffd54a;border:.25mm solid #e65100;text-align:center;font-weight:bold;line-height:1.3em;font-size:.9em}
 .yb-aim{background:#fff3e0;border-radius:1mm;padding:.6mm 1.2mm}
+.yb-hz{background:#e8f1fb;border-radius:1mm;padding:.6mm 1.2mm;margin-top:.6mm;line-height:1.35}
 .yb-txt ul{margin:0;padding-left:3mm;display:grid;gap:.6mm;list-style:disc}
 .yb-txt .text-warn{color:#c62828}.yb-txt .text-accent{color:#1b5e20}.yb-txt .text-sand{color:#a8740f}.yb-txt .text-muted{color:#666}
 .yb-plan{border-top:.2mm dashed #999;padding-top:.8mm}

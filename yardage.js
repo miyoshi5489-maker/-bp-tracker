@@ -7,7 +7,9 @@ function openYardageBook(date){
   const x=ROUND_BASE(date);if(!x||!x.mapKey)return;
   YB={date,plan:x.planKey||''};
   const go=()=>{if(YB)drawYardageBook();};
-  if(typeof buildClubs==='function'&&typeof getRecs==='function')getRecs().then(r=>{buildClubs(r);go();}).catch(go);else go();
+  const hz=typeof hzLoadAll==='function'?hzLoadAll(x.mapKey,x.holes.map(h=>h[0])).catch(()=>{}):Promise.resolve();
+  const cl=typeof buildClubs==='function'&&typeof getRecs==='function'?getRecs().then(r=>{buildClubs(r);}).catch(()=>{}):Promise.resolve();
+  Promise.all([hz,cl]).then(go,go);
 }
 function closeYardageBook(){const el=$('yb');if(el)el.remove();document.body.style.overflow='';document.body.classList.remove('yb-open');YB=null;}
 
@@ -77,7 +79,7 @@ function ybCard(x,h,x2){
     ${(()=>{const sc=ybScore(x,h[0]);return sc?`<div class="yb-goal"><div class="yb-mut">結果</div><b style="color:${ybDiffCol(sc-h[4])}">${sc}</b><div class="yb-mut">目標${h[4]}（${sc-h[4]>0?'+':''}${sc-h[4]}）</div></div>`:'';})()}<div class="yb-goal"><div class="yb-mut">目標</div><b>${h[4]}</b>${other?`<div class="yb-mut">${esc(x2.planName)} ${other[4]}</div>`:''}</div></div>
    <div class="yb-body">${fig}
     <div class="yb-txt">
-     <div class="yb-tee">1打目 <b>${esc(h[5])}</b></div>${shotLines}${aim}
+     <div class="yb-tee">1打目 <b>${esc(h[5])}</b></div>${shotLines}${aim}${(()=>{const z=typeof hzLines==='function'?hzLines(key,h[0],dt):null;if(!z||(!z.tee.length&&!z.grn.length))return '';return `<div class="yb-hz"><b>ティーから</b> ${z.tee.map(t=>t.txt).join('　')||'届く所にバンカー・池なし'}${z.grn.length?`<br><b>グリーン周り</b> ${z.grn.join('・')}`:''}</div>`;})()}
      <ul>${cad.map(t=>`<li>${t}</li>`).join('')}</ul>
      <div class="yb-plan"><b>狙い</b> ${esc(h[6])}</div>
     </div></div>
