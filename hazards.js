@@ -48,6 +48,12 @@ function hzLoadAll(key,holes){return Promise.all(holes.map(n=>hzLoad(key,n)));}
 function hzSide(x){return x>8?'右':x<-8?'左':'中央';}
 function hzSrc(key,n){const m=(typeof HOLE_MAPS!=='undefined'&&HOLE_MAPS[key]&&HOLE_MAPS[key][n])||{};const c=m.c;
   return (m.hz||[]).filter(h=>(h.t==='b'||h.t==='w')&&!h.nd&&h.y!=null).map(h=>{const e=h.t==='w'?(h.ry||10):6;let x=h.x||0;if(c&&typeof alongPt==='function')x-=alongPt(c,h.y)[0];return {t:h.t,f:h.y-e,c:h.y+e,x,src:1};});}
+// 図のグリーン周りのバンカーと出典の距離を、近い組から1対1で対応させる（手前・奥が食い違う組は使わない）
+function hzGMatch(L,src,gl){const used=new Set(),got=new Map();const ov=(z,h)=>z.t===h.t&&z.c>=h.f-20&&z.f<=h.c+20;
+  const okp=(h,z)=>!gl||(h.gp==='手前'?z.c<=gl+5:h.gp==='奥'?z.f>=gl-5:true);
+  L.filter(h=>h.g).flatMap(h=>src.filter(z=>ov(z,h)&&okp(h,z)&&Math.abs(z.f+z.c-h.f-h.c)<=30).map(z=>[Math.abs(z.f+z.c-h.f-h.c)+Math.abs(z.x-h.x),h,z])).sort((p,q)=>p[0]-q[0])
+    .forEach(([,h,z])=>{if(!used.has(z)&&!got.has(h)){used.add(z);got.set(h,z);}});
+  return got;}
 function hzLines(key,n,dt){
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return null;dt=dt||0;
   // 出典のある距離（HOLE_MAPS）を優先し、図から測ったものは重ならない分だけ足す
@@ -55,20 +61,17 @@ function hzLines(key,n,dt){
   // グリーン周りのものと同じバンカー（出典の距離）は1つにまとめて、グリーン周りとして出す
   const ov=(z,h)=>z.t===h.t&&z.c>=h.f-20&&z.f<=h.c+20;
   // 図のグリーン周りのバンカーと出典の距離を、近い組から1対1で対応させる（手前・奥が食い違う組は使わない）
-  const used=new Set(),got=new Map();const G0=L.filter(h=>h.g);
-  const okp=(h,z)=>!gl||(h.gp==='手前'?z.c<=gl+5:h.gp==='奥'?z.f>=gl-5:true);
-  G0.flatMap(h=>src.filter(z=>ov(z,h)&&okp(h,z)).map(z=>[Math.abs(z.f+z.c-h.f-h.c)+Math.abs(z.x-h.x),h,z])).sort((p,q)=>p[0]-q[0])
-    .forEach(([,h,z])=>{if(!used.has(z)&&!got.has(h)){used.add(z);got.set(h,z);}});
+  const G0=L.filter(h=>h.g);const got=hzGMatch(L,src,gl);const used=new Set(got.values());
   const gs=G0.map(h=>{const z=got.get(h);return z?{...h,f:z.f,c:z.c,srcd:1}:h;});
   const src2=src.filter(z=>!used.has(z));
   // ティーのすぐ前（60y未満）に図から見つかった白いもの（文字・カート道など）は除く
   const all=[...src2,...gs,...L.filter(h=>!h.g&&h.c>=60&&!src.some(z=>ov(z,h)))];
   const tee=[],sec=[],grn=[],segs=[];const gm=new Map(); // グリーン周りは同じ側・同じ種類を1つにまとめる
   all.sort((a,b)=>a.f-b.f).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;const nm=(h.t==='b'?'バンカー':'池');const ic=h.t==='b'?'⛱':'💧';
-    if(h.g){const k=h.t+hzSide(h.x);const o2=gm.get(k);if(!o2)gm.set(k,{...h,f,c:cc,ic,nm});else{o2.ge=Math.min(o2.ge,h.ge);if(h.srcd){o2.f=o2.srcd?Math.min(o2.f,f):f;o2.c=o2.srcd?Math.max(o2.c,cc):cc;o2.srcd=1;}if(o2.gp!==h.gp)o2.gp='手前〜横';}if(h.srcd)segs.push([f,cc]);return;}
+    if(h.g){const k=h.t+hzSide(h.x);const o2=gm.get(k);if(!o2)gm.set(k,{...h,f,c:cc,ic,nm});else{o2.ge=Math.min(o2.ge,h.ge);o2.f=Math.min(o2.f,f);o2.c=Math.max(o2.c,cc);if(o2.gp!==h.gp)o2.gp='手前〜横';}segs.push([f,cc]);return;}
     const toG=gl?Math.max(0,gl-h.c):null;const o={t:h.t,f,c:cc,txt:`${ic}${hzSide(h.x)}の${nm} <b>${f}</b>〜<b>${cc}</b>y${toG!=null?`<span class="hzg">（越えてグリーンまで${toG}y）</span>`:''}`};
     (f<=320?tee:sec).push(o);segs.push([f,cc]);});
-  gm.forEach(h=>grn.push(`${h.ic}${hzSide(h.x)}の${h.nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}${h.srcd?`・ティーから${h.f}〜${h.c}y`:''}）`:''}`));
+  gm.forEach(h=>grn.push(`${h.ic}${hzSide(h.x)}の${h.nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}・ティーから${h.f}〜${h.c}y）`:''}`));
   // バンカー・池がない区間（ティーショットの範囲）
   const gaps=[];let mx=null;segs.sort((a,b)=>a[0]-b[0]).forEach(([f,c])=>{if(mx!=null&&f-mx>=8&&mx<=330)gaps.push(`${mx}〜${f}y（${f-mx}y）`);mx=mx==null?c:Math.max(mx,c);});
   return {tee,sec,grn:[...new Set(grn)],gaps,gl};
@@ -85,9 +88,9 @@ function hzHtml(z){if(!z)return '';const p=[];
 function hzSvg(key,n,dt,u,wrap,W,mode){
   // mode 'out'：図の外の余白にラベルを出して、線でバンカー・池を指す（図が隠れない）
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;const out=mode==='out';
-  const src=hzSrc(key,n);const items=[];const gl=(L.find(h=>h.gl)||{}).gl||0;
+  const src=hzSrc(key,n);const items=[];const gl=(L.find(h=>h.gl)||{}).gl||0;const gm=hzGMatch(L,src,gl);
   L.forEach(h0=>{if(h0.cx==null)return;const col=h0.t==='b'?'#8d6e00':'#1565c0';
-    if(h0.g){items.push({h:h0,txt:`G中央へ${h0.ge}y`,sub:'',col});return;}
+    if(h0.g){const z=gm.get(h0);const f=Math.max(0,Math.round((z?z.f:h0.f)-dt)),c=Math.round((z?z.c:h0.c)-dt);items.push({h:h0,txt:`${f}〜${c}`,sub:`G中央へ${h0.ge}`,col});return;}
     const z=src.filter(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20).sort((a,b)=>Math.abs(a.f+a.c-h0.f-h0.c)+Math.abs(a.x-h0.x)/2-Math.abs(b.f+b.c-h0.f-h0.c)-Math.abs(b.x-h0.x)/2)[0];if(!z&&h0.c<60)return;const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0)return;
     items.push({h,txt:`${f}〜${c}`,sub:gl?`G迄${Math.max(0,gl-h.c)}`:'',col});});
   const cw=t=>[...t].reduce((s,ch)=>s+(/[\x00-\x7f]/.test(ch)?2.9:4.6),0);
