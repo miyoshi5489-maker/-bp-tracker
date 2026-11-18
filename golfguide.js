@@ -83,17 +83,32 @@ const SLOPE_GUIDE=[
      'フェースをピンに向けたうえで、さらにピンに向かって振りに行かない（とんでもない方向に飛んでボールをなくす）。慣れればクローズでクロスに打つ方法もあるが、基本はオープン',
      '球を上げに行かない。壁が高くて無理なら、ピンは狙わず出しやすい方向へ出す（左足上がりになる向きがいちばん簡単）']}]},
 ];
-function slopeTab(g,p){const t=/^左足上/.test(p.h)?'左上':/^左足下/.test(p.h)?'左下':/^つま先上/.test(p.h)?'つま上':'つま下';return (g.key.startsWith('shot')?'傾斜':'砂')+t;}
-function slopeGuideTabs(){if(typeof SLOPE_GUIDE==='undefined')return [];return SLOPE_GUIDE.flatMap(g=>g.parts.map(p=>slopeTab(g,p)));}
+function slopeTab(g,p){const t=/^左足上/.test(p.h)?'左足上がり':/^左足下/.test(p.h)?'左足下がり':/^つま先上/.test(p.h)?'つま先上がり':'つま先下がり';return t;}
+function slopeKind(g){return g.key.startsWith('shot')?'shot':'sand';}
+// 表紙のいちばん下：タップでそのページへ飛ぶメニュー（画面だけ。印刷には出さない）
+function slopeGuideMenu(base,scoreIdx){
+  if(typeof SLOPE_GUIDE==='undefined')return '';let k=base;
+  const grp=kind=>SLOPE_GUIDE.filter(g=>slopeKind(g)===kind).flatMap(g=>g.parts.map(p=>({g,p,i:k++})));
+  const shot=grp('shot'),sand=grp('sand');
+  const btn=o=>`<button class="yb-mbtn" onclick="ybGo(${o.i})"><b>${slopeTab(o.g,o.p)}</b><span>${o.p.h.replace(/^[^（]*/,'')||'　'}</span></button>`;
+  return `<div class="yb-menu yb-scr">
+    <div class="yb-mh">打ち方ガイド<span>タップで開く</span></div>
+    <div class="yb-mg yb-m-shot"><div class="yb-mt">⛳ 傾斜からのショット</div><div class="yb-mgrid">${shot.map(btn).join('')}</div></div>
+    <div class="yb-mg yb-m-sand"><div class="yb-mt">🏖 バンカー</div><div class="yb-mgrid">${sand.map(btn).join('')}</div></div>
+    <button class="yb-mbtn yb-m-score" onclick="ybGo(${scoreIdx})"><b>📝 スコアカード</b></button>
+  </div>`;
+}
 // 1つの傾斜を1ページに（印刷しても文字が小さくなりすぎないように）
 function slopeGuideCards(){
   if(typeof SLOPE_GUIDE==='undefined')return [];
-  return SLOPE_GUIDE.flatMap(g=>g.parts.map(p=>`<div class="yb-card yb-cover yb-guide"><div class="yb-ctitle">${g.key.startsWith('shot')?'傾斜':'バンカー'}：${p.h}</div>
+  return SLOPE_GUIDE.flatMap(g=>g.parts.map(p=>{const kd=slopeKind(g),nm=kd==='shot'?'傾斜':'バンカー';
+   return `<div class="yb-card yb-cover yb-guide yb-g-${kd}"><div class="yb-ctitle"><small>${nm}</small>${p.h}</div>
    <div class="yb-txt">
-    <ul>${p.items.map(i=>`<li>${i}</li>`).join('')}</ul>
-    <div class="yb-sec">${g.key.startsWith('shot')?'傾斜':'バンカー'}の共通ルール</div>
+    <ul class="yb-gitems">${p.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+    <div class="yb-sec">${nm}の共通ルール</div>
     <ul class="yb-gbase">${g.base.map(b=>`<li>${b}</li>`).join('')}</ul>
     <div class="yb-mut">動画 ${Math.floor(p.t/60)}:${String(p.t%60).padStart(2,'0')}〜</div>
+    <div class="yb-scr yb-gbtns"><a class="yb-gvid" href="https://youtu.be/${g.vid}?t=${p.t}" target="_blank" rel="noopener">▶ 動画のこの場面を見る</a><button class="yb-gback" onclick="ybGo(0)">← 表紙のメニューへ</button></div>
    </div>
-   <div class="yb-foot">出典：${g.src}（YouTube）<span>${slopeTab(g,p)}</span></div></div>`));
+   <div class="yb-foot">出典：${g.src}（YouTube）<span>${nm}：${slopeTab(g,p)}</span></div></div>`;}));
 }

@@ -11,7 +11,7 @@ function openYardageBook(date){
   const cl=typeof buildClubs==='function'&&typeof getRecs==='function'?getRecs().then(r=>{buildClubs(r);}).catch(()=>{}):Promise.resolve();
   go();Promise.all([hz,cl]).then(go,go);
 }
-function ybGo(i){const sc=document.querySelector('#yb .yb-screen');if(sc)sc.scrollTo({left:i*sc.clientWidth,behavior:'smooth'});}
+function ybGo(i){const el=document.getElementById('yb');const sc=el&&el.querySelector('.yb-screen');if(!sc)return;if(el.classList.contains('yb-m')){el.scrollTo({top:0});sc.scrollTo({left:i*sc.clientWidth,behavior:'smooth'});}else{const c=sc.querySelectorAll(':scope>.yb-card')[i];c&&c.scrollIntoView({behavior:'smooth',block:'start'});}}
 function closeYardageBook(){const el=$('yb');if(el)el.remove();document.body.style.overflow='';document.body.classList.remove('yb-open');YB=null;}
 
 // 図の上の印：ルート・落とし所（番号）・ブレの範囲・OBライン・ピン
@@ -101,6 +101,7 @@ function ybCover(x){
    ${typeof dwGroups==='function'?(()=>{const g=dwGroups(x);return `<div class="yb-sec">ドライバーの使い分け</div><table class="yb-tbl">${DW_LABEL.map(([k,l,s2,c])=>g[k].length?`<tr><th style="color:${c};width:22%">${l}</th><td style="text-align:left;font-weight:bold">${g[k].join('・')}番</td><td style="width:18%">${g[k].length}回</td></tr>`:'').join('')}</table>`;})():''}
    ${typeof COURSE_YARDS!=='undefined'?`<div class="yb-sec">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)}）</div><table class="yb-tbl"><tr>${COURSE_YARDS.rows.map(r=>`<th>${r[0]}</th>`).join('')}</tr><tr>${COURSE_YARDS.rows.map(r=>`<td>${r[1]===0?'〜'+r[2]:r[2]>=999?r[1]+'〜':r[1]+'〜'+r[2]}</td>`).join('')}</tr></table>`:''}
    ${x.result&&x.result.score?'':`<div class="yb-sec">ティーショット（トラックマン）</div><table class="yb-tbl"><tr><th>クラブ</th><th>キャリー</th><th>トータル</th><th>左右</th><th>測った日</th></tr>${cl.filter(c=>['1W','5W','4H'].includes(c.c)).map(c=>`<tr><td>${c.c}</td><td>${Math.round(c.carry)}</td><td>${Math.round(c.total||c.carry)}</td><td>${c.side!=null?(c.side>0?'右':'左')+Math.abs(Math.round(c.side)):'－'}</td><td>${c.date?(+c.date.slice(5,7))+'/'+(+c.date.slice(8)):'－'}</td></tr>`).join('')}</table>`}
+   <!--YBMENU-->
    <div class="yb-foot">作成 ${new Date().toLocaleDateString('ja-JP')}・最新データで作り直すには、アプリで開き直して印刷<span>表紙</span></div>
   </div>`;
 }
@@ -118,6 +119,7 @@ function drawYardageBook(){
   const alt=YB.plan?'':Object.keys(x0.plans||{})[0];const xa=x0.plans?ybPlan(YB.date,alt):null;const x2=xa?{...xa,planName:alt?(x0.plans[alt].name):'100切り'}:null;
   const order=(x.order||['out','in']).flatMap(k=>x.holes.filter(h=>k==='out'?h[0]<=9:h[0]>=10));
   const GC=typeof slopeGuideCards==='function'?slopeGuideCards():[];const cards=[ybCover(x),...order.map(h=>ybCard(x,h,x2)),...GC,ybScoreCard(x)];
+  const G0=1+order.length;cards[0]=cards[0].replace('<!--YBMENU-->',typeof slopeGuideMenu==='function'?slopeGuideMenu(G0,cards.length-1,order):'');
   // 切って重ねるだけで順番になる並べ方：シートs・位置p に cards[p*S+s]
   const S=Math.ceil(cards.length/4);const sheets=[...Array(S)].map((_,s)=>[0,1,2,3].map(p=>cards[p*S+s]||'<div class="yb-card"></div>'));
   let el=$('yb');if(!el){el=document.createElement('div');el.id='yb';document.body.appendChild(el);document.body.style.overflow='hidden';document.body.classList.add('yb-open');}
@@ -127,16 +129,16 @@ function drawYardageBook(){
     ${x0.plans?`<div class="seg !p-0.5 text-[12px]"><button class="${YB.plan?'':'on'} !min-h-[34px] !px-2" onclick="YB.plan='';drawYardageBook()">100切り</button>${Object.entries(x0.plans).map(([k,P])=>`<button class="${YB.plan===k?'on':''} !min-h-[34px] !px-2" onclick="YB.plan='${k}';drawYardageBook()">${P.name}</button>`).join('')}</div>`:''}
     <button class="btn !min-h-[38px] !px-3" onclick="window.print()">🖨 印刷</button></div>
    <div class="yb-help">A4で<b>倍率100％（実際のサイズ）・余白なし</b>で印刷 → ${S}枚を重ねて点線で十字に切る → <b>左上→右上→左下→右下</b>の束の順に重ねると、表紙・1〜18番・傾斜とバンカーの打ち方・スコアの順になります → 左はじをホッチキスで留める。</div>
-   ${mob?`<div class="yb-jump">${['表紙',...order.map(h=>h[0]),...(typeof slopeGuideTabs==='function'?slopeGuideTabs():[]),'スコア'].map((t,i)=>`<button data-i="${i}" onclick="ybGo(${i})">${t}</button>`).join('')}</div>`:''}
+   ${mob?`<div class="yb-jump"><button class="yb-jc" data-i="0" onclick="ybGo(0)">表紙</button>${order.map((h,k)=>`<button class="yb-jp${h[1]}" data-i="${k+1}" onclick="ybGo(${k+1})">${h[0]}</button>`).join('')}<button class="yb-js" data-i="${cards.length-1}" onclick="ybGo(${cards.length-1})">スコア</button></div>`:''}
    <div class="yb-screen">${cards.join('')}</div>
    <div class="yb-print">${sheets.map(c=>`<div class="yb-sheet">${c.join('')}<i class="yb-cut-v"></i><i class="yb-cut-h"></i></div>`).join('')}</div>`;
   if(typeof jpWalk==='function')jpWalk(el);
   if(mob){const sc=el.querySelector('.yb-screen');sc.scrollLeft=keepX;const mark=()=>{const i=Math.round(sc.scrollLeft/sc.clientWidth);el.querySelectorAll('.yb-jump button').forEach(b=>{const on=+b.dataset.i===i;b.classList.toggle('on',on);if(on)b.scrollIntoView({block:'nearest',inline:'nearest'});});};sc.onscroll=()=>{clearTimeout(sc._t);sc._t=setTimeout(mark,80);};mark();}
   const fit=()=>{const sc=el.querySelector('.yb-screen');if(!sc||mob)return;const pw=YB_CARD_W*96/25.4;sc.style.zoom=Math.min(1.4,(el.clientWidth-16)/pw);};fit();
   // 文字があふれるカードは文字を小さくする（印刷用にも同じ大きさを写す）
-  requestAnimationFrame(()=>{if(mob)el.classList.remove('yb-m');const sc=[...el.querySelectorAll('.yb-screen .yb-txt')];const fs=sc.map(t=>{let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}return f;});
+  requestAnimationFrame(()=>{el.classList.add('yb-measure');if(mob)el.classList.remove('yb-m');const sc=[...el.querySelectorAll('.yb-screen .yb-txt')];const fs=sc.map(t=>{let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}return f;});
     const pr=[...el.querySelectorAll('.yb-print .yb-card')];const idx=sheets.flatMap((c,s)=>[0,1,2,3].map(p=>p*S+s));
     const scards=[...el.querySelectorAll('.yb-screen .yb-card')];
     pr.forEach((c,i)=>{const t=c.querySelector('.yb-txt');const ci=idx[i];const st=scards[ci]&&scards[ci].querySelector('.yb-txt');if(t&&st)t.style.fontSize=st.style.fontSize;});
-    if(mob){el.classList.add('yb-m');const s2=el.querySelector('.yb-screen');s2.style.zoom='';s2.scrollLeft=keepX;}});
+    el.classList.remove('yb-measure');if(mob){el.classList.add('yb-m');const s2=el.querySelector('.yb-screen');s2.style.zoom='';s2.scrollLeft=keepX;}});
 }
