@@ -84,7 +84,7 @@ function hzLines(key,n,dt){
 // 1つの表にまとめる（ヤーデージブック・ホールマップ共通）：名前｜ティーから｜グリーンまで
 function hzHtml(z){if(!z)return '';const nm=t=>t==='b'?'バンカー':'池',ic=t=>t==='b'?'⛱':'💧';
   const tr=r=>r.k==='gap'?`<tr class="hzt-gap"><td>すき間 <b>${r.w}</b>y</td><td>${r.f}〜${r.c}</td><td></td></tr>`
-    :r.k==='g'?`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>中央から<b>${r.ge}</b>（${r.gp}）</td></tr>`
+    :r.k==='g'?`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>中央へ <b>${r.ge}</b>・${r.gp}</td></tr>`
     :`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>${r.toG!=null?`越えて <b>${r.toG}</b>`:''}</td></tr>`;
   const body=(z.rows||[]).map(tr).join('')||'<tr><td colspan="3">グリーンまでバンカー・池なし</td></tr>';
   return `<table class="hzt"><thead><tr><th></th><th>ティーから（y）</th><th>グリーンまで（y）</th></tr></thead><tbody>${body}${(z.grows||[]).length?`<tr class="hzt-sec"><td colspan="3">グリーン周り</td></tr>${z.grows.map(tr).join('')}`:''}</tbody></table>`;}
