@@ -63,11 +63,12 @@ function hzLines(key,n,dt){
   const src2=src.filter(z=>!used.has(z));
   // ティーのすぐ前（60y未満）に図から見つかった白いもの（文字・カート道など）は除く
   const all=[...src2,...gs,...L.filter(h=>!h.g&&h.c>=60&&!src.some(z=>ov(z,h)))];
-  const tee=[],sec=[],grn=[],segs=[];
+  const tee=[],sec=[],grn=[],segs=[];const gm=new Map(); // グリーン周りは同じ側・同じ種類を1つにまとめる
   all.sort((a,b)=>a.f-b.f).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;const nm=(h.t==='b'?'バンカー':'池');const ic=h.t==='b'?'⛱':'💧';
-    if(h.g){grn.push(`${ic}${hzSide(h.x)}の${nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}${h.srcd?`・ティーから${f}〜${cc}y`:''}）`:''}`);if(h.srcd)segs.push([f,cc]);return;}
+    if(h.g){const k=h.t+hzSide(h.x);const o2=gm.get(k);if(!o2)gm.set(k,{...h,f,c:cc,ic,nm});else{o2.ge=Math.min(o2.ge,h.ge);if(h.srcd){o2.f=o2.srcd?Math.min(o2.f,f):f;o2.c=o2.srcd?Math.max(o2.c,cc):cc;o2.srcd=1;}if(o2.gp!==h.gp)o2.gp='手前〜横';}if(h.srcd)segs.push([f,cc]);return;}
     const toG=gl?Math.max(0,gl-h.c):null;const o={t:h.t,f,c:cc,txt:`${ic}${hzSide(h.x)}の${nm} <b>${f}</b>〜<b>${cc}</b>y${toG!=null?`<span class="hzg">（越えてグリーンまで${toG}y）</span>`:''}`};
     (f<=320?tee:sec).push(o);segs.push([f,cc]);});
+  gm.forEach(h=>grn.push(`${h.ic}${hzSide(h.x)}の${h.nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}${h.srcd?`・ティーから${h.f}〜${h.c}y`:''}）`:''}`));
   // バンカー・池がない区間（ティーショットの範囲）
   const gaps=[];let mx=null;segs.sort((a,b)=>a[0]-b[0]).forEach(([f,c])=>{if(mx!=null&&f-mx>=8&&mx<=330)gaps.push(`${mx}〜${f}y（${f-mx}y）`);mx=mx==null?c:Math.max(mx,c);});
   return {tee,sec,grn:[...new Set(grn)],gaps,gl};
