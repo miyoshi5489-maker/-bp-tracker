@@ -71,6 +71,8 @@ def main():
 
 
 if __name__ == '__main__':
+    if not all(os.environ.get(k) for k in ('GARMIN_EMAIL', 'GARMIN_PASSWORD', 'SB_EMAIL', 'SB_PASSWORD')):
+        print('Secrets がまだ設定されていないので何もしません'); sys.exit(0)
     try:
         main()
     except urllib.error.HTTPError as e:
