@@ -52,10 +52,14 @@ function hzLines(key,n,dt){
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return null;dt=dt||0;
   // 出典のある距離（HOLE_MAPS）を優先し、図から測ったものは重ならない分だけ足す
   const src=hzSrc(key,n);const gl=(L.find(h=>h.gl)||{}).gl||0;
-  const all=[...src,...L.filter(h=>h.g||!src.some(z=>z.t===h.t&&z.c>=h.f-20&&z.f<=h.c+20))];
+  // グリーン周りのものと同じバンカー（出典の距離）は1つにまとめて、グリーン周りとして出す
+  const ov=(z,h)=>z.t===h.t&&z.c>=h.f-20&&z.f<=h.c+20;
+  const gs=L.filter(h=>h.g).map(h=>{const z=src.find(z=>ov(z,h));return z?{...h,f:z.f,c:z.c,srcd:1}:h;});
+  const src2=src.filter(z=>!gs.some(h=>h.srcd&&h.f===z.f&&h.c===z.c));
+  const all=[...src2,...gs,...L.filter(h=>!h.g&&!src.some(z=>ov(z,h)))];
   const tee=[],sec=[],grn=[],segs=[];
   all.sort((a,b)=>a.f-b.f).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;const nm=(h.t==='b'?'バンカー':'池');const ic=h.t==='b'?'⛱':'💧';
-    if(h.g){grn.push(`${ic}${hzSide(h.x)}の${nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}）`:''}`);return;}
+    if(h.g){grn.push(`${ic}${hzSide(h.x)}の${nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}${h.srcd?`・ティーから${f}〜${cc}y`:''}）`:''}`);if(h.srcd)segs.push([f,cc]);return;}
     const toG=gl?Math.max(0,gl-h.c):null;const o={t:h.t,f,c:cc,txt:`${ic}${hzSide(h.x)}の${nm} <b>${f}</b>〜<b>${cc}</b>y${toG!=null?`<span class="hzg">（越えてグリーンまで${toG}y）</span>`:''}`};
     (f<=320?tee:sec).push(o);segs.push([f,cc]);});
   // バンカー・池がない区間（ティーショットの範囲）

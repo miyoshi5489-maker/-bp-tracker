@@ -1,0 +1,45 @@
+name: Garmin 自動取り込み
+on:
+  schedule:
+    - cron: '17 * * * *'   # 1時間ごと
+  workflow_dispatch: {}
+concurrency: garmin
+permissions:
+  contents: read
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
+      GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+      SB_EMAIL: ${{ secrets.SB_EMAIL }}
+      SB_PASSWORD: ${{ secrets.SB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -q garminconnect
+      # Garminのログイン情報は暗号化して保存（公開リポジトリでも中身は読めない）
+      - uses: actions/cache/restore@v4
+        with:
+          path: garmin.enc
+          key: garmin-enc-${{ github.run_id }}
+          restore-keys: garmin-enc-
+      - name: ログイン情報を戻す
+        run: |
+          if [ -f garmin.enc ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -pass env:GARMIN_PASSWORD -in garmin.enc | tar xz -C ~ || true
+          fi
+      - run: python scripts/garmin_sync.py
+      - name: ログイン情報を暗号化
+        if: always()
+        run: |
+          if [ -d ~/.garminconnect ]; then
+            tar cz -C ~ .garminconnect | openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:GARMIN_PASSWORD -out garmin.enc
+          fi
+      - uses: actions/cache/save@v4
+        if: always() && hashFiles('garmin.enc') != ''
+        with:
+          path: garmin.enc
+          key: garmin-enc-${{ github.run_id }}
