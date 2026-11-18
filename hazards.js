@@ -54,8 +54,12 @@ function hzLines(key,n,dt){
   const src=hzSrc(key,n);const gl=(L.find(h=>h.gl)||{}).gl||0;
   // グリーン周りのものと同じバンカー（出典の距離）は1つにまとめて、グリーン周りとして出す
   const ov=(z,h)=>z.t===h.t&&z.c>=h.f-20&&z.f<=h.c+20;
-  const used=new Set();const near=(h,z)=>Math.abs(z.f+z.c-h.f-h.c)+Math.abs(z.x-h.x);
-  const gs=L.filter(h=>h.g).map(h=>{const z=src.filter(z=>!used.has(z)&&ov(z,h)).sort((p,q)=>near(h,p)-near(h,q))[0];if(z){used.add(z);return {...h,f:z.f,c:z.c,srcd:1};}return h;});
+  // 図のグリーン周りのバンカーと出典の距離を、近い組から1対1で対応させる（手前・奥が食い違う組は使わない）
+  const used=new Set(),got=new Map();const G0=L.filter(h=>h.g);
+  const okp=(h,z)=>!gl||(h.gp==='手前'?z.c<=gl+5:h.gp==='奥'?z.f>=gl-5:true);
+  G0.flatMap(h=>src.filter(z=>ov(z,h)&&okp(h,z)).map(z=>[Math.abs(z.f+z.c-h.f-h.c)+Math.abs(z.x-h.x),h,z])).sort((p,q)=>p[0]-q[0])
+    .forEach(([,h,z])=>{if(!used.has(z)&&!got.has(h)){used.add(z);got.set(h,z);}});
+  const gs=G0.map(h=>{const z=got.get(h);return z?{...h,f:z.f,c:z.c,srcd:1}:h;});
   const src2=src.filter(z=>!used.has(z));
   // ティーのすぐ前（60y未満）に図から見つかった白いもの（文字・カート道など）は除く
   const all=[...src2,...gs,...L.filter(h=>!h.g&&h.c>=60&&!src.some(z=>ov(z,h)))];
