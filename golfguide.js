@@ -99,14 +99,23 @@ function slopeGuideMenu(base,scoreIdx){
   </div>`;
 }
 // 1つの傾斜を1ページに（印刷しても文字が小さくなりすぎないように）
+// 読みやすく：「見出し：本文」を分け、本文は文ごとに区切る（文字はそのまま。iPhoneでは1文ずつ改行）
+function gFmt(s){let lab='',body=s;const m=s.match(/^<b>([^<]{1,14})<\/b>：/);if(m){lab=m[1];body=s.slice(m[0].length);}
+  const out=[];let cur='',dep=0,inB=false;
+  for(let i=0;i<body.length;i++){const c=body[i];
+    if(body.startsWith('<b>',i))inB=true;else if(body.startsWith('</b>',i))inB=false;
+    if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);
+    cur+=c;if(c==='。'&&!dep&&!inB&&i<body.length-1){out.push(cur);cur='';}}
+  if(cur)out.push(cur);
+  return (lab?`<span class="gl">${lab}</span>`:'')+out.map(x=>`<span class="gs">${x}</span>`).join('');}
 function slopeGuideCards(){
   if(typeof SLOPE_GUIDE==='undefined')return [];
   return SLOPE_GUIDE.flatMap(g=>g.parts.map(p=>{const kd=slopeKind(g),nm=kd==='shot'?'傾斜':'バンカー';
    return `<div class="yb-card yb-cover yb-guide yb-g-${kd}"><div class="yb-ctitle"><small>${nm}</small>${p.h}</div>
    <div class="yb-txt">
-    <ul class="yb-gitems">${p.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+    <ul class="yb-gitems">${p.items.map(i=>`<li>${gFmt(i)}</li>`).join('')}</ul>
     <div class="yb-sec">${nm}の共通ルール</div>
-    <ul class="yb-gbase">${g.base.map(b=>`<li>${b}</li>`).join('')}</ul>
+    <ul class="yb-gbase">${g.base.map(b=>`<li>${gFmt(b)}</li>`).join('')}</ul>
     <div class="yb-mut">動画 ${Math.floor(p.t/60)}:${String(p.t%60).padStart(2,'0')}〜</div>
     <div class="yb-scr yb-gbtns"><a class="yb-gvid" href="https://youtu.be/${g.vid}?t=${p.t}" target="_blank" rel="noopener">▶ 動画のこの場面を見る</a><button class="yb-gback" onclick="ybGo(0)">← 表紙のメニューへ</button></div>
    </div>
