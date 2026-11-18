@@ -40,6 +40,21 @@ function ybSvg(I,hi,m,o){
   pts.forEach((q,i)=>{v+=`<circle cx="${q[0]}" cy="${q[1]}" r="${1.9*K}" fill="#ffd54a" stroke="#e65100" stroke-width="${.35*K}"/><text x="${q[0]}" y="${q[1]+.9*K}" font-size="${2.6*K}" font-weight="bold" fill="#111" text-anchor="middle">${i+1}</text>`;});
   return v+'</svg>';
 }
+// 図をタッチ：その場所までティーから何y・そこからグリーン中央まで何y（画面で見るときだけ）
+function ybTap(ev,el){if(el.closest('.yb-print'))return;const key=el.dataset.k,n=+el.dataset.n,dt=+el.dataset.dt||0,K=+el.dataset.u||4;
+  const IL=(ILLUS[key]||[]).find(v=>v.holes[n]);if(!IL)return;const hi=IL.holes[n],r=hi.r,s=hi.s,G=r[r.length-1];
+  const svg=el.querySelector('svg');if(!svg)return;const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const q=pt.matrixTransform(svg.getScreenCTM().inverse());
+  const T0=dt>=0?routeAt(r,dt*s).p:(()=>{const u=routeAt(r,0).u;return [r[0][0]+u[0]*dt*s,r[0][1]+u[1]*dt*s];})();
+  const a=Math.round(Math.hypot(q.x-T0[0],q.y-T0[1])/s),b=Math.round(Math.hypot(G[0]-q.x,G[1]-q.y)/s);
+  svg.querySelectorAll('.ybtap').forEach(g=>g.remove());
+  const u=K*.62,W=IL.w,w=36*u,hh=14*u;let lx=q.x+3*u;if(lx+w>W+30*u)lx=q.x-3*u-w;let ly=Math.max(-2*u,q.y-hh-3*u);
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.setAttribute('class','ybtap');
+  g.innerHTML=`<line x1="${T0[0]}" y1="${T0[1]}" x2="${q.x}" y2="${q.y}" stroke="#fff" stroke-width="${1.2*u}"/><line x1="${T0[0]}" y1="${T0[1]}" x2="${q.x}" y2="${q.y}" stroke="#1565c0" stroke-width="${.6*u}" stroke-dasharray="${1.6*u} ${1*u}"/>`
+   +`<line x1="${q.x}" y1="${q.y}" x2="${G[0]}" y2="${G[1]}" stroke="#fff" stroke-width="${1.2*u}"/><line x1="${q.x}" y1="${q.y}" x2="${G[0]}" y2="${G[1]}" stroke="#7b1fa2" stroke-width="${.6*u}" stroke-dasharray="${1.6*u} ${1*u}"/>`
+   +`<circle cx="${q.x}" cy="${q.y}" r="${2*u}" fill="#fff" stroke="#1565c0" stroke-width="${.7*u}"/>`
+   +`<rect x="${lx}" y="${ly}" width="${w}" height="${hh}" rx="${2.5*u}" fill="#fff" stroke="#263238" stroke-width="${.5*u}"/>`
+   +`<text x="${lx+2.5*u}" y="${ly+6*u}" font-size="${4.4*u}" font-weight="bold" fill="#1565c0">ティー ${a}y</text><text x="${lx+2.5*u}" y="${ly+11.6*u}" font-size="${4.4*u}" font-weight="bold" fill="#7b1fa2">G中央 ${b}y</text>`;
+  svg.appendChild(g);}
 // 1打ごとの距離（ティー→落とし所、落とし所→ピン）
 function ybShots(I,hi,m,dt){const r=hi.r,s=hi.s,G=r[r.length-1];const T=m.t||[];
   const T0=dt>=0?routeAt(r,dt*s).p:(()=>{const u=routeAt(r,0).u;return [r[0][0]+u[0]*dt*s,r[0][1]+u[1]*dt*s];})();
@@ -65,14 +80,14 @@ function ybCard(x,h,x2){
   const dt=teeShift(key,h[0]);const sides=(HOLE_SIDES[key]||{})[h[0]];
   let fig='';let shots=[];
   if(IL){const hi=IL.holes[h[0]];const IH=hi.h||IL.h;let hmm=YB_IMG_H,wmm=hmm*IL.w/IH;if(wmm>YB_IMG_MAXW){wmm=YB_IMG_MAXW;hmm=wmm*IH/IL.w;}const k=IH/hmm;
-    fig=`<div class="yb-fig" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH};--hr:${(IH/IL.w).toFixed(3)}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
+    fig=`<div class="yb-fig" data-k="${key}" data-n="${h[0]}" data-dt="${dt}" data-u="${k}" onclick="ybTap(event,this)" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH};--hr:${(IH/IL.w).toFixed(3)}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
     shots=ybShots(IL,hi,m,dt);}
   const cad0=caddie(x,h,m);const iL=cad0.findIndex(t=>/>左 /.test(t));if(iL>=0&&/>右 /.test(cad0[iL+1]||''))cad0.splice(iL,2,cad0[iL]+'　'+cad0[iL+1]);
   const cad=cad0.filter(t=>!/同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
   const st=(HOLE_STATS[key]||{})[h[0]];
   const shotLines=shots.map(s=>{const cc=liveClub(s.club)||(clubCode(s.club)&&MYCLUBS[clubCode(s.club)]);
     return `<div class="yb-shot"><span class="yb-no">${s.n}</span><b>${esc(s.club||'')}</b> ${s.d}y${cc&&s.n===1?`<span class="yb-mut">（キャリー${Math.round(cc.carry)}・トータル${Math.round(cc.total||cc.carry)}）</span>`:''} → 残り<b>${s.rest}y</b></div>`;}).join('');
-  const aim=club&&club.side!=null&&Math.abs(club.side)>=6?`<div class="yb-aim">${club.side>0?'右':'左'}に約${Math.abs(Math.round(club.side))}yずれる → <b>${club.side>0?'左':'右'}を向く</b></div>`:'';
+  const aim=''; // ずれの文は出さない（図の楕円で見る）
   const other=x2?x2.holes.find(r=>r[0]===h[0]):null;
   const col=h[7]==='hard'?'#c62828':h[7]==='mid'?'#b7791f':'#2e7d32';
   return `<div class="yb-card">

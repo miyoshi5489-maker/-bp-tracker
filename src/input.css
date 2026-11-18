@@ -206,3 +206,13 @@
   #yb .yb-print{display:block}
 }
 .hzg{font-size:.85em;color:#455a64;white-space:nowrap}
+/* バンカー・池の表 */
+.hzt{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.hzt th{font-size:.78em;font-weight:bold;color:#546e7a;text-align:left;padding:0 .3em .2em;white-space:nowrap}
+.hzt td{padding:.18em .3em;border-top:1px solid rgba(21,101,192,.18);vertical-align:middle;white-space:nowrap}
+.hzt td:first-child{width:38%}
+.hzt td:nth-child(3){font-size:.92em;color:#37474f;white-space:normal}
+.hzt b{font-weight:800}
+.hzt-gap td{color:#2e7d32;font-size:.9em;background:rgba(46,125,50,.07)}
+.hzt-sec td{font-weight:bold;font-size:.8em;color:#8d6e00;padding-top:.45em;border-top:2px solid rgba(141,110,0,.35)}
+.yb-fig{cursor:crosshair}

@@ -74,15 +74,20 @@ function hzLines(key,n,dt){
   gm.forEach(h=>grn.push(`${h.ic}${hzSide(h.x)}の${h.nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}・ティーから${h.f}〜${h.c}y）`:''}`));
   // バンカー・池がない区間（ティーショットの範囲）
   const gaps=[];let mx=null;segs.sort((a,b)=>a[0]-b[0]).forEach(([f,c])=>{if(mx!=null&&f-mx>=8&&mx<=330)gaps.push(`${mx}〜${f}y（${f-mx}y）`);mx=mx==null?c:Math.max(mx,c);});
-  return {tee,sec,grn:[...new Set(grn)],gaps,gl};
+  // 表の行：ティーからの順に バンカー・池 と すき間 を並べ、最後にグリーン周り
+  const rows=[];all.filter(h=>!h.g).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;rows.push({k:'h',t:h.t,sd:hzSide(h.x),f,c:cc,toG:gl?Math.max(0,gl-h.c):null});});
+  {let mx=null;segs.slice().sort((a,b)=>a[0]-b[0]).forEach(([f,c])=>{if(mx!=null&&f-mx>=8&&mx<=330)rows.push({k:'gap',f:mx,c:f,w:f-mx});mx=mx==null?c:Math.max(mx,c);});}
+  rows.sort((a,b)=>a.f-b.f||(a.k==='gap')-(b.k==='gap'));
+  const grows=[...gm.values()].sort((a,b)=>a.f-b.f).map(h=>({k:'g',t:h.t,sd:hzSide(h.x),f:h.f,c:h.c,ge:h.ge,gp:h.gp||'横'}));
+  return {tee,sec,grn:[...new Set(grn)],gaps,gl,rows,grows};
 }
-// 1つの欄にまとめた文（ヤーデージブック・ホールマップ共通）
-function hzHtml(z){if(!z)return '';const p=[];
-  p.push(`<b>ティーから</b> ${z.tee.map(t=>t.txt).join('　')||'ティーショットの届く所にバンカー・池なし'}`);
-  if(z.gaps.length)p.push(`<b>すき間</b>（バンカー・池がない所） ${z.gaps.join('　')}`);
-  if(z.sec.length)p.push(`<b>2打目から先</b> ${z.sec.map(t=>t.txt).join('　')}`);
-  if(z.grn.length)p.push(`<b>グリーン周り</b> ${z.grn.join('　')}`);
-  return p.join('<br>');}
+// 1つの表にまとめる（ヤーデージブック・ホールマップ共通）：名前｜ティーから｜グリーンまで
+function hzHtml(z){if(!z)return '';const nm=t=>t==='b'?'バンカー':'池',ic=t=>t==='b'?'⛱':'💧';
+  const tr=r=>r.k==='gap'?`<tr class="hzt-gap"><td>すき間 <b>${r.w}</b>y</td><td>${r.f}〜${r.c}</td><td></td></tr>`
+    :r.k==='g'?`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>中央から<b>${r.ge}</b>（${r.gp}）</td></tr>`
+    :`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>${r.toG!=null?`越えて <b>${r.toG}</b>`:''}</td></tr>`;
+  const body=(z.rows||[]).map(tr).join('')||'<tr><td colspan="3">グリーンまでバンカー・池なし</td></tr>';
+  return `<table class="hzt"><thead><tr><th></th><th>ティーから（y）</th><th>グリーンまで（y）</th></tr></thead><tbody>${body}${(z.grows||[]).length?`<tr class="hzt-sec"><td colspan="3">グリーン周り</td></tr>${z.grows.map(tr).join('')}`:''}</tbody></table>`;}
 
 // 図の上のラベル：バンカー・池の横に「手前〜越える」ヤード（グリーン周りは除く）
 function hzSvg(key,n,dt,u,wrap,W,mode){

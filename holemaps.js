@@ -342,7 +342,7 @@ function drawHoleMap(){
     ${m.n?`<div class="text-[12px] leading-snug text-muted"><b>コース</b>　${esc(m.n)}</div>`:''}
     ${IL?`<div class="text-[11px] text-muted">下の距離は${x.mapKey==='arima'?'動画で言っていた距離（グリーン周りは情報なし）':'ショットナビの図からの目安'}。ホール図をタップして測る方が正確です。</div>`:''}
     ${(()=>{const z=typeof hzLines==='function'?hzLines(x.mapKey,h[0],teeShift(x.mapKey,h[0])):null;if(!z){if(typeof hzLoad==='function'&&(ILLUS[x.mapKey]||[]).length){const d0=HM.date,n0=HM.no;hzLoad(x.mapKey,h[0]).then(L=>{if(L&&L.length&&HM&&HM.date===d0&&HM.no===n0)drawHoleMap();});}return '';}
-      if(!z.tee.length&&!z.grn.length&&!z.sec.length)return '';return `<div class="rounded-xl bg-field px-3 py-2 text-[13px] leading-7 ring-1 ring-line"><div class="text-[11px] text-muted">バンカー・池の距離（手前〜越える所・ホール図から自動で測った目安）</div>${hzHtml(z)}</div>`;})()}
+      if(!z.tee.length&&!z.grn.length&&!z.sec.length)return '';return `<div class="rounded-xl bg-field px-3 py-2 text-[13px] leading-6 ring-1 ring-line"><div class="text-[11px] text-muted">バンカー・池の距離（手前〜越える所・ホール図から自動で測った目安）</div>${hzHtml(z)}</div>`;})()}
     <div class="flex flex-wrap gap-1">${hazList(m,TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2],teeShift(x.mapKey,h[0])).map(t=>`<span class="rounded-md bg-field px-1.5 py-0.5 text-[11px] ring-1 ring-line">${t}</span>`).join('')}</div>
     <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
    </div>
