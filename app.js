@@ -205,20 +205,26 @@ async function renderToday(){
   const st=streakDays(bd);const wd=weekDone(bd,mon);
   const tm=addDays(t,1);
   el.innerHTML=`
-  <div class="grid grid-cols-2 gap-3">
-    ${r>=0?`<div class="card cursor-pointer p-4" onclick="show('golf',{routine:'rounds'})"><div class="lbl">次のゴルフ ${nr?md(nr):""}</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-accent">${r}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">${esc(((typeof ROUND_BASE==='function'&&ROUND_BASE(nr))||{}).course||'')}</div><div class="text-[12px] text-muted">${nr===ROUND?'目標 100切り（前回118）':'目標 100切り'} ›</div></div>`:''}
-    ${m>=0?`<div class="card p-4"><div class="lbl">篠山マラソン 3/7（日）</div><div class="mt-1 flex items-baseline gap-1"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted">日</span></div><div class="text-[12px] text-muted">目標 サブ4 → 3時間30分</div></div>`:''}
+  ${(()=>{const rb=nr&&typeof ROUND_BASE==='function'?(ROUND_BASE(nr)||{}):{};const tg=rb.target||'';
+    const L=typeof D300_LOG!=='undefined'?D300_LOG:[];const best=L.reduce((m,x)=>Math.max(m,x.best||0),0);const goal=280;const pct=best?Math.min(100,Math.round(best/goal*100)):0;
+    const words=['小さな積み重ねが、スコアを連れてくる。','今日の1回が、本番の1打になる。','余裕は、準備から生まれる。','昨日の自分を1つだけ超える。'];
+    return `<div class="hero cursor-pointer p-5" onclick="show('golf',{routine:'rounds'})">
+      <div class="relative z-[1] grid gap-3">
+        <div class="text-[12px] font-bold opacity-85">${words[new Date(t).getDate()%words.length]}</div>
+        ${r>=0?`<div class="flex items-end justify-between gap-3"><div><div class="text-[12px] font-bold opacity-85">次のゴルフ ${md(nr)}${rb.course?'・'+esc(rb.course):''}</div><div class="flex items-baseline gap-1.5"><span class="text-sm font-bold">あと</span><span class="num text-6xl font-semibold leading-none">${r}</span><span class="text-lg font-bold">日</span></div></div>${tg?`<div class="rounded-2xl bg-white/20 px-3.5 py-2 text-center"><div class="text-[11px] font-bold opacity-90">目標</div><div class="num text-3xl font-semibold leading-none">${tg}</div></div>`:''}</div>`:'<div class="font-display text-2xl">次のラウンドを決めよう</div>'}
+        ${best?`<div class="grid gap-1.5"><div class="flex items-baseline justify-between text-[12px] font-bold"><span>ドライバー最高 <b class="num text-base">${best}y</b></span><span class="opacity-85">今月の目標 ${goal}y まで あと${Math.max(0,Math.round((goal-best)*10)/10)}y</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>`:''}
+      </div></div>`;})()}
+  <div class="grid grid-cols-3 gap-2.5">
+    <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-pop-soft text-base">🔥</div><div class="num text-2xl font-semibold leading-tight">${st}<span class="text-xs text-muted"> 日</span></div><div class="lbl">連続で記録</div></div>
+    <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-accent-soft text-base">💪</div><div class="num text-2xl font-semibold leading-tight">${wd.done}<span class="text-xs text-muted"> / ${wd.plan}</span></div><div class="lbl">今週やった日</div></div>
+    <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-accent2-soft text-base">🏃</div><div class="num text-2xl font-semibold leading-tight">${km1(wAct)}<span class="text-xs text-muted"> / ${wPlan}</span></div><div class="lbl">今週のラン km</div></div>
   </div>
-  <div class="card grid grid-cols-3 divide-x divide-line py-3 text-center">
-    <div><div class="num text-xl font-semibold">${st}<span class="text-xs text-muted"> 日</span></div><div class="lbl">連続で記録</div></div>
-    <div><div class="num text-xl font-semibold">${wd.done}<span class="text-xs text-muted"> / ${wd.plan}日</span></div><div class="lbl">今週やった日</div></div>
-    <div><div class="num text-xl font-semibold">${km1(wAct)}<span class="text-xs text-muted"> / ${wPlan}km</span></div><div class="lbl">今週のラン</div></div>
-  </div>
+  ${m>=0?`<div class="card flex items-center gap-3 p-3.5"><div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sky-soft text-xl">🏅</div><div class="min-w-0 flex-1"><div class="lbl">篠山マラソン 3/7（日）</div><div class="text-[12px] text-muted">目標 サブ4 → 3時間30分</div></div><div class="text-right"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted"> 日</span></div></div>`:''}
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}
   <div id="act-box" class="grid gap-2"></div>
   ${(p.note||[]).map(n=>`<p class="-mt-2 text-[13px] text-muted">・${esc(n)}</p>`).join('')}
   <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('week')">週間を見る</button></div>
-    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('week')" class="grid gap-1 rounded-lg py-1.5 ${d===t?'bg-accent-soft':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>
+    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('week')" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>
   <div class="grid gap-2"><h2 class="h2">明日の予定</h2>${dayCard(tm,null)}</div>`;
   if(window.renderActual)renderActual(ACT_DATE||t);
 }
@@ -513,12 +519,19 @@ async function importRecords(){
 
 // ── カラーパレット ──
 function openPalette(){
-  const T=window.THEME;const cur=T.current();const dk=document.documentElement.style.colorScheme==='dark';
-  $('pal-grid').innerHTML=T.THEMES.map(([n],i)=>{const t=T.tokens(i,dk);return `<button onclick="THEME.pick(${i});openPalette()" class="grid justify-items-center gap-1 rounded-xl p-1.5 ${cur.i===i?'ring-2 ring-fg':''}" aria-label="${n}">
-    <span class="relative block h-10 w-10 overflow-hidden rounded-full border border-line" style="background:${t['--bg']}"><span class="absolute inset-x-0 bottom-0 h-1/2" style="background:${t['--accent']}"></span></span><span class="text-[10px] leading-tight text-muted">${n}</span></button>`;}).join('');
+  const T=window.THEME;const cur=T.current();const dk=T.isDark();
+  const sw=(p,on,click,lbl)=>`<button onclick="${click}" class="pal-sw ${on?'on':''}" aria-label="${lbl}"><span class="pal-dot" style="background:linear-gradient(135deg,${p[1]} 0 45%,${p[2]} 45% 80%,${p[3]} 80%)"></span><span class="text-[11px] font-bold leading-tight">${lbl}</span></button>`;
+  $('pal-grid').innerHTML=T.PRESETS.map((p,i)=>sw(p,cur.pal===String(i),`THEME.pick(${i});openPalette()`,p[0])).join('');
+  const c=T.custom();
+  $('pal-custom').innerHTML=[['メイン',1],['サブ',2],['ポイント',3]].map(([n,k])=>`<label class="pal-pick"><input type="color" value="${c[k]}" data-k="${k}" oninput="palCustom()"><span class="text-[12px] font-bold">${n}</span><span class="num text-[10px] text-muted">${c[k]}</span></label>`).join('');
+  $('pal-custom-box').classList.toggle('ring-2',cur.pal==='c');$('pal-custom-box').classList.toggle('ring-accent',cur.pal==='c');
   document.querySelectorAll('#pal-mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===cur.mode));
   $('palette').classList.remove('hidden');$('palette').classList.add('flex');
 }
+function palCustom(){const v=[...document.querySelectorAll('#pal-custom input')].map(i=>i.value);THEME.setCustom(v);
+  document.querySelectorAll('#pal-custom .pal-pick').forEach((l,i)=>l.querySelector('.num').textContent=v[i]);
+  document.querySelectorAll('#pal-grid .pal-sw').forEach(b=>b.classList.remove('on'));$('pal-custom-box').classList.add('ring-2','ring-accent');}
+function palCopy(){const p=THEME.current().colors;THEME.setCustom(p);openPalette();}
 function closePalette(){$('palette').classList.add('hidden');$('palette').classList.remove('flex');}
 
 // ── 起動 ──

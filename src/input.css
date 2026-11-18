@@ -3,22 +3,30 @@
 @tailwind utilities;
 
 @layer components{
-  .bn{@apply grid min-h-[58px] place-items-center content-center gap-0.5 pt-1.5 text-[11px] font-bold text-muted}
-  .bn.on{@apply text-accent}
-  .bn-i{@apply h-6 w-6}
-  .tab{@apply whitespace-nowrap border-b-[3px] border-transparent px-3 pb-2 pt-2.5 text-sm font-bold text-muted}
-  .tab.on{@apply border-accent text-fg}
-  .h2{@apply font-display text-xl leading-snug}
-  .card{@apply rounded-2xl border border-line bg-surface}
+  /* 下のメニュー：浮いたガラスのバー。選ぶとグラデーションの丸 */
+  .bn{@apply grid min-h-[54px] place-items-center content-center gap-0.5 rounded-[20px] pt-1 text-[10.5px] font-bold text-muted transition}
+  .bn.on{@apply text-white shadow-md;background:linear-gradient(135deg,var(--grad-a),var(--grad-b))}
+  .bn-i{@apply h-[22px] w-[22px]}
+  .glass{background:color-mix(in srgb,var(--surface) 78%,transparent);-webkit-backdrop-filter:saturate(1.6) blur(16px);backdrop-filter:saturate(1.6) blur(16px)}
+  .brand{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .pal-btn{@apply grid h-10 w-10 place-items-center rounded-full text-white shadow-md;background:linear-gradient(135deg,var(--grad-a),var(--grad-b))}
+  .tab{@apply whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold text-muted}
+  .tab.on{@apply text-white shadow-sm;background:linear-gradient(135deg,var(--grad-a),var(--grad-b))}
+  /* 見出し：左にグラデーションの縦棒 */
+  .h2{@apply relative pl-3 font-display text-xl leading-snug}
+  .h2::before{content:"";@apply absolute bottom-1 left-0 top-1 w-[5px] rounded-full;background:linear-gradient(180deg,var(--accent),var(--accent2))}
+  .card{@apply rounded-3xl border border-line bg-surface shadow-[0_1px_2px_rgba(0,0,0,.04),0_8px_24px_-12px_rgba(0,0,0,.18)]}
+  .hero{@apply relative overflow-hidden rounded-3xl text-white shadow-[0_14px_30px_-12px_var(--grad-a)];background:linear-gradient(135deg,var(--grad-a),var(--grad-b))}
+  .hero::after{content:"";@apply pointer-events-none absolute -right-10 -top-12 h-44 w-44 rounded-full bg-white/10}
   .lbl{@apply text-xs font-medium text-muted}
-  .inp{@apply w-full rounded-lg border border-line bg-field px-3 py-2.5 text-[16px] text-fg outline-none placeholder:text-muted focus:border-accent focus-visible:ring-2 focus-visible:ring-accent}
-  .btn{@apply inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-sm font-bold active:scale-[.99]}
-  .btn-main{@apply btn w-full bg-accent text-surface}
+  .inp{@apply w-full rounded-xl border border-line bg-field px-3 py-2.5 text-[16px] text-fg outline-none placeholder:text-muted focus:border-accent focus-visible:ring-2 focus-visible:ring-accent}
+  .btn{@apply inline-flex items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-bold transition active:scale-[.98]}
+  .btn-main{@apply btn w-full text-white shadow-[0_10px_20px_-10px_var(--grad-a)];background:linear-gradient(135deg,var(--grad-a),var(--grad-b))}
   .btn-sub{@apply btn border border-line bg-surface text-fg}
-  .btn-sm{@apply inline-flex min-h-[40px] items-center justify-center rounded-lg border border-line px-3 text-[13px] font-bold text-muted focus-visible:ring-2 focus-visible:ring-accent}
-  .seg{@apply flex gap-1 rounded-xl bg-line p-1 text-sm font-bold}
-  .seg button{@apply min-h-[40px] flex-1 whitespace-nowrap rounded-lg px-1 py-2 text-muted}
-  .seg button.on{@apply bg-surface text-fg shadow-sm}
+  .btn-sm{@apply inline-flex min-h-[40px] items-center justify-center rounded-full border border-line bg-surface px-3.5 text-[13px] font-bold text-muted transition focus-visible:ring-2 focus-visible:ring-accent active:scale-[.97]}
+  .seg{@apply flex gap-1 rounded-2xl bg-line p-1 text-sm font-bold}
+  .seg button{@apply min-h-[40px] flex-1 whitespace-nowrap rounded-xl px-1 py-2 text-muted transition}
+  .seg button.on{@apply text-white shadow-sm;background:linear-gradient(135deg,var(--grad-a),var(--grad-b))}
   .chip{@apply inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold}
   .k-genie{@apply bg-accent-soft text-accent}
   .k-goltore{@apply bg-sand-soft text-sand}
@@ -30,6 +38,19 @@
   .k-prep{@apply bg-warn-soft text-warn}
   .dot{@apply inline-block h-1.5 w-1.5 rounded-full}
   .num{@apply font-mono tabular-nums}
+  .bar{@apply h-2.5 overflow-hidden rounded-full bg-white/25}
+  .bar>i{@apply block h-full rounded-full bg-pop-fill}
+  .today-tile{@apply text-white shadow-md;background:linear-gradient(160deg,var(--grad-a),var(--grad-b))}
+  .today-tile .text-muted,.today-tile .text-accent{@apply text-white}
+  /* デザイン設定 */
+  .pal-sw{@apply grid justify-items-center gap-1.5 rounded-2xl border border-line p-2 text-fg transition}
+  .pal-sw.on{@apply border-transparent ring-2 ring-accent}
+  .pal-dot{@apply block h-11 w-11 rounded-full shadow-inner ring-2 ring-white/70}
+  .pal-pick{@apply grid cursor-pointer justify-items-center gap-1 rounded-2xl bg-bg p-2}
+  .pal-pick input{@apply h-11 w-11 cursor-pointer appearance-none rounded-full border-0 bg-transparent p-0}
+  .pal-pick input::-webkit-color-swatch-wrapper{padding:0}
+  .pal-pick input::-webkit-color-swatch{border:3px solid #fff;border-radius:999px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  .pal-pick input::-moz-color-swatch{border:3px solid #fff;border-radius:999px}
 }
 
 /* ── ヤーデージブック（印刷：A4に A6×4枚） */
