@@ -54,9 +54,11 @@ function hzLines(key,n,dt){
   const src=hzSrc(key,n);const gl=(L.find(h=>h.gl)||{}).gl||0;
   // グリーン周りのものと同じバンカー（出典の距離）は1つにまとめて、グリーン周りとして出す
   const ov=(z,h)=>z.t===h.t&&z.c>=h.f-20&&z.f<=h.c+20;
-  const gs=L.filter(h=>h.g).map(h=>{const z=src.find(z=>ov(z,h));return z?{...h,f:z.f,c:z.c,srcd:1}:h;});
-  const src2=src.filter(z=>!gs.some(h=>h.srcd&&h.f===z.f&&h.c===z.c));
-  const all=[...src2,...gs,...L.filter(h=>!h.g&&!src.some(z=>ov(z,h)))];
+  const used=new Set();const near=(h,z)=>Math.abs(z.f+z.c-h.f-h.c)+Math.abs(z.x-h.x);
+  const gs=L.filter(h=>h.g).map(h=>{const z=src.filter(z=>!used.has(z)&&ov(z,h)).sort((p,q)=>near(h,p)-near(h,q))[0];if(z){used.add(z);return {...h,f:z.f,c:z.c,srcd:1};}return h;});
+  const src2=src.filter(z=>!used.has(z));
+  // ティーのすぐ前（60y未満）に図から見つかった白いもの（文字・カート道など）は除く
+  const all=[...src2,...gs,...L.filter(h=>!h.g&&h.c>=60&&!src.some(z=>ov(z,h)))];
   const tee=[],sec=[],grn=[],segs=[];
   all.sort((a,b)=>a.f-b.f).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;const nm=(h.t==='b'?'バンカー':'池');const ic=h.t==='b'?'⛱':'💧';
     if(h.g){grn.push(`${ic}${hzSide(h.x)}の${nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}${h.srcd?`・ティーから${f}〜${cc}y`:''}）`:''}`);if(h.srcd)segs.push([f,cc]);return;}
@@ -81,7 +83,7 @@ function hzSvg(key,n,dt,u,wrap,W,mode){
   const src=hzSrc(key,n);const items=[];const gl=(L.find(h=>h.gl)||{}).gl||0;
   L.forEach(h0=>{if(h0.cx==null)return;const col=h0.t==='b'?'#8d6e00':'#1565c0';
     if(h0.g){items.push({h:h0,txt:`G中央へ${h0.ge}y`,sub:'',col});return;}
-    const z=src.filter(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20).sort((a,b)=>Math.abs(a.f+a.c-h0.f-h0.c)+Math.abs(a.x-h0.x)/2-Math.abs(b.f+b.c-h0.f-h0.c)-Math.abs(b.x-h0.x)/2)[0];const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0)return;
+    const z=src.filter(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20).sort((a,b)=>Math.abs(a.f+a.c-h0.f-h0.c)+Math.abs(a.x-h0.x)/2-Math.abs(b.f+b.c-h0.f-h0.c)-Math.abs(b.x-h0.x)/2)[0];if(!z&&h0.c<60)return;const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0)return;
     items.push({h,txt:`${f}〜${c}`,sub:gl?`G迄${Math.max(0,gl-h.c)}`:'',col});});
   const cw=t=>[...t].reduce((s,ch)=>s+(/[\x00-\x7f]/.test(ch)?2.9:4.6),0);
   const H1=8.4*u,H2=13*u;let v='';
