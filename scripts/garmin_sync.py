@@ -39,10 +39,17 @@ def main():
     acts = garmin().get_activities_by_date(start.isoformat(), end.isoformat())
     have = http('GET', f"{SB_URL}/rest/v1/training_logs?date=gte.{start.isoformat()}&select=id,date,run_dist,walk_dist", headers=auth) or []
     rows = []
+    skipped = {}
     for a in acts:
         kind = ((a.get('activityType') or {}).get('typeKey') or '').lower()
         if kind not in RUN and kind not in WALK:
-            continue
+            if 'run' in kind:
+                RUN.add(kind)            # street_running・road_running など、名前に run が付くものは全部ラン
+            elif 'walk' in kind or 'hik' in kind:
+                WALK.add(kind)
+            else:
+                skipped[kind] = skipped.get(kind, 0) + 1
+                continue
         d = (a.get('startTimeLocal') or '')[:10]
         if not d or d < SINCE:
             continue
@@ -68,6 +75,7 @@ def main():
     if rows:
         http('POST', SB_URL + '/rest/v1/training_logs', rows, {**auth, 'Prefer': 'resolution=merge-duplicates'})
     print(f'Garmin: {len(acts)}件を確認、{len(rows)}件を記録（{start}〜）')
+    print('ラン・ウォーク以外で入れなかった種類:', skipped)
 
 
 if __name__ == '__main__':
