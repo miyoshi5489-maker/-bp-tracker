@@ -120,12 +120,15 @@ function ybCover(x){
    <div class="yb-foot">作成 ${new Date().toLocaleDateString('ja-JP')}・最新データで作り直すには、アプリで開き直して印刷<span>表紙</span></div>
   </div>`;
 }
+// パーからの差：±0・+1・-1。パー以下は緑、ボギーは黄土、ダブル以上は赤
+const ybPm=d=>d===0?'±0':(d>0?'+':'')+d;
+const ybParCol=d=>d<=0?'#2e7d32':d===1?'#8d6e00':'#c62828';
 function ybScoreCard(x){
-  const H=x.holes;const row=hs=>`<tr><th>H</th>${hs.map(h=>`<td>${h[0]}</td>`).join('')}<th>計</th></tr><tr><th>Par</th>${hs.map(h=>`<td>${h[1]}</td>`).join('')}<th>${hs.reduce((s,h)=>s+h[1],0)}</th></tr><tr><th>目標</th>${hs.map(h=>`<td>${h[4]}</td>`).join('')}<th>${hs.reduce((s,h)=>s+h[4],0)}</th></tr><tr class="yb-w"><th>打数</th>${hs.map(h=>{const sc=ybScore(x,h[0]);return `<td style="font-weight:bold;${sc?'color:'+ybDiffCol(sc-h[4]):''}">${sc||''}</td>`;}).join('')}<th>${hs.every(h=>ybScore(x,h[0]))?hs.reduce((t,h)=>t+ybScore(x,h[0]),0):''}</th></tr>${hs.every(h=>ybScore(x,h[0]))?`<tr><th>目標差</th>${hs.map(h=>{const d=ybScore(x,h[0])-h[4];return `<td style="color:${ybDiffCol(d)}">${d>0?'+':''}${d}</td>`;}).join('')}<th>${(()=>{const d=hs.reduce((t,h)=>t+ybScore(x,h[0])-h[4],0);return (d>0?'+':'')+d;})()}</th></tr>`:''}<tr class="yb-w"><th>パット</th>${hs.map(()=>'<td></td>').join('')}<th></th></tr>`;
+  const H=x.holes;const row=hs=>`<tr><th>H</th>${hs.map(h=>`<td>${h[0]}</td>`).join('')}<th>計</th></tr><tr><th>Par</th>${hs.map(h=>`<td>${h[1]}</td>`).join('')}<th>${hs.reduce((s,h)=>s+h[1],0)}</th></tr><tr><th>目標</th>${hs.map(h=>`<td>${h[4]}</td>`).join('')}<th>${hs.reduce((s,h)=>s+h[4],0)}</th></tr><tr class="yb-w"><th>打数</th>${hs.map(h=>{const sc=ybScore(x,h[0]);return `<td style="font-weight:bold;${sc?'color:'+ybDiffCol(sc-h[4]):''}">${sc||''}</td>`;}).join('')}<th>${hs.every(h=>ybScore(x,h[0]))?hs.reduce((t,h)=>t+ybScore(x,h[0]),0):''}</th></tr>${hs.every(h=>ybScore(x,h[0]))?`<tr><th>パー差</th>${hs.map(h=>{const d=ybScore(x,h[0])-h[1];return `<td style="color:${ybParCol(d)}">${ybPm(d)}</td>`;}).join('')}<th>${ybPm(hs.reduce((t,h)=>t+ybScore(x,h[0])-h[1],0))}</th></tr>`:''}<tr class="yb-w"><th>パット</th>${hs.map(()=>'<td></td>').join('')}<th></th></tr>`;
   return `<div class="yb-card yb-cover"><div class="yb-ctitle">スコア</div>
    <div class="yb-sec">OUT</div><table class="yb-tbl yb-sc">${row(H.filter(h=>h[0]<=9))}</table>
    <div class="yb-sec">IN</div><table class="yb-tbl yb-sc">${row(H.filter(h=>h[0]>=10))}</table>
-   ${x.result&&x.result.score?`<div class="yb-big">合計 <b>${x.result.score}</b>　目標 ${x.target}（${x.result.score-x.target>0?'+':''}${x.result.score-x.target}）</div>`:'<div class="yb-big">合計 ＿＿＿＿　パット ＿＿＿＿</div>'}
+   ${x.result&&x.result.score?`<div class="yb-big">合計 <b>${x.result.score}</b>（パー${ybPm(x.result.score-H.reduce((s,h)=>s+h[1],0))}）　目標 ${x.target}</div>`:'<div class="yb-big">合計 ＿＿＿＿　パット ＿＿＿＿</div>'}
    <div class="yb-sec">今日よかったこと・次の課題</div>${(()=>{const L=typeof SWING_LOG!=='undefined'&&SWING_LOG.find(c=>c.date===x.date);return L?`<ul style="margin:0;padding-left:4mm;font-size:7pt;line-height:1.5">${L.good.map(g=>`<li>◎ ${esc(g)}</li>`).join('')}${L.fix.map(f=>`<li style="color:#c62828">課題：${esc(f.t)}</li>`).join('')}</ul>`:`<div class="yb-lines">${'<div></div>'.repeat(6)}</div>`;})()}
    <div class="yb-foot"><span>裏表紙</span></div></div>`;
 }
