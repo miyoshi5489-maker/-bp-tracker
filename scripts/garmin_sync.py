@@ -6,7 +6,7 @@ from datetime import date, timedelta
 
 SB_URL = 'https://nuqhddzwjknoxrykfcrb.supabase.co'
 SB_KEY = 'sb_publishable_6nSJ-7MfHwr4e2p2Esgp8A_0BTGPODN'
-SINCE = os.environ.get('SYNC_SINCE', '2026-11-18')   # この日より前は入れない（スクショで入れた分と重ならないように）
+SINCE = os.environ.get('SYNC_SINCE', '2026-10-01')   # この日より前は入れない
 DAYS = int(os.environ.get('SYNC_DAYS', '7'))
 TOKENS = os.path.expanduser('~/.garminconnect')
 RUN = {'running', 'treadmill_running', 'trail_running', 'track_running', 'indoor_running', 'virtual_run'}
@@ -53,7 +53,7 @@ def main():
         aid = int(a['activityId'])
         fld = 'run_dist' if kind in RUN else 'walk_dist'
         # 手で入れた同じ日・同じ距離の記録があれば入れない（二重にしない）
-        if any(h['date'][:10] == d and int(h['id']) != aid and abs(float(h.get(fld) or 0) - km) < 0.06 for h in have):
+        if any(h['date'][:10] == d and int(h['id']) != aid and abs(float(h.get(fld) or 0) - km) < 0.15 for h in have):
             continue
         pm, ps = divmod(int(round(sec / km)), 60)   # 1kmあたりの秒 → 分・秒
         row = {'id': aid, 'date': d, 'cat': 'run', 'exercises': [], 'run_dist': 0, 'run_time': 0, 'run_pace_min': 0,
