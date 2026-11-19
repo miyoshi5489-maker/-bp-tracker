@@ -484,16 +484,16 @@ function hmBoxHTML(x,h){const v=hmVid(x.mapKey,h[0]);
    <div style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${v.id}?start=${v.t[0]}&end=${v.t[1]}&rel=0&playsinline=1&modestbranding=1" title="${h[0]}番ホールの動画" class="h-full w-full" style="border:0" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
    <div id="hm-bres" title="ドラッグで大きさを変える" class="absolute bottom-0 right-0 h-6 w-6 cursor-nwse-resize touch-none" style="background:linear-gradient(135deg,transparent 55%,rgba(255,255,255,.85) 55%)"></div></div>`;}
 function hmBoxClamp(save){const b=$('hm-box'),sd=$('hm-side');if(!b||!sd)return;const W=sd.clientWidth,H=sd.clientHeight;
-  let w=Math.max(200,Math.min(b.offsetWidth,W-8));b.style.width=w+'px';const bh=b.offsetHeight;
+  let w=Math.max(Math.min(200,W-8),Math.min(b.offsetWidth,W-8));b.style.width=w+'px';const bh=b.offsetHeight;
   b.style.left=Math.max(4,Math.min(b.offsetLeft,W-w-4))+'px';b.style.top=Math.max(4,Math.min(b.offsetTop,Math.max(4,H-bh-4)))+'px';
   if(save)try{localStorage.setItem('hm:boxpos',JSON.stringify({l:b.offsetLeft/W,t:b.offsetTop,w:w/W}));}catch{}}
 function hmBoxSetup(){const b=$('hm-box'),sd=$('hm-side'),bar=$('hm-bbar'),rs=$('hm-bres');if(!b||!sd)return;const ifr=b.querySelector('iframe');const sp=$('hm-vspace');
   let v=null;try{v=JSON.parse(localStorage.getItem('hm:boxpos')||'null');}catch{}
-  const W=sd.clientWidth;if(v){b.style.width=(v.w*W)+'px';b.style.left=(v.l*W)+'px';b.style.top=v.t+'px';}else{b.style.width=(W-24)+'px';}
-  hmBoxClamp();if(sp)sp.style.height=Math.round((W-24)*9/16+28-8)+'px';
+  const W=sd.clientWidth;const m=W<300?4:12;if(v&&W>=300){b.style.width=(v.w*W)+'px';b.style.left=(v.l*W)+'px';b.style.top=v.t+'px';}else{b.style.width=(W-2*m)+'px';b.style.left=m+'px';b.style.top=m+'px';}
+  hmBoxClamp();if(sp)sp.style.height=Math.max(0,b.offsetTop+b.offsetHeight-12)+'px';
   const drag=(el,mv)=>{let st=null;el.addEventListener('pointerdown',e=>{st={x:e.clientX,y:e.clientY,l:b.offsetLeft,t:b.offsetTop,w:b.offsetWidth};el.setPointerCapture(e.pointerId);ifr.style.pointerEvents='none';e.preventDefault();});
     el.addEventListener('pointermove',e=>{if(st)mv(st,e.clientX-st.x,e.clientY-st.y);});
     const end=()=>{if(!st)return;st=null;ifr.style.pointerEvents='';hmBoxClamp(true);};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);};
   drag(bar,(s,dx,dy)=>{b.style.left=(s.l+dx)+'px';b.style.top=(s.t+dy)+'px';hmBoxClamp();});
-  drag(rs,(s,dx)=>{b.style.width=Math.max(200,Math.min(s.w+dx,sd.clientWidth-s.l-4))+'px';hmBoxClamp();});
+  drag(rs,(s,dx)=>{b.style.width=Math.max(Math.min(200,sd.clientWidth-8),Math.min(s.w+dx,sd.clientWidth-s.l-4))+'px';hmBoxClamp();});
   bar.addEventListener('dblclick',()=>{try{localStorage.removeItem('hm:boxpos');}catch{}b.style.left='12px';b.style.top='12px';b.style.width=(sd.clientWidth-24)+'px';});}
