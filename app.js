@@ -6,7 +6,9 @@ const SUPABASE_URL='https://nuqhddzwjknoxrykfcrb.supabase.co';
 const SUPABASE_KEY='sb_publishable_6nSJ-7MfHwr4e2p2Esgp8A_0BTGPODN';
 const SB_HEADERS={'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY};
 
-const {ROUND,ROUNDS,nextRound,RACE,PHASES,PACE,planFor,plannedKm,longRuns}=window.PLAN;
+const {ROUND,ROUNDS,nextRound,RACE,PHASES,PACE,planFor:planForAll,plannedKm,longRuns}=window.PLAN;
+// ゴルフとランニング専用：筋トレ・ピラティスの予定は出さない
+const planFor=d=>{const p=planForAll(d);return {...p,items:(p.items||[]).filter(i=>!['gym','pilates'].includes(i.kind))};};
 const {pad,ymd,parse,addDays,diffDays,mondayOf,today}=window.PLAN.util;
 const DOW=['日','月','火','水','木','金','土'];
 const $=id=>document.getElementById(id);
@@ -143,8 +145,8 @@ const KIND_LABEL={genie:'ジーニー',goltore:'ゴルトレ',run:'ラン',gym:'
 const KIND_DOT={genie:'var(--accent)',goltore:'var(--sand)',run:'var(--sky)',gym:'var(--fg)',pilates:'var(--plum)',off:'var(--line)',event:'var(--warn)',prep:'var(--warn)'};
 
 // ── ルーター（下のメニュー5つ＋ページ内の切り替え） ──
-const PAGES=['today','golf','marathon','study','week','month','log','history','stats','import'];
-const GROUPS={today:[['today','今日']],plan:[['week','週間'],['month','月間'],['marathon','マラソン']],golf:[['golf','ゴルフ図鑑']],study:[['study','学習']],record:[['log','入力'],['history','履歴'],['stats','進捗'],['import','まとめて入力']]};
+const PAGES=['today','golf','marathon'];
+const GROUPS={today:[['today','今日']],golf:[['golf','ゴルフ']],run:[['marathon','マラソン']]};
 const groupOf=p=>Object.keys(GROUPS).find(g=>GROUPS[g].some(([k])=>k===p))||'today';
 const LAST_IN={};
 let CUR='today';
@@ -223,8 +225,8 @@ async function renderToday(){
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}
   <div id="act-box" class="grid gap-2"></div>
   ${(p.note||[]).map(n=>`<p class="-mt-2 text-[13px] text-muted">・${esc(n)}</p>`).join('')}
-  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('week')">週間を見る</button></div>
-    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('week')" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>
+  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('marathon')">ランの計画</button></div>
+    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="${d<=t?`actOpen('${d}')`:''}" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>
   <div class="grid gap-2"><h2 class="h2">明日の予定</h2>${dayCard(tm,null)}</div>`;
   if(window.renderActual)renderActual(ACT_DATE||t);
 }
