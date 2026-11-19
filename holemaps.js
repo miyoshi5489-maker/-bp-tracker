@@ -333,7 +333,7 @@ function drawHoleMap(){
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
-   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex w-3 shrink-0 cursor-col-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a]"><span class="block h-12 w-1 rounded bg-white/70"></span></div><div id="hm-side" class="w-[40%] shrink-0 overflow-y-auto border-l border-white/20 bg-[#24492a] md:w-[44%] relative">${hmVid(x.mapKey,h[0])?hmBoxHTML(x,h):''}${hmPhotoView(x,h,PH,!!hmVid(x.mapKey,h[0]))}</div>`:''}</div>
+   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex w-3 shrink-0 cursor-col-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a]"><span class="block h-12 w-1 rounded bg-white/70"></span></div><div id="hm-side" class="w-[36%] shrink-0 overflow-y-auto border-l border-white/20 bg-[#24492a] md:w-[44%] relative">${hmVid(x.mapKey,h[0])?hmBoxHTML(x,h):''}${hmPhotoView(x,h,PH,!!hmVid(x.mapKey,h[0]))}</div>`:''}</div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     ${x.plans?`<div class="grid grid-cols-2 gap-1 rounded-xl bg-line p-1">${[['','100切り',ROUND_DEFS.find(r=>r.date===x.date).target],...Object.entries(x.plans).map(([k,P])=>[k,P.name,P.target])].map(([k,n,t])=>`<button class="min-h-[40px] rounded-lg text-[13px] font-bold" style="${(x.planKey||'')===k?'background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)':'color:var(--muted)'}" onclick="setPlan('${x.date}','${k}')">${n}プラン（目標${t}）</button>`).join('')}</div>`:''}
     ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
@@ -366,7 +366,7 @@ function hmZoomTo(z,px,py){const sc=$('hm-scroll');const inn=$('hm-in');if(!sc||
   HM.z=Math.max(1,Math.min(6,z));inn.style.width=HM.base*HM.z+'px';
   const nr=inn.getBoundingClientRect();sc.scrollLeft+=(nr.left+fx*nr.width)-px;sc.scrollTop+=(nr.top+fy*nr.height)-py;
   cancelAnimationFrame(HM_RAF);HM_RAF=requestAnimationFrame(hmOverlay);}
-function hmOverlay(){const c=HM&&HM.ctx;const inn=$('hm-in');if(!c||!inn)return;const L=Math.max(0.8,Math.min(3.2,2.3/(inn.offsetWidth/c.IL.w)));if(HM.L&&Math.abs(HM.L-L)<0.05&&inn.querySelector('svg'))return;HM.L=L;
+function hmOverlay(){const c=HM&&HM.ctx;const inn=$('hm-in');if(!c||!inn)return;const k=hmWide()?2.3:1.75;const L=Math.max(0.8*k/2.3,Math.min(3.2*k/2.3,k/(inn.offsetWidth/c.IL.w))); // スマホは文字を少し小さく（マップを大きく）if(HM.L&&Math.abs(HM.L-L)<0.05&&inn.querySelector('svg'))return;HM.L=L;
   const old=inn.querySelector('svg');const tmp=document.createElement('div');tmp.innerHTML=illusView(c.IL,c.hi,c.m,{...c.opt,L});const nv=tmp.firstElementChild;old.replaceWith(nv);
   nv.addEventListener('click',e=>{if(HM.pinchAt&&Date.now()-HM.pinchAt<400)return;if(HM.dragAt&&Date.now()-HM.dragAt<300)return;const pt=nv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(nv.getScreenCTM().inverse());HM.tap=[q.x,q.y];HM.L=0;hmOverlay();});}
 let HM_RAF=0;
@@ -438,7 +438,7 @@ function hmSideToggle(){try{localStorage.setItem('hm:side',hmSideOn()?'0':'1');}
 // マップと景色の境目をドラッグして幅（スマホ縦は高さ）を変える。割合を覚えておく
 const hmWide=()=>window.matchMedia('(min-width:768px)').matches;
 function hmSideApply(){const sd=$('hm-side');if(!sd)return;let v={};try{v=JSON.parse(localStorage.getItem('hm:sidesz')||'{}')||{};}catch{}
-  sd.style.height='';sd.style.maxHeight='';sd.style.width=(hmWide()?(v.w||44):(v.wn||40))+'%';} // スマホも左右並び（右の動画は40%、境目をドラッグで変えられる）
+  sd.style.height='';sd.style.maxHeight='';sd.style.width=(hmWide()?(v.w||44):(v.wn||36))+'%';} // スマホも左右並び（右の動画は36%、境目をドラッグで変えられる）
 function hmRefit(){const sc=$('hm-scroll'),inn=$('hm-in'),pad=$('hm-pad');if(!sc||!inn||!HM||!HM.vb)return;
   const cx=sc.scrollLeft+sc.clientWidth/2-(pad?pad.offsetLeft:0)-inn.offsetLeft,cy=sc.scrollTop+sc.clientHeight/2-(pad?pad.offsetTop:0)-inn.offsetTop;const fx=cx/inn.offsetWidth,fy=cy/inn.offsetHeight;
   HM.base=Math.min((HM.IL?sc.clientWidth-2*hzGut():sc.clientWidth),(sc.clientHeight-10)*HM.vb.width/HM.vb.height);inn.style.width=HM.base*HM.z+'px';

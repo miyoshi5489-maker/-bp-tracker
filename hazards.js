@@ -104,7 +104,7 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
   if(out){
     // 左右は「コースの中心から左か右か」で決める（左のバンカーは左側の余白に）
     const side=o=>{const x=o.h.x;return (x!=null&&Math.abs(x)>=4)?(x<0?'L':'R'):(o.h.cx<W/2?'L':'R');};
-    const HH=gl?H2:H1,G=1.4*u,J=8*u;
+    const HH=gl?H2:H1,G=1.4*u,J=(typeof hzGut==='function'&&hzGut()<HZ_GUT?3:8)*u;
     ['L','R'].forEach(sd=>{const it=items.filter(o=>side(o)===sd).sort((a,b)=>a.h.cy-b.h.cy);if(!it.length)return;
       const w=(Math.max(...it.map(o=>Math.max(cw(o.txt),cw(o.sub)*.8)))+7)*u; // 同じ側は全部同じ幅・同じ高さ
       const ys=[];it.forEach((o,i)=>{ys[i]=Math.max(o.h.cy-HH/2,i?ys[i-1]+HH+G:-1e9);});
@@ -122,4 +122,4 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
   return v;
 }
 const HZ_GUT=100; // マップの左右に空ける余白（画面のpx）
-function hzGut(){return window.matchMedia('(min-width:768px)').matches?HZ_GUT:48;} // スマホ（マップが左の細い列）は余白を小さく
+function hzGut(){return window.matchMedia('(min-width:768px)').matches?HZ_GUT:62;} // スマホ（マップが左の細い列）は余白を小さく
