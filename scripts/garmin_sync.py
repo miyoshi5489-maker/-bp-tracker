@@ -6,7 +6,7 @@ from datetime import date, timedelta
 
 SB_URL = 'https://nuqhddzwjknoxrykfcrb.supabase.co'
 SB_KEY = 'sb_publishable_6nSJ-7MfHwr4e2p2Esgp8A_0BTGPODN'
-SINCE = os.environ.get('SYNC_SINCE', '2026-10-01')   # この日より前は入れない
+SINCE = os.environ.get('SYNC_SINCE', '2026-01-01')   # この日より前は入れない
 DAYS = int(os.environ.get('SYNC_DAYS', '7'))
 TOKENS = os.path.expanduser('~/.garminconnect')
 RUN = {'running', 'treadmill_running', 'trail_running', 'track_running', 'indoor_running', 'virtual_run'}
