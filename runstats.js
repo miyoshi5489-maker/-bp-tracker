@@ -38,7 +38,8 @@ window.renderRunStats=async function(){
   const el=$('p-runstats');const t=today();if(!el.innerHTML)el.innerHTML='<div class="text-sm text-muted">読み込み中…</div>';
   const recs=await getRecs();
   const runs=recs.filter(r=>r.runDist>0&&r.runTime>0).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);
-  const main=runs.filter(r=>r.runDist>=2); // 短いウォームアップ等は傾向から外す
+  // 傾向は2km以上・ペースが現実的（3'30〜10'00/km）なランだけで見る（短いウォームアップや入力ミスを外す）
+  const main=runs.filter(r=>r.runDist>=2&&pace(r)>=210&&pace(r)<=600);
   // 週ごと
   const mon=mondayOf(t);const weeks=[...Array(10)].map((_,i)=>addDays(mon,-7*(9-i)));
   const wk=weeks.map(w=>{const e=addDays(w,6);return {d:w,v:runs.filter(r=>r.date>=w&&r.date<=e).reduce((s,r)=>s+r.runDist,0),plan:plannedKm(w,e),cur:w===mon};});
