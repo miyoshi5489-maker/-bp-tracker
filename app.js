@@ -555,6 +555,8 @@ async function importRecords(){
 function openPalette(){
   const T=window.THEME;const cur=T.current();const dk=T.isDark();
   const sw=(p,on,click,lbl)=>`<button onclick="${click}" class="pal-sw ${on?'on':''}" aria-label="${lbl}"><span class="pal-dot" style="background:linear-gradient(135deg,${p[1]} 0 45%,${p[2]} 45% 80%,${p[3]} 80%)"></span><span class="text-[11px] font-bold leading-tight">${lbl}</span></button>`;
+  {const F=T.FONTS;T.loadFont(F.filter(f=>f[5]).map(f=>f[5]).join('&family='),'font-preview');
+   $('font-grid').innerHTML=F.map(f=>`<button class="font-sw ${T.fontNow()===f[0]?'on':''}" onclick="THEME.font('${f[0]}');openPalette()"><span style="font-family:${f[2].replace(/"/g,'&quot;')};font-weight:${f[4]}" class="text-[20px] leading-tight">みよトレ 3:30</span><span class="text-[11px] text-muted">${f[1]}</span></button>`).join('');}
   $('pal-grid').innerHTML=T.PRESETS.map((p,i)=>sw(p,cur.pal===String(i),`THEME.pick(${i});openPalette()`,p[0])).join('');
   const c=T.custom();
   $('pal-custom').innerHTML=[['メイン',1],['サブ',2],['ポイント',3]].map(([n,k])=>`<label class="pal-pick"><input type="color" value="${c[k]}" data-k="${k}" oninput="palCustom()"><span class="text-[12px] font-bold">${n}</span><span class="num text-[10px] text-muted">${c[k]}</span></label>`).join('');

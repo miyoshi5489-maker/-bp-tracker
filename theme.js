@@ -58,7 +58,22 @@ function apply(){
 }
 mq.addEventListener&&mq.addEventListener('change',apply);
 apply();
-window.THEME={PRESETS,apply,tokens,custom,isDark,
+// 文字（フォント）… 見出しと本文。Google Fontsから選んだものだけ読み込む
+const FONTS=[
+  ['dela','いまの太字','"Dela Gothic One","Zen Kaku Gothic New"','"Zen Kaku Gothic New"',400,'Dela+Gothic+One'],
+  ['zen','すっきり','"Zen Kaku Gothic New"','"Zen Kaku Gothic New"',700,'Zen+Kaku+Gothic+New:wght@400;500;700'],
+  ['maru','まるい','"Zen Maru Gothic"','"Zen Maru Gothic"',700,'Zen+Maru+Gothic:wght@400;500;700'],
+  ['mplus','やわらか','"M PLUS Rounded 1c"','"M PLUS Rounded 1c"',800,'M+PLUS+Rounded+1c:wght@400;500;800'],
+  ['noto','くっきり','"Noto Sans JP"','"Noto Sans JP"',800,'Noto+Sans+JP:wght@400;500;800'],
+  ['pop','ポップ','"Mochiy Pop One","Zen Maru Gothic"','"Zen Maru Gothic"',400,'Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@400;500;700'],
+  ['mincho','上品（明朝）','"Shippori Mincho B1"','"Zen Kaku Gothic New"',800,'Shippori+Mincho+B1:wght@800'],
+  ['system','iPhoneの文字','"Hiragino Sans","Hiragino Kaku Gothic ProN"','"Hiragino Sans","Hiragino Kaku Gothic ProN"',800,''],
+];
+function loadFont(q,id){if(!q)return;id=id||'font-css';let l=document.getElementById(id);if(!l){l=document.createElement('link');l.id=id;l.rel='stylesheet';document.head.appendChild(l);}const u='https://fonts.googleapis.com/css2?family='+q+'&display=swap';if(l.href!==u)l.href=u;}
+function applyFont(){const f=FONTS.find(x=>x[0]===get('font','dela'))||FONTS[0];const r=document.documentElement.style;r.setProperty('--font-display',f[2]);r.setProperty('--font-body',f[3]);r.setProperty('--font-display-w',f[4]);loadFont(f[5]);}
+applyFont();
+window.THEME={PRESETS,apply,tokens,custom,isDark,FONTS,loadFont,
+  font(k){set('font',k);applyFont();},fontNow(){return get('font','dela');},
   pick(i){set('pal',String(i));apply();},
   setCustom(c){set('pal_custom',JSON.stringify(c));set('pal','c');apply();},
   mode(m){set('theme_mode',m);apply();},

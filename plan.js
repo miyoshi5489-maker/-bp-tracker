@@ -84,8 +84,8 @@ function planFor(s){
   if(s==='2026-11-27')return{phase:ph,items:[it('genie','ジーニー ⑤⑥ジャンプ・回旋（15分）',{routine:'genie',part:'power'}),pplItem('base','pull',{extra:'ラウンド2日前。重さは控えめ、各2セットでOK'})]};
   if(s===ROUND)return{phase:ph,items:[it('event','ラウンド本番（東条湖CC OUT 7:08）',{detail:'朝：①可動域の3種＋骨盤分離 片足10回＋ヒップツイスト 10回。3ホールごとに補食。目標100切り！'})]};
   if(s===RACE)return{phase:ph,items:[it('event','篠山マラソン',{detail:"目標3時間30分切り（4'58/km）。最初の5kmは5'05で入り、そこからイーブン。30km以降に余裕があれば上げる。テストの結果しだいで3時間40分（5'12/km）に切り替える",km:42.195})]};
-  if(s==='2026-12-17')return{phase:ph,items:[it('run','10kmタイムトライアル（朝）',{km:14,detail:'アップ2km→10kmを全力の一歩手前で→ダウン2km。49分以内なら1月から1段上のペースへ'})]};
-  if(s==='2027-01-28')return{phase:ph,items:[it('run','ハーフのタイムトライアル（朝）',{km:24,detail:'アップ1.5km→21.1kmをレースのつもりで→ダウン1.5km。1時間43分以内なら2月から3時間30分のペースへ。補給の練習も'})]};
+  if(s==='2026-12-17')return{phase:ph,items:[it('run','10kmタイムトライアル（朝）',{km:14,detail:'アップ2km→10kmを全力の一歩手前で（1km 4\'54"より速く＝49分以内）→ダウン2km。49分以内なら1月から1段上のペースへ、46分以内（1km 4\'36"）なら2月のペースへ'})]};
+  if(s==='2027-01-28')return{phase:ph,items:[it('run','ハーフのタイムトライアル（朝）',{km:24,detail:'アップ1.5km→21.1kmをレースのつもりで（1km 4\'53"より速く＝1時間43分以内）→ダウン1.5km。届けば2月から3時間30分のペース（1km 4\'58"）へ。補給の練習も'})]};
   if(s==='2026-10-19')return{phase:ph,items:[it('prep','ラウンド前日の調整',{detail:'⓪ほぐし＋骨盤分離＋ヒップツイストだけ。練習場は60球まで',routine:'genie',part:'short'})]};
   if(s==='2026-10-18')return{phase:ph,items:[it('off','完全OFF',{detail:'ストレッチと散歩のみ'})]};
   if(s==='2026-10-21')return{phase:ph,items:[it('off','回復日',{detail:'ラウンドの疲れを抜く。散歩とストレッチ'})]};

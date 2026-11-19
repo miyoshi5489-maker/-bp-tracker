@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+:root{--font-display:"Dela Gothic One","Zen Kaku Gothic New";--font-body:"Zen Kaku Gothic New";--font-display-w:400}
+.font-display{font-weight:var(--font-display-w)}
 @layer components{
   /* 下のメニュー：浮いたガラスのバー。選ぶとグラデーションの丸 */
   .bn{@apply grid min-h-[54px] place-items-center content-center gap-0.5 rounded-[20px] pt-1 text-[10.5px] font-bold text-muted transition}
@@ -43,6 +45,8 @@
   .today-tile{@apply text-white shadow-md;background:linear-gradient(160deg,var(--grad-a),var(--grad-b))}
   .today-tile .text-muted,.today-tile .text-accent{@apply text-white}
   /* デザイン設定 */
+  .font-sw{@apply grid gap-0.5 rounded-2xl border border-line bg-surface px-3 py-2.5 text-left transition}
+  .font-sw.on{@apply border-transparent ring-2 ring-accent}
   .pal-sw{@apply grid justify-items-center gap-1.5 rounded-2xl border border-line p-2 text-fg transition}
   .pal-sw.on{@apply border-transparent ring-2 ring-accent}
   .pal-dot{@apply block h-11 w-11 rounded-full shadow-inner ring-2 ring-white/70}
