@@ -1,11 +1,11 @@
 {
   "name": "みよトレ🏌️‍♂️🏃‍♂️",
   "short_name": "みよトレ",
-  "description": "ゴルフ体づくり・マラソン・筋トレの計画と記録",
+  "description": "ゴルフとランニングの練習・記録",
   "start_url": "./index.html#today",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F2F4EF",
+  "background_color": "#0b3524",
   "theme_color": "#F2F4EF",
   "icons": [
     {
