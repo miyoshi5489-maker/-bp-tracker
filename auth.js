@@ -71,7 +71,7 @@ function signOut(){save(null);try{localStorage.removeItem('yohei_bp_cache');}cat
 function gateHtml(){return `
   <div id="auth-gate" class="fixed inset-0 z-50 grid place-items-center bg-bg px-5" style="padding-top:env(safe-area-inset-top,0px)">
     <form id="auth-form" class="card grid w-full max-w-sm gap-3 p-6" onsubmit="event.preventDefault()">
-      <div class="font-display text-2xl">洋平トレーニング</div>
+      <div class="font-display text-2xl">ゴルトレ🏌️‍♂️</div>
       <p class="text-[14px] text-muted">記録を守るためにログインしてください。初めての時は「新しく登録」を押します。</p>
       <label class="grid gap-1"><span class="lbl">メールアドレス</span><input id="auth-email" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" class="inp" required></label>
       <label class="grid gap-1"><span class="lbl">パスワード（8文字以上）</span><input id="auth-pass" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" minlength="8" class="inp" required></label>
