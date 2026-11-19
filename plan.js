@@ -37,7 +37,7 @@ const LONG_NOTE={
 // ペースは3段階で上げる（3時間30分切り＝4'58/km）。テストの結果で次の段階へ進む
 const PACE_STAGES=[
   {from:'2000-01-01',name:'今の力（〜1/3）',why:'11/10の8.1km 5\'14"（心拍167）から',easy:"6'20〜6'55/km",long:"6'10〜6'40/km",mp:"5'25〜5'30/km",tempo:"5'05〜5'10/km",interval:"4'40〜4'45/km"},
-  {from:'2027-01-04',name:'1月（10kmテスト49分以内なら）',why:'12/19の10kmテストで確認',easy:"5'55〜6'30/km",long:"5'50〜6'20/km",mp:"5'10〜5'15/km",tempo:"4'48〜4'53/km",interval:"4'25〜4'30/km"},
+  {from:'2027-01-04',name:'1月（10kmテスト49分以内なら）',why:'12/19の10kmテストで確認。46分以内なら2月の段階へ飛び級',easy:"5'55〜6'30/km",long:"5'50〜6'20/km",mp:"5'10〜5'15/km",tempo:"4'48〜4'53/km",interval:"4'25〜4'30/km"},
   {from:'2027-02-01',name:'2月〜本番（3時間30分切り）',why:'1/30のハーフ1時間43分以内なら',easy:"5'35〜6'10/km",long:"5'30〜6'00/km",mp:"4'55〜5'00/km",tempo:"4'35〜4'40/km",interval:"4'14〜4'18/km"},
 ];
 const paceAt=s=>PACE_STAGES.filter(x=>s>=x.from).pop();
@@ -129,7 +129,8 @@ function planFor(s){
       else items.push(it('run','テンポ走',{km:taper||s<'2027-01-11'?8:10,detail:`${taper?4:6}kmを ${P.tempo}。アップ・ダウン込み`}));
     }
     if(dow===3){items.push(pplItem('marathon','upper'));if(!race)items.push(it('run','イージーラン',{km:taper||s<'2027-01-11'?5:(s<'2027-01-25'?6:8),detail:P.easy}));}
-    if(dow===4){items.push(it('run',race?'イージーラン':'イージーラン＋流し',{km:race?5:(taper||s<'2027-01-11'?6:8),detail:P.easy+(race?'':'。最後に100m×4本の流し')}),it('goltore','骨盤分離＋ヒップツイスト',{routine:'y2',part:'short'}));}
+    // 2020年（神戸バレンタイン 20km 4'12"/km）の頃は週2回きつい練習をしていた → インターバルの週は木曜にペース走を足す
+    if(dow===4){const tempoThu=!race&&!taper&&wk%2===1;items.push(it('run',race?'イージーラン':(tempoThu?'ペース走':'イージーラン＋流し'),{km:race?5:(taper||s<'2027-01-11'?6:8),detail:tempoThu?`うち4kmを ${P.tempo}（2020年の週2回きつい練習を少しずつ戻す）。あとはゆっくり`:P.easy+(race?'':'。最後に100m×4本の流し')}),it('goltore','骨盤分離＋ヒップツイスト',{routine:'y2',part:'short'}));}
     if(dow===5){items.push(it('off','OFF',{detail:race?'レース2日前。よく寝る':'ストレッチのみ'}));}
     if(dow===6){const km=LONG[mon]!=null?LONG[mon]:16;if(km)items.push(it('run',race?'前日刺激走':'ロング走',{km,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+(race?'':(mon==='2027-02-15'?`前半9kmは ${P.long}、後半15kmを ${P.mp}`:P.long))}));}
     if(dow===0){items.push(race?it('off','OFF'):it('run','回復ジョグ',{km:taper?5:6,detail:'ゆっくり。脚が重ければOFF'}));}

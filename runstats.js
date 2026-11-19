@@ -53,6 +53,12 @@ window.renderRunStats=async function(){
   const months=[];for(let i=1;i<=12;i++){const k=`2026-${pad(i)}`;if(k>t.slice(0,7))break;const R=runs.filter(r=>r.date.startsWith(k));const M=R.filter(ok);const H=M.filter(r=>r.runHr>0);
     months.push({k,n:+k.slice(5),km:R.reduce((s,r)=>s+r.runDist,0),p:M.length?M.reduce((s,r)=>s+r.runTime,0)/M.reduce((s,r)=>s+r.runDist,0):0,hr:H.length?H.reduce((s,r)=>s+r.runHr,0)/H.length:0,ef:H.length?H.reduce((s,r)=>s+eff(r),0)/H.length:0,lg:Math.max(0,...R.map(r=>r.runDist))});}
   const mm=months.filter(m=>m.ef);const e0=mm[0],e1=mm[mm.length-1];const bestKm=months.reduce((a,b)=>b.km>a.km?b:a,months[0]||{km:0});
+  // 一番良かった頃（2019/12〜2020/2/9 神戸バレンタインラブラン）と今を比べる
+  const win=(a,b)=>runs.filter(r=>r.date>=a&&r.date<=b);
+  const sumUp=(a,b)=>{const R=win(a,b),M=R.filter(ok),H=M.filter(r=>r.runHr>0),wks=(diffDays(a,b)+1)/7;const b10=M.filter(r=>r.runDist>=9.5).sort((x,y)=>pace(x)-pace(y))[0];
+    return {kmw:R.reduce((s,r)=>s+r.runDist,0)/wks,nw:new Set(R.map(r=>r.date)).size/wks,ef:H.length?H.reduce((s,r)=>s+eff(r),0)/H.length:0,hard:M.length?M.filter(r=>pace(r)<300).length/wks:0,b10};};
+  const race20=runs.find(r=>/バレンタイン/.test(r.note||''));
+  const peak=race20?sumUp(addDays(race20.date,-70),addDays(race20.date,-1)):null,now=sumUp(addDays(t,-69),t);
   const P=window.PLAN.paceAt(t);const nextP=window.PLAN.PACE_STAGES.find(x=>x.from>t);
   const dot=st=>st==='ok'?'<span class="text-accent">✓ 達成</span>':st==='ng'?'<span class="text-warn">未達</span>':st==='miss'?'<span class="text-muted">記録なし</span>':'';
   el.innerHTML=`
@@ -84,6 +90,11 @@ window.renderRunStats=async function(){
     ${[['イージー','easy'],['ロング走','long'],['マラソンペース','mp'],['テンポ走','tempo'],['インターバル','interval']].map(([n,k])=>`<div class="flex items-center justify-between border-t border-line py-2.5"><span class="text-[14px]">${n}</span><span class="num text-[14px] font-semibold">${P[k]}</span></div>`).join('')}
     ${nextP?`<div class="border-t border-line py-2.5 text-[12px] text-muted">次の段階：${esc(nextP.name)}（マラソンペース ${nextP.mp}）</div>`:''}</div></div>
 
+  ${peak?`<div class="grid gap-2"><h2 class="h2">一番良かった頃と比べる</h2>
+    <div class="card p-4 text-[13px]"><div class="mb-2 leading-relaxed">${md(race20.date).replace(/（.）/,'')}（${race20.date.slice(0,4)}年）の神戸バレンタインラブラン：<b class="num">${km1(race20.runDist)}km ${fmtT(race20.runTime)}（${paceStr(pace(race20))}/km・心拍${race20.runHr}）</b>。マラソンに直すと約 <b class="num">${fmtT(riegel(race20))}</b> の力です。</div>
+    <table class="w-full"><thead><tr class="text-[11px] text-muted"><th class="py-1.5 text-left">直前10週の平均</th><th class="py-1.5 text-right">当時</th><th class="py-1.5 text-right">今</th></tr></thead><tbody>
+    ${[['週の距離',x=>km1(x.kmw)+'km'],['走った日（週）',x=>x.nw.toFixed(1)+'日'],['5分/kmより速い練習（週）',x=>x.hard.toFixed(1)+'回'],['効率（心拍1回で進む距離）',x=>x.ef?x.ef.toFixed(2)+'m':'—'],['10km以上で一番速い',x=>x.b10?paceStr(pace(x.b10))+'/km':'—']].map(([n,f])=>`<tr class="border-t border-line"><td class="py-2">${n}</td><td class="num py-2 text-right font-bold">${f(peak)}</td><td class="num py-2 text-right">${f(now)}</td></tr>`).join('')}</tbody></table>
+    <p class="mt-2 text-[11.5px] leading-relaxed text-muted">当時は週5日前後走り、週2回ほど5分/kmより速い練習（10kmを4'14"など）を入れていました。効率がこの頃の水準に近づくほど、3時間30分切りが現実になります。</p></div></div>`:''}
   <div class="grid gap-2"><h2 class="h2">1月からの変化</h2>
     ${e0&&e1?`<p class="text-[13px] leading-relaxed">心拍1回で進む距離（効率）は ${e0.n}月 <b>${e0.ef.toFixed(2)}m</b> → ${e1.n}月 <b>${e1.ef.toFixed(2)}m</b>（${((e1.ef/e0.ef-1)*100).toFixed(0)}%）。月の距離は${bestKm.n}月の ${km1(bestKm.km)}km が最高。</p>`:''}
     <div class="card overflow-hidden"><table class="w-full text-[13px]"><thead><tr class="text-[11px] text-muted"><th class="px-3 py-2 text-left">月</th><th class="py-2 text-right">距離</th><th class="py-2 text-right">平均ペース</th><th class="py-2 text-right">心拍</th><th class="px-3 py-2 text-right">効率</th></tr></thead>
