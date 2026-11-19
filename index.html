@@ -165,6 +165,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
       <div class="flex items-center justify-between gap-2"><div><div class="font-bold">自分で作る</div><div class="text-[12px] text-muted">色の丸を押して好きな色を選ぶ</div></div><button class="btn-sm" onclick="palCopy()">今の色から作る</button></div>
       <div id="pal-custom" class="grid grid-cols-3 gap-2"></div>
     </div>
+    <div class="card mt-4 grid gap-2 p-4"><div class="font-bold">アカウント</div><p class="text-[13px] text-muted" id="acct-email2"></p><button class="btn-sub" onclick="if(confirm('ログアウトしますか？（もう一度メールアドレスとパスワードで入ります）'))AUTH.signOut()">ログアウト</button></div>
   </div>
 </div>
 <div id="toast" class="pointer-events-none fixed left-1/2 z-50 -translate-x-1/2 translate-y-2 rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-bg opacity-0 transition" style="bottom:calc(env(safe-area-inset-bottom,0px) + 140px)"></div>

@@ -564,6 +564,7 @@ function openPalette(){
   $('pal-custom').innerHTML=[['メイン',1],['サブ',2],['ポイント',3]].map(([n,k])=>`<label class="pal-pick"><input type="color" value="${c[k]}" data-k="${k}" oninput="palCustom()"><span class="text-[12px] font-bold">${n}</span><span class="num text-[10px] text-muted">${c[k]}</span></label>`).join('');
   $('pal-custom-box').classList.toggle('ring-2',cur.pal==='c');$('pal-custom-box').classList.toggle('ring-accent',cur.pal==='c');
   document.querySelectorAll('#pal-mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===cur.mode));
+  {const u=window.AUTH&&AUTH.user();const el=$('acct-email2');if(el)el.textContent=u&&u.email?`${u.email} でログイン中`:'ログインしていません';}
   $('palette').classList.remove('hidden');$('palette').classList.add('flex');
 }
 function palCustom(){const v=[...document.querySelectorAll('#pal-custom input')].map(i=>i.value);THEME.setCustom(v);
