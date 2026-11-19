@@ -327,7 +327,6 @@ function drawHoleMap(){
       :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{hz:{key:x.mapKey,n:h[0]},pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
        :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
-    ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}<span class="hidden md:inline">（${IL.note}）・図をタップで距離／ドラッグか矢印キーで移動／2本指か＋−で拡大縮小</span></div>`}
     ${gv||!IL?'':`${VW.length>1?`<div class="absolute left-3 top-3 z-10 flex gap-1">${VW.map((v,k)=>`<button class="rounded-full px-3 py-1 text-[12px] font-bold " style="${k===(HM.src||0)?'background:#fff;color:#111':'background:rgba(0,0,0,.45);color:#fff'}" onclick="HM.src=${k};HM.tap=null;HM.L=0;drawHoleMap()">${v.name}</button>`).join('')}</div>`:''}`}
     ${gv?'':`<div class="absolute right-3 top-3 z-10 grid gap-2">
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
@@ -424,7 +423,7 @@ function courseView(x){const v=COURSE_VIEW[x.mapKey];if(!v)return '';const ph=(t
 // ホールマップの「景色」：そのホールの公式写真と、実際に回った人の動画（ティーの景色から）
 function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='class="text-[11px] text-white/80"';
   const bv=boxed?hmVid(x.mapKey,h[0]):null;const mm=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-  return `<div class="mx-auto grid max-w-3xl gap-3 p-3">${bv?`<div id="hm-vspace"></div><div ${W}>動画：${esc(bv.src)}・${mm(bv.t[0])}から（時間は目安）。季節・ティーの位置は当日と違います。動画は上のバーで移動、右下の角で大きさを変えられます（ダブルクリックで元に戻す）。</div>`:''}
+  return `<div class="mx-auto grid max-w-3xl gap-3 p-3">${bv?`<div id="hm-vspace"></div>`:''}
    ${PH?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">${h[0]}番ホール（ティーからの景色）</div><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" referrerpolicy="no-referrer"><figcaption ${W}>写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`
      :''}
    ${boxed?'':holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
