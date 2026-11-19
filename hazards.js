@@ -111,7 +111,7 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
       if(H){for(let i=it.length-1;i>=0;i--){ys[i]=Math.min(ys[i],(i<it.length-1?ys[i+1]-HH-G:H-HH));}}
       let ey=-1e9;
       it.forEach((o,i)=>{const y=ys[i],ly=y+HH/2;const x=sd==='L'?-w-J:W+J;const ax=sd==='L'?x+w:x;const ex=sd==='L'?0:W;
-        const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));ey=Math.max(o.h.cy,ey+1.3*u);
+        const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));ey=Math.max(o.h.cy,ey+2.6*u);
         const pts=`${ax},${ly} ${ex},${ey} ${bx},${ey} ${bx},${o.h.cy}`;
         v+=`<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="${1.1*u}" stroke-linejoin="round"/><polyline points="${pts}" fill="none" stroke="${o.col}" stroke-width="${.55*u}" stroke-linejoin="round"/><circle cx="${bx}" cy="${o.h.cy}" r="${.9*u}" fill="${o.col}" stroke="#fff" stroke-width="${.3*u}"/>`+lab(o,x,y,w,HH);});});
     return v;}
