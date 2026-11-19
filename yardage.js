@@ -173,4 +173,4 @@ function ybAim(t){if(!t)return '';t=String(t);let head='';const m=t.match(/^([^�
   return `<div class="yb-aim-h"><b>狙い</b>${head?`<span>${esc(head)}</span>`:''}</div>${rows}`;}
 
 // 箇条書きの中の文も「。」ごとに改行（カッコやタグの中は切らない）
-function ybBr(t){t=String(t).replace(/^((?:<[^>]+>)*[^<。]{1,14}(?:<\/[^>]+>)+)[\s　]+/,'$1<br>');let o='',dep=0,tag=false;const n=t.length;for(let i=0;i<n;i++){const c=t[i];if(c==='<')tag=true;if(!tag){if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);}o+=c;if(c==='>')tag=false;if(c==='。'&&!dep&&!tag&&i<n-1&&!/^\s*(<\/[^>]+>\s*)*$/.test(t.slice(i+1)))o+='<br>';}return o;}
+function ybBr(t){t=String(t).replace(/(<\/[^>]+>)?[\s　]*→[\s　]*/g,(m,a)=>(a||'')+'<br>→ ').replace(/^((?:<[^>]+>)*[^<。]{1,14}(?:<\/[^>]+>)+)[\s　]+/,'$1<br>');let o='',dep=0,tag=false;const n=t.length;for(let i=0;i<n;i++){const c=t[i];if(c==='<')tag=true;if(!tag){if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);}o+=c;if(c==='>')tag=false;if(c==='。'&&!dep&&!tag&&i<n-1&&!/^\s*(<\/[^>]+>\s*)*$/.test(t.slice(i+1)))o+='<br>';}return o;}
