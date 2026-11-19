@@ -35,9 +35,9 @@ window.renderRunStats=async function(){
   // 関門
   const runOn=(d,sp)=>runs.filter(r=>sp?(r.date>=addDays(d,sp[0])&&r.date<=addDays(d,sp[1])):r.date===d).sort((a,b)=>b.runDist-a.runDist)[0];
   const gates=[
-    {d:'2026-12-19',t:'10kmテスト',goal:'49分以内',lim:49*60,dist:10},
-    {d:'2027-01-30',t:'ハーフのテスト',goal:'1時間43分以内',lim:103*60,dist:21.0975},
-    {d:'2027-02-11',t:'32km走（木曜の晩）',goal:'最後まで歩かずに走りきる（水曜に入れ替えてもOK）',dist:32,span:[-1,2]},
+    {d:'2026-12-17',t:'10kmテスト（木曜の朝）',goal:'49分以内',lim:49*60,dist:10},
+    {d:'2027-01-28',t:'ハーフのテスト（木曜の朝）',goal:'1時間43分以内',lim:103*60,dist:21.0975},
+    {d:'2027-02-11',t:'32km走（木曜の朝）',goal:'最後まで歩かずに走りきる（水曜に入れ替えてもOK）',dist:32,span:[-1,2]},
     {d:RACE,t:'篠山マラソン',goal:"3時間30分切り（4'58/km）",lim:GOAL,dist:42.195},
   ].map(g=>{const r=g.d<=t||(g.span&&addDays(g.d,g.span[0])<=t)?runOn(g.d,g.span):null;let res='',st='';
     if(r&&r.runDist>=g.dist*0.95){const tt=g.lim?r.runTime*Math.pow(g.dist/r.runDist,1.06):r.runTime;res=g.lim?fmtT(tt):`${km1(r.runDist)}km`;st=g.lim?(tt<=g.lim?'ok':'ng'):'ok';}
