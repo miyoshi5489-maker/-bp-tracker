@@ -327,13 +327,13 @@ function drawHoleMap(){
       :(IL?`<div id="hm-in" class="relative mx-auto my-1 bg-white" style="aspect-ratio:${IL.w}/${IH}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホールの公式イラスト" class="absolute inset-0 h-full w-full" referrerpolicy="no-referrer">${illusView(IL,IL.holes[h[0]],m,{hz:{key:x.mapKey,n:h[0]},pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`
        :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
-    ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}（${IL.note}）・図をタップで距離／ドラッグか矢印キーで移動／2本指か＋−で拡大縮小</div>`}
+    ${gv||!IL?'':`<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-2 pb-1 text-center text-[10px] leading-tight" style="color:#fff;text-shadow:0 1px 2px #000">${IL.credit}<span class="hidden md:inline">（${IL.note}）・図をタップで距離／ドラッグか矢印キーで移動／2本指か＋−で拡大縮小</span></div>`}
     ${gv||!IL?'':`${VW.length>1?`<div class="absolute left-3 top-3 z-10 flex gap-1">${VW.map((v,k)=>`<button class="rounded-full px-3 py-1 text-[12px] font-bold " style="${k===(HM.src||0)?'background:#fff;color:#111':'background:rgba(0,0,0,.45);color:#fff'}" onclick="HM.src=${k};HM.tap=null;HM.L=0;drawHoleMap()">${v.name}</button>`).join('')}</div>`:''}`}
     ${gv?'':`<div class="absolute right-3 top-3 z-10 grid gap-2">
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
-   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex w-3 shrink-0 cursor-col-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a]"><span class="block h-12 w-1 rounded bg-white/70"></span></div><div id="hm-side" class="w-[60%] shrink-0 overflow-y-auto border-l border-white/20 bg-[#24492a] md:w-[44%] relative">${hmVid(x.mapKey,h[0])?hmBoxHTML(x,h):''}${hmPhotoView(x,h,PH,!!hmVid(x.mapKey,h[0]))}</div>`:''}</div>
+   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex w-3 shrink-0 cursor-col-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a]"><span class="block h-12 w-1 rounded bg-white/70"></span></div><div id="hm-side" class="w-[40%] shrink-0 overflow-y-auto border-l border-white/20 bg-[#24492a] md:w-[44%] relative">${hmVid(x.mapKey,h[0])?hmBoxHTML(x,h):''}${hmPhotoView(x,h,PH,!!hmVid(x.mapKey,h[0]))}</div>`:''}</div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     ${x.plans?`<div class="grid grid-cols-2 gap-1 rounded-xl bg-line p-1">${[['','100切り',ROUND_DEFS.find(r=>r.date===x.date).target],...Object.entries(x.plans).map(([k,P])=>[k,P.name,P.target])].map(([k,n,t])=>`<button class="min-h-[40px] rounded-lg text-[13px] font-bold" style="${(x.planKey||'')===k?'background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)':'color:var(--muted)'}" onclick="setPlan('${x.date}','${k}')">${n}プラン（目標${t}）</button>`).join('')}</div>`:''}
     ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
@@ -357,7 +357,7 @@ function drawHoleMap(){
   const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
   inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{hz:{key:x.mapKey,n:h[0]},pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
   if(HM.pos){const p=HM.pos;HM.pos=null;requestAnimationFrame(()=>{sc.scrollLeft=p[0];sc.scrollTop=p[1];});}
-  else if(!HM.tap)requestAnimationFrame(()=>{const i=$('hm-in'),pd=$('hm-pad');if(!i||!pd)return;sc.scrollTop=pd.offsetTop+i.offsetTop+i.offsetHeight-sc.clientHeight+8;sc.scrollLeft=pd.offsetLeft+i.offsetLeft+i.offsetWidth/2-sc.clientWidth/2;});
+  else if(!HM.tap)requestAnimationFrame(()=>{const i=$('hm-in'),pd=$('hm-pad');if(!i||!pd)return;sc.scrollTop=i.offsetHeight<sc.clientHeight?pd.offsetTop+i.offsetTop-(sc.clientHeight-i.offsetHeight)/2:pd.offsetTop+i.offsetTop+i.offsetHeight-sc.clientHeight+8;sc.scrollLeft=pd.offsetLeft+i.offsetLeft+i.offsetWidth/2-sc.clientWidth/2;});
 }
 // 拡大縮小：（px,py）＝画面上の基準点（その点が動かないように拡大する）
 function hmZoomTo(z,px,py){const sc=$('hm-scroll');const inn=$('hm-in');if(!sc||!inn)return;const r=sc.getBoundingClientRect();
@@ -428,7 +428,7 @@ function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='cl
    ${PH?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">${h[0]}番ホール（ティーからの景色）</div><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" referrerpolicy="no-referrer"><figcaption ${W}>写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`
      :''}
    ${boxed?'':holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
-   ${v.drone?`<a class="btn-sm justify-self-start !border-white !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
+   ${v.drone?`<a class="btn-sm justify-self-start !border-white !bg-transparent !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
   </div>`;}
 
 // 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
@@ -438,7 +438,7 @@ function hmSideToggle(){try{localStorage.setItem('hm:side',hmSideOn()?'0':'1');}
 // マップと景色の境目をドラッグして幅（スマホ縦は高さ）を変える。割合を覚えておく
 const hmWide=()=>window.matchMedia('(min-width:768px)').matches;
 function hmSideApply(){const sd=$('hm-side');if(!sd)return;let v={};try{v=JSON.parse(localStorage.getItem('hm:sidesz')||'{}')||{};}catch{}
-  sd.style.height='';sd.style.maxHeight='';sd.style.width=(hmWide()?(v.w||44):(v.wn||60))+'%';} // スマホも左右並び：マップ4・動画6
+  sd.style.height='';sd.style.maxHeight='';sd.style.width=(hmWide()?(v.w||44):(v.wn||40))+'%';} // スマホも左右並び（右の動画は40%、境目をドラッグで変えられる）
 function hmRefit(){const sc=$('hm-scroll'),inn=$('hm-in'),pad=$('hm-pad');if(!sc||!inn||!HM||!HM.vb)return;
   const cx=sc.scrollLeft+sc.clientWidth/2-(pad?pad.offsetLeft:0)-inn.offsetLeft,cy=sc.scrollTop+sc.clientHeight/2-(pad?pad.offsetTop:0)-inn.offsetTop;const fx=cx/inn.offsetWidth,fy=cy/inn.offsetHeight;
   HM.base=Math.min((HM.IL?sc.clientWidth-2*hzGut():sc.clientWidth),(sc.clientHeight-10)*HM.vb.width/HM.vb.height);inn.style.width=HM.base*HM.z+'px';
