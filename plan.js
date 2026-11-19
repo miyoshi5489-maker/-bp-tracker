@@ -110,7 +110,7 @@ function planFor(s){
     const day=((wk%3)+3)%3+1;
     const late=s>='2026-11-30',later=s>='2026-12-14';
     const easy=s<'2026-11-09'?6:8;const LD=longDow(mon);const lkm=LONG[mon]!=null?LONG[mon]:8;
-    const longItem=()=>it('run','ロング走（晩）',{km:lkm,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+P.long+'。水曜にずらしてもOK（その時は水木を入れ替え）'});
+    const longItem=()=>it('run',LD===4?'ロング走（晩）':'ロング走',{km:lkm,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+P.long+(LD===4?'。水曜にずらしてもOK（その時は水木を入れ替え）':'')});
     if(dow===1){items.push(it('genie','ジーニー ⓪〜③（30分版）',{routine:'genie',part:'short'}),pplItem('base','legs'));}
     if(dow===2){items.push(it('run',late?'イージーラン＋流し':'イージーラン',{km:late&&s<'2026-12-07'?6:easy,detail:P.easy+(late?'。最後に100m×4本を気持ちよく速く（流し）':'')}));}
     if(dow===3){items.push(it('genie','ジーニー ⓪ほぐし・②肩胸椎',{routine:'genie',part:'upper'}),pplItem('base','push'));if(later)items.push(it('run','ゆっくりジョグ',{km:5,detail:P.easy}));}
