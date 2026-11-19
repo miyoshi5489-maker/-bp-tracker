@@ -37,7 +37,10 @@ async function call(path,body){
   return{ok:r.ok,status:r.status,j};
 }
 const MSG={'Invalid login credentials':'メールアドレスかパスワードが違います','Email not confirmed':'確認メールのリンクをまだ押していません。メールを確認してください','User already registered':'このメールアドレスは登録済みです。「ログイン」を押してください'};
-const jmsg=j=>MSG[j.msg||j.error_description||j.message]||j.msg||j.error_description||j.message||'うまくいきませんでした。もう一度お試しください';
+const jmsg=j=>{const m=j.msg||j.error_description||j.message||'';if(MSG[m])return MSG[m];
+  const w=m.match(/only request this after (\d+) seconds/);if(w)return `続けて押されたので、${w[1]}秒待ってからもう1回だけ押してください（メールはもう送られているかもしれません。受信箱と迷惑メールを確認してください）`;
+  if(/rate limit/i.test(m))return 'メールの送りすぎで少し止まっています。しばらく（1時間ほど）待ってからお試しください';
+  return m||'うまくいきませんでした。もう一度お試しください';};
 async function signIn(email,password){
   const r=await call('/auth/v1/token?grant_type=password',{email,password});
   if(!r.ok)return jmsg(r.j);
