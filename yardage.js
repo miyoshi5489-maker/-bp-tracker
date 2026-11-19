@@ -98,7 +98,7 @@ function ybCard(x,h,x2){
     <div class="yb-txt">
      <div class="yb-tee">1打目 <b>${esc(h[5])}</b></div>${shotLines}${aim}${(()=>{const z=typeof hzLines==='function'?hzLines(key,h[0],dt):null;if(!z||(!z.tee.length&&!z.grn.length&&!z.sec.length))return '';return `<div class="yb-hz">${hzHtml(z)}</div>`;})()}
      <ul>${cad.map(t=>`<li>${t}</li>`).join('')}</ul>
-     <div class="yb-plan"><b>狙い</b> ${esc(h[6])}</div>
+     <div class="yb-plan">${ybAim(h[6])}</div>
     </div></div>
    <div class="yb-score">${['打数','パット','FW','OB・池','メモ'].map((t,i)=>{const sc=i===0?ybScore(x,h[0]):null;return `<div><span>${t}</span>${sc?`<b style="display:block;text-align:center;font-size:15pt;line-height:1;color:${ybDiffCol(sc-h[4])}">${sc}</b>`:''}</div>`;}).join('')}</div>
    <div class="yb-foot">${IL?esc(IL.credit)+'（縮図・距離は目安）':''}<span>${h[0]}</span></div>
@@ -161,3 +161,13 @@ function drawYardageBook(){
     pr.forEach((c,i)=>{const t=c.querySelector('.yb-txt');const ci=idx[i];const st=scards[ci]&&scards[ci].querySelector('.yb-txt');if(t&&st)t.style.fontSize=st.style.fontSize;});
     el.classList.remove('yb-measure');if(mob){el.classList.add('yb-m');const s2=el.querySelector('.yb-screen');s2.style.zoom='';s2.scrollLeft=keepX;}});
 }
+
+// 狙いの文章を読みやすく：見出し → 1文ずつ行に分ける → 「→」の流れは段に分ける → （カッコの補足）は小さく
+function ybAim(t){if(!t)return '';t=String(t);let head='';const m=t.match(/^([^。：]{2,26})：/);if(m){head=m[1];t=t.slice(m[0].length);}
+  const ss=[];let cur='',dep=0;for(const c of t){if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);cur+=c;if(c==='。'&&!dep){ss.push(cur);cur='';}}if(cur.trim())ss.push(cur);
+  const small=x=>esc(x).replace(/（([^（）]*)）/g,'<span class="yb-aim-n">（$1）</span>');
+  const ic=x0=>{const x=x0.replace(/（[^（）]*）/g,'');return /^[23]打目/.test(x)?'⛳':/OB|しない|注意|出やすい|ダメ|禁止|避け/.test(x)?'⚠️':/スタート前|温め|素振り/.test(x)?'🔥':/ドライバー|ティー|1打目|ウッド|ユーティ|アイアン/.test(x)?'🏌️':/グリーン|アプローチ|パット/.test(x)?'⛳':'・';};
+  const rows=ss.map(x=>x.trim().replace(/。$/,'')).filter(Boolean).map(x=>{const st=x.split('→').map(y=>y.trim()).filter(Boolean);
+    const body=st.length>1?`<div class="yb-aim-flow">${st.map((y,i)=>`<div>${i?'<span class="yb-aim-ar">→</span>':''}${small(y)}</div>`).join('')}</div>`:small(x);
+    return `<div class="yb-aim-row"><span class="yb-aim-ic">${ic(x)}</span><div>${body}</div></div>`;}).join('');
+  return `<div class="yb-aim-h"><b>狙い</b>${head?`<span>${esc(head)}</span>`:''}</div>${rows}`;}

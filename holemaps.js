@@ -235,7 +235,7 @@ function illusView(I,hi,m,opt){m=tmAdjust(m);const L=(opt&&opt.L)||1;const DT=(o
   if(cl&&cl.side!=null&&T[0]){const a=routeAt(r,(cl.total||cl.carry)*s);const c=[a.p[0]-a.u[1]*cl.side*s,a.p[1]+a.u[0]*cl.side*s];const ang=Math.atan2(a.u[0],-a.u[1])*180/Math.PI;
     v+=`<ellipse cx="${c[0]}" cy="${c[1]}" rx="${Math.max(3,1.5*(cl.sdSide||10)*s)}" ry="${Math.max(3,1.5*(cl.sdCarry||8)*s)}" transform="rotate(${ang} ${c[0]} ${c[1]})" fill="#ffb300" fill-opacity=".22" stroke="#e65100" stroke-width=".7" stroke-dasharray="2 1.5"/>`;}
   let prev=T0;const pts=T.map(t=>toPx(t[0],t[1]));v+=`<circle cx="${T0[0]}" cy="${T0[1]}" r="${3*L}" fill="#fff" stroke="#111" stroke-width=".8"/>`;
-  {const rp=[prev,...pts,P].map(q=>q.join(',')).join(' ');v+=hmRoute(rp,1);}
+  {const rp=[prev,...pts,P].map(q=>q.join(',')).join(' ');v+=hmRoute(rp,1.5);}
   v+=`<line x1="${P[0]}" y1="${P[1]}" x2="${P[0]}" y2="${P[1]-9}" stroke="#111" stroke-width=".6"/><path d="M${P[0]} ${P[1]-9} l5 1.8 l-5 1.8z" fill="#e53935"/>`;
   let pv=[0,0];
   T.forEach((t,i)=>{const q=pts[i];const d=i===0?Math.round(Math.hypot(q[0]-T0[0],q[1]-T0[1])/s):Math.round(Math.hypot(t[0]-pv[0],t[1]-pv[1]));pv=t;const rest=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);
