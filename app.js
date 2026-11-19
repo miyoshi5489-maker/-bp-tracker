@@ -146,7 +146,7 @@ const KIND_DOT={genie:'var(--accent)',goltore:'var(--sand)',run:'var(--sky)',gym
 
 // ── ルーター（下のメニュー5つ＋ページ内の切り替え） ──
 const PAGES=['today','golf','runstats','marathon'];
-const GROUPS={today:[['today','今日']],golf:[['golf','ゴルフ']],run:[['runstats','分析'],['marathon','マラソン計画']]};
+const GROUPS={today:[['today','今日']],golf:[['golf','ゴルフ']],run:[['runstats','3時間半']]};
 const groupOf=p=>Object.keys(GROUPS).find(g=>GROUPS[g].some(([k])=>k===p))||'today';
 const LAST_IN={};
 let CUR='today';
@@ -221,9 +221,9 @@ async function renderToday(){
     <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-accent-soft text-base">💪</div><div class="num text-2xl font-semibold leading-tight">${wd.done}<span class="text-xs text-muted"> / ${wd.plan}</span></div><div class="lbl">今週やった日</div></div>
     <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-accent2-soft text-base">🏃</div><div class="num whitespace-nowrap text-xl font-semibold leading-tight">${km1(wAct)}<span class="text-xs text-muted"> / ${wPlan}</span></div><div class="lbl">今週のラン km</div></div>
   </div>
-  ${m>=0?`<div class="card flex items-center gap-3 p-3.5"><div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sky-soft text-xl">🏅</div><div class="min-w-0 flex-1"><div class="lbl">篠山マラソン 3/7（日）</div><div class="text-[12px] text-muted">目標 サブ4 → 3時間30分</div></div><div class="text-right"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted"> 日</span></div></div>`:''}
+  ${m>=0?`<div class="card flex items-center gap-3 p-3.5"><div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sky-soft text-xl">🏅</div><div class="min-w-0 flex-1"><div class="lbl">篠山マラソン 3/7（日）</div><div class="text-[12px] text-muted">目標 3時間30分切り</div></div><div class="text-right"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted"> 日</span></div></div>`:''}
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}
-  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('runstats')">ランの分析</button></div>
+  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('runstats')">ランを見る</button></div>
     <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('runstats')" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>`;
 }
 
@@ -341,12 +341,12 @@ async function renderMarathon(){
   <div class="card grid gap-1 p-5">
     <div class="lbl">篠山ABCマラソン　2027年3月7日（日）</div>
     <div class="flex items-baseline gap-2"><span class="num text-5xl font-semibold text-sky">${Math.max(0,m)}</span><span class="text-muted">日</span></div>
-    <div class="text-sm">まずはサブ4。練習が順調なら3時間30分を狙います。</div>
+    <div class="text-sm">目標は3時間30分切り（4'58/km）。12/19と1/30のテストで当日のペースを決めます。</div>
   </div>
   <div class="grid gap-2"><h2 class="h2">目標ペース</h2>
     <div class="grid grid-cols-3 gap-2">${goals.map(([l,s])=>`<div class="card p-3"><div class="text-[12px] font-bold">${l}</div><div class="num text-xl font-semibold text-sky">${paceStr(s/42.195)}</div><div class="text-[11px] text-muted">/km　中間 ${hms(s/2)}</div></div>`).join('')}</div></div>
   <div class="grid gap-2"><h2 class="h2">練習のペース</h2>
-    <div class="card divide-y divide-line px-4">${[['イージー・ジョグ','easy','会話できる強度。一番多く走るペース'],['ロング走','long','土曜のロング。距離を踏むのが目的'],['マラソンペース','mp','サブ4のレースペース'],['テンポ走','tempo','少しきつい。火曜のポイント練習'],['インターバル','interval','1km×3〜5本。心肺を上げる']].map(([n,k,d])=>`<div class="flex items-center justify-between gap-3 py-2.5"><div><div class="font-bold">${n}</div><div class="text-[12px] text-muted">${d}</div></div><div class="num shrink-0 text-sm font-semibold">${PACE[k]}</div></div>`).join('')}</div>
+    <div class="card divide-y divide-line px-4">${[['イージー・ジョグ','easy','会話できる強度。一番多く走るペース'],['ロング走','long','土曜のロング。距離を踏むのが目的'],['マラソンペース','mp','3時間30分の本番ペース（段階で上げる）'],['テンポ走','tempo','少しきつい。火曜のポイント練習'],['インターバル','interval','1km×3〜5本。心肺を上げる']].map(([n,k,d])=>`<div class="flex items-center justify-between gap-3 py-2.5"><div><div class="font-bold">${n}</div><div class="text-[12px] text-muted">${d}</div></div><div class="num shrink-0 text-sm font-semibold">${PACE[k]}</div></div>`).join('')}</div>
     <p class="text-[12px] text-muted">楽に走れるペースが5〜6分/kmでも、イージーは6分30秒より遅く。故障を防ぎ、サブ3.5の土台になります。</p></div>
   <div class="grid gap-2"><h2 class="h2">3つの期間</h2>
     <div class="grid gap-2">${PHASES.map(p=>`<div class="card flex items-center gap-3 p-3.5 ${cur&&cur.id===p.id?'ring-2 ring-sky':''}"><div class="num w-24 shrink-0 text-[12px] text-muted">${p.from.slice(5).replace('-','/')}〜${p.to.slice(5).replace('-','/')}</div><div><div class="font-bold">${p.name}${cur&&cur.id===p.id?' <span class="chip k-run ml-1">今ここ</span>':''}</div><div class="text-[12px] text-muted">${p.sub}</div></div></div>`).join('')}</div></div>
