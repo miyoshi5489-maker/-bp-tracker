@@ -82,7 +82,7 @@ function ybCard(x,h,x2){
   if(IL){const hi=IL.holes[h[0]];const IH=hi.h||IL.h;let hmm=YB_IMG_H,wmm=hmm*IL.w/IH;if(wmm>YB_IMG_MAXW){wmm=YB_IMG_MAXW;hmm=wmm*IH/IL.w;}const k=IH/hmm;
     fig=`<div class="yb-fig" data-k="${key}" data-n="${h[0]}" data-dt="${dt}" data-u="${k}" onclick="ybTap(event,this)" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH};--hr:${(IH/IL.w).toFixed(3)}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
     shots=ybShots(IL,hi,m,dt);}
-  const cad0=caddie(x,h,m);const iL=cad0.findIndex(t=>/>左 /.test(t));if(iL>=0&&/>右 /.test(cad0[iL+1]||''))cad0.splice(iL,2,cad0[iL]+'　'+cad0[iL+1]);
+  const cad0=caddie(x,h,m);const iL=cad0.findIndex(t=>/>左 /.test(t));if(iL>=0&&/>右 /.test(cad0[iL+1]||''))cad0.splice(iL,2,cad0[iL]+'<br>'+cad0[iL+1]);
   const cad=cad0.filter(t=>!/同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
   const st=(HOLE_STATS[key]||{})[h[0]];
   const shotLines=shots.map(s=>{const cc=liveClub(s.club)||(clubCode(s.club)&&MYCLUBS[clubCode(s.club)]);
@@ -97,7 +97,7 @@ function ybCard(x,h,x2){
    <div class="yb-body">${fig}
     <div class="yb-txt">
      <div class="yb-tee">1打目 <b>${esc(h[5])}</b></div>${shotLines}${aim}${(()=>{const z=typeof hzLines==='function'?hzLines(key,h[0],dt):null;if(!z||(!z.tee.length&&!z.grn.length&&!z.sec.length))return '';return `<div class="yb-hz">${hzHtml(z)}</div>`;})()}
-     <ul>${cad.map(t=>`<li>${t}</li>`).join('')}</ul>
+     <ul class="yb-cad">${cad.map(t=>`<li>${ybBr(t)}</li>`).join('')}</ul>
      <div class="yb-plan">${ybAim(h[6])}</div>
     </div></div>
    <div class="yb-score">${['打数','パット','FW','OB・池','メモ'].map((t,i)=>{const sc=i===0?ybScore(x,h[0]):null;return `<div><span>${t}</span>${sc?`<b style="display:block;text-align:center;font-size:15pt;line-height:1;color:${ybDiffCol(sc-h[4])}">${sc}</b>`:''}</div>`;}).join('')}</div>
@@ -171,3 +171,6 @@ function ybAim(t){if(!t)return '';t=String(t);let head='';const m=t.match(/^([^�
     const body=st.length>1?`<div class="yb-aim-flow">${st.map((y,i)=>`<div>${i?'<span class="yb-aim-ar">→</span>':''}${small(y)}</div>`).join('')}</div>`:small(x);
     return `<div class="yb-aim-row"><span class="yb-aim-ic">${ic(x)}</span><div>${body}</div></div>`;}).join('');
   return `<div class="yb-aim-h"><b>狙い</b>${head?`<span>${esc(head)}</span>`:''}</div>${rows}`;}
+
+// 箇条書きの中の文も「。」ごとに改行（カッコやタグの中は切らない）
+function ybBr(t){t=String(t).replace(/^((?:<[^>]+>)*[^<。]{1,14}(?:<\/[^>]+>)+)[\s　]+/,'$1<br>');let o='',dep=0,tag=false;const n=t.length;for(let i=0;i<n;i++){const c=t[i];if(c==='<')tag=true;if(!tag){if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);}o+=c;if(c==='>')tag=false;if(c==='。'&&!dep&&!tag&&i<n-1&&!/^\s*(<\/[^>]+>\s*)*$/.test(t.slice(i+1)))o+='<br>';}return o;}
