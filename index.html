@@ -43,16 +43,16 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 
 <!-- ゴルフ -->
 <section id="p-golf" class="page hidden grid gap-4">
-  <div class="seg grid grid-cols-5 !gap-0.5 text-[11px]" id="golf-seg">
-    <button data-r="genie">ジーニー</button>
-    <button data-r="y1">トレ1</button>
-    <button data-r="y2">トレ2</button>
-    <button data-r="y3">トレ3</button>
-    <button data-r="check">チェック</button>
-    <button data-r="rounds">ラウンド</button>
-    <button data-r="clubs">飛距離</button>
-    <button data-r="swing">スイング</button>
-    <button data-r="d300">300y</button>
+  <div class="grid gap-2">
+    <div class="flex items-stretch gap-2">
+      <div class="seg grid flex-1 grid-cols-3 text-[12.5px]" id="golf-seg">
+        <button data-g="train" class="!grid !gap-0 leading-tight"><span class="text-lg">💪</span>トレーニング</button>
+        <button data-g="dist" class="!grid !gap-0 leading-tight"><span class="text-lg">🏌️</span>飛距離</button>
+        <button data-g="round" class="!grid !gap-0 leading-tight"><span class="text-lg">⛳</span>ラウンド</button>
+      </div>
+      <button class="grid w-[52px] shrink-0 place-items-center rounded-2xl border border-line bg-surface text-2xl shadow-sm active:scale-95" onclick="openNextYB()" aria-label="次のラウンドのヤーデージブックを開く">📗</button>
+    </div>
+    <div id="golf-sub" class="flex gap-1.5"></div>
   </div>
   <div id="golf-body" class="grid gap-6"></div>
 </section>

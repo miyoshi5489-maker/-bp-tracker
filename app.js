@@ -238,12 +238,12 @@ function getChk(d,r){try{return JSON.parse(localStorage.getItem(chkKey(d,r))||'[
 function setChk(d,r,a){try{localStorage.setItem(chkKey(d,r),JSON.stringify(a));}catch{}}
 function renderGolf(req){
   if(req){const[r,part]=req.split(':');GOLF_R=r;GOLF_PART=part||'';}
-  if(GOLF_R==='d300'||req==='d300'){GOLF_R='d300';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='d300'));return renderD300();}
-  if(GOLF_R==='swing'||req==='swing'){GOLF_R='swing';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='swing'));return renderSwing();}
-  if(GOLF_R==='clubs'||req==='clubs'){GOLF_R='clubs';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='clubs'));return renderClubs();}
-  if(GOLF_R==='rounds'||req==='rounds'){GOLF_R='rounds';document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r==='rounds'));return renderRounds();}
+  if(GOLF_R==='d300'||req==='d300'){GOLF_R='d300';golfTabs();return renderD300();}
+  if(GOLF_R==='swing'||req==='swing'){GOLF_R='swing';golfTabs();return renderSwing();}
+  if(GOLF_R==='clubs'||req==='clubs'){GOLF_R='clubs';golfTabs();return renderClubs();}
+  if(GOLF_R==='rounds'||req==='rounds'){GOLF_R='rounds';golfTabs();return renderRounds();}
   if(!GOLF_R){const it=planFor(today()).items.find(i=>i.routine);GOLF_R=it?it.routine:'genie';GOLF_PART=it&&it.part||'';}
-  document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.r===GOLF_R));
+  golfTabs();
   const r=GOLF_R;const d=today();
   let blocks=golfData(r);
   if(r==='genie'&&GOLF_PART==='short')blocks=blocks.slice(0,4);
@@ -274,7 +274,21 @@ function renderGolf(req){
      <span class="text-sm">できた <b class="num">${all.filter(e=>chk.includes(e.id)).length}</b> / ${all.length}</span><button class="btn-sm ml-auto" onclick="setChk(today(),GOLF_R,[]);renderGolf()">リセット</button>
      <button class="btn min-h-[44px] bg-accent px-4 py-2 text-surface" onclick="busy(this,saveGolf)">保存</button></div>`:''}`;
 }
-document.querySelectorAll('#golf-seg button').forEach(b=>b.addEventListener('click',()=>{GOLF_R=b.dataset.r;GOLF_PART='';renderGolf();}));
+// 📗：次のラウンドのヤーデージブックをすぐ開く（ヤーデージブックがないラウンドは飛ばす）
+function openNextYB(){const t=today();const ok=x=>x.mapKey&&typeof ILLUS!=='undefined'&&(ILLUS[x.mapKey]||[]).length;
+  const L=(typeof ROUND_DEFS!=='undefined'?ROUND_DEFS:[]).filter(x=>x.date>=t&&ok(x)).sort((a,b)=>a.date<b.date?-1:1);
+  if(!L.length)return toast('次のラウンドのヤーデージブックはまだありません');openYardageBook(L[0].date);}
+// 大きく3つ（トレーニング・飛距離・ラウンド）→ 押すと中の項目を選べる
+const GOLF_GROUPS={train:[['genie','ジーニー'],['y1','トレ1'],['y2','トレ2'],['y3','トレ3'],['check','チェック']],dist:[['clubs','飛距離'],['swing','スイング'],['d300','300y']],round:[['rounds','ラウンド']]};
+const GOLF_LAST={};
+function golfGroup(r){return Object.keys(GOLF_GROUPS).find(g=>GOLF_GROUPS[g].some(x=>x[0]===r))||'train';}
+function golfTabs(){const g=golfGroup(GOLF_R);GOLF_LAST[g]=GOLF_R;
+  document.querySelectorAll('#golf-seg button').forEach(b=>b.classList.toggle('on',b.dataset.g===g));
+  const sub=GOLF_GROUPS[g];$('golf-sub').innerHTML=sub.length>1?sub.map(([r,l])=>`<button class="tab flex-1 !px-1 ${r===GOLF_R?'on':'border border-line bg-surface'}" onclick="GOLF_R='${r}';GOLF_PART='';renderGolf()">${l}</button>`).join(''):'';
+  $('golf-sub').classList.toggle('hidden',sub.length<2);}
+document.querySelectorAll('#golf-seg button').forEach(b=>b.addEventListener('click',()=>{const g=b.dataset.g;
+  if(g==='train'&&!GOLF_LAST.train){GOLF_R=null;GOLF_PART='';return renderGolf();}
+  GOLF_R=GOLF_LAST[g]||GOLF_GROUPS[g][0][0];GOLF_PART='';renderGolf();}));
 // 写真：タップで次へ（最後まで行ったら最初に戻る）
 function stripGo(el,dir){const w=el.clientWidth;const n=el.children.length;if(n<2)return;let i=Math.round(el.scrollLeft/w)+dir;if(i>=n)i=0;if(i<0)i=n-1;el.scrollTo({left:i*w,behavior:'smooth'});}
 function stripSync(el){const lab=el.parentElement.querySelector('.strip-n');if(!lab)return;const i=Math.round(el.scrollLeft/el.clientWidth)+1;lab.textContent=`${i} / ${el.children.length}`;}
