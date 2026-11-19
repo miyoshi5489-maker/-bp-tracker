@@ -122,3 +122,4 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
   return v;
 }
 const HZ_GUT=100; // マップの左右に空ける余白（画面のpx）
+function hzGut(){return window.matchMedia('(min-width:768px)').matches?HZ_GUT:48;} // スマホ（マップが左の細い列）は余白を小さく
