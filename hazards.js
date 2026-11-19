@@ -90,7 +90,7 @@ function hzHtml(z){if(!z)return '';const nm=t=>t==='b'?'バンカー':'池',ic=t
   return `<table class="hzt"><thead><tr><th></th><th>ティーから（y）</th><th>グリーンまで（y）</th></tr></thead><tbody>${body}${(z.grows||[]).length?`<tr class="hzt-sec"><td colspan="3">グリーン周り</td></tr>${z.grows.map(tr).join('')}`:''}</tbody></table>`;}
 
 // 図の上のラベル：バンカー・池の横に「手前〜越える」ヤード（グリーン周りは除く）
-function hzSvg(key,n,dt,u,wrap,W,mode){
+function hzSvg(key,n,dt,u,wrap,W,mode,H){
   // mode 'out'：図の外の余白にラベルを出して、線でバンカー・池を指す（図が隠れない）
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;const out=mode==='out';
   const src=hzSrc(key,n);const items=[];const gl=(L.find(h=>h.gl)||{}).gl||0;const gm=hzGMatch(L,src,gl);
@@ -102,10 +102,18 @@ function hzSvg(key,n,dt,u,wrap,W,mode){
   const H1=8.4*u,H2=13*u;let v='';
   const lab=(o,x,y,w,hh)=>`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="#fff" fill-opacity="${out?1:.93}" stroke="${o.col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.6*u}" font-weight="bold" fill="${o.col}" text-anchor="middle">${o.txt}</text>${o.sub?`<text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="#455a64" text-anchor="middle">${o.sub}</text>`:''}`;
   if(out){
-    ['L','R'].forEach(sd=>{const it=items.filter(o=>(o.h.cx<W/2)===(sd==='L')).sort((a,b)=>a.h.cy-b.h.cy);let last=-1e9;
-      it.forEach(o=>{const hh=o.sub?H2:H1;const w=(Math.max(cw(o.txt),cw(o.sub)*.8)+7)*u;let y=Math.max(o.h.cy-hh/2,last+1.2*u);last=y+hh;
-        const x=sd==='L'?-w-3*u:W+3*u;const ax=sd==='L'?x+w:x;const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));
-        v+=`<line x1="${ax}" y1="${y+hh/2}" x2="${bx}" y2="${o.h.cy}" stroke="#fff" stroke-width="${1.1*u}"/><line x1="${ax}" y1="${y+hh/2}" x2="${bx}" y2="${o.h.cy}" stroke="${o.col}" stroke-width="${.55*u}"/><circle cx="${bx}" cy="${o.h.cy}" r="${.9*u}" fill="${o.col}" stroke="#fff" stroke-width="${.3*u}"/>`+lab(o,x,y,w,hh);});});
+    // 左右は「コースの中心から左か右か」で決める（左のバンカーは左側の余白に）
+    const side=o=>{const x=o.h.x;return (x!=null&&Math.abs(x)>=4)?(x<0?'L':'R'):(o.h.cx<W/2?'L':'R');};
+    const HH=gl?H2:H1,G=1.4*u,J=8*u;
+    ['L','R'].forEach(sd=>{const it=items.filter(o=>side(o)===sd).sort((a,b)=>a.h.cy-b.h.cy);if(!it.length)return;
+      const w=(Math.max(...it.map(o=>Math.max(cw(o.txt),cw(o.sub)*.8)))+7)*u; // 同じ側は全部同じ幅・同じ高さ
+      const ys=[];it.forEach((o,i)=>{ys[i]=Math.max(o.h.cy-HH/2,i?ys[i-1]+HH+G:-1e9);});
+      if(H){for(let i=it.length-1;i>=0;i--){ys[i]=Math.min(ys[i],(i<it.length-1?ys[i+1]-HH-G:H-HH));}}
+      let ey=-1e9;
+      it.forEach((o,i)=>{const y=ys[i],ly=y+HH/2;const x=sd==='L'?-w-J:W+J;const ax=sd==='L'?x+w:x;const ex=sd==='L'?0:W;
+        const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));ey=Math.max(o.h.cy,ey+1.3*u);
+        const pts=`${ax},${ly} ${ex},${ey} ${bx},${ey} ${bx},${o.h.cy}`;
+        v+=`<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="${1.1*u}" stroke-linejoin="round"/><polyline points="${pts}" fill="none" stroke="${o.col}" stroke-width="${.55*u}" stroke-linejoin="round"/><circle cx="${bx}" cy="${o.h.cy}" r="${.9*u}" fill="${o.col}" stroke="#fff" stroke-width="${.3*u}"/>`+lab(o,x,y,w,HH);});});
     return v;}
   const placed=[];// 図の中に置く時は、ラベル同士が重ならないように上下にずらす
   items.sort((p,q)=>p.h.cy-q.h.cy).forEach(o=>{const h=o.h;const hh=o.sub?H2:H1;const w=(Math.max(cw(o.txt),cw(o.sub)*.8)+7)*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));let y=h.cy-hh/2;

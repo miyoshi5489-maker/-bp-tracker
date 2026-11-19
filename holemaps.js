@@ -256,7 +256,7 @@ function illusView(I,hi,m,opt){m=tmAdjust(m);const L=(opt&&opt.L)||1;const DT=(o
   if(HM&&HM.tap){const q=HM.tap;const ft=Math.round(Math.hypot(q[0]-T0[0],q[1]-T0[1])/s),tp=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);const bx=q[0]<I.w/2?q[0]+5:q[0]-5-50;
     v+=`<line x1="${T0[0]}" y1="${T0[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#1565c0" stroke-width=".7"/><line x1="${q[0]}" y1="${q[1]}" x2="${P[0]}" y2="${P[1]}" stroke="#1565c0" stroke-width=".7" stroke-dasharray="1.5 1"/><circle cx="${q[0]}" cy="${q[1]}" r="3" fill="#1565c0" stroke="#fff" stroke-width=".8"/>`;
     v+=`<g transform="${SC(q[0],q[1])}"><rect x="${bx}" y="${q[1]-7}" width="50" height="14" rx="2" fill="#1565c0"/><text x="${bx+2.5}" y="${q[1]-1.2}" font-size="5.2" font-weight="bold" fill="#fff">ティーから ${ft}y</text><text x="${bx+2.5}" y="${q[1]+5}" font-size="5.2" font-weight="bold" fill="#fff">ピンまで ${tp}y</text></g>`;}
-  if(opt&&opt.hz&&typeof hzSvg==='function')v+=hzSvg(opt.hz.key,opt.hz.n,DT,L*1.25,null,I.w,'out');
+  if(opt&&opt.hz&&typeof hzSvg==='function')v+=hzSvg(opt.hz.key,opt.hz.n,DT,L*1.25,null,I.w,'out',IH);
   return v+'</svg>';
 }
 
