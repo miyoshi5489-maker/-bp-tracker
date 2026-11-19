@@ -107,7 +107,9 @@ function hzSvg(key,n,dt,u,wrap,W,mode){
         const x=sd==='L'?-w-3*u:W+3*u;const ax=sd==='L'?x+w:x;const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));
         v+=`<line x1="${ax}" y1="${y+hh/2}" x2="${bx}" y2="${o.h.cy}" stroke="#fff" stroke-width="${1.1*u}"/><line x1="${ax}" y1="${y+hh/2}" x2="${bx}" y2="${o.h.cy}" stroke="${o.col}" stroke-width="${.55*u}"/><circle cx="${bx}" cy="${o.h.cy}" r="${.9*u}" fill="${o.col}" stroke="#fff" stroke-width="${.3*u}"/>`+lab(o,x,y,w,hh);});});
     return v;}
-  items.forEach(o=>{const h=o.h;const hh=o.sub?H2:H1;const w=(Math.max(cw(o.txt),cw(o.sub)*.8)+7)*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));const y=h.cy-hh/2;
+  const placed=[];// 図の中に置く時は、ラベル同士が重ならないように上下にずらす
+  items.sort((p,q)=>p.h.cy-q.h.cy).forEach(o=>{const h=o.h;const hh=o.sub?H2:H1;const w=(Math.max(cw(o.txt),cw(o.sub)*.8)+7)*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));let y=h.cy-hh/2;
+    for(let k=0;k<12;k++){const hit=placed.find(b=>x<b.x+b.w+1&&x+w+1>b.x&&y<b.y+b.h+1&&y+hh+1>b.y);if(!hit)break;y=hit.y+hit.h+1.2*u;}placed.push({x,y,w,h:hh});
     const g=lab(o,x,y,w,hh);v+=wrap?wrap(x+w/2,h.cy,g):g;});
   return v;
 }
