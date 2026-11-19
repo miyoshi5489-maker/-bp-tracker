@@ -274,10 +274,32 @@ function renderGolf(req){
      <span class="text-sm">できた <b class="num">${all.filter(e=>chk.includes(e.id)).length}</b> / ${all.length}</span><button class="btn-sm ml-auto" onclick="setChk(today(),GOLF_R,[]);renderGolf()">リセット</button>
      <button class="btn min-h-[44px] bg-accent px-4 py-2 text-surface" onclick="busy(this,saveGolf)">保存</button></div>`:''}`;
 }
-// 📗：次のラウンドのヤーデージブックをすぐ開く（ヤーデージブックがないラウンドは飛ばす）
-function openNextYB(){const t=today();const ok=x=>x.mapKey&&typeof ILLUS!=='undefined'&&(ILLUS[x.mapKey]||[]).length;
-  const L=(typeof ROUND_DEFS!=='undefined'?ROUND_DEFS:[]).filter(x=>x.date>=t&&ok(x)).sort((a,b)=>a.date<b.date?-1:1);
-  if(!L.length)return toast('次のラウンドのヤーデージブックはまだありません');openYardageBook(L[0].date);}
+// 📗：ヤーデージブックのまとめページ（これから→直近から、終わったもの→新しい順）。押すとそのブックへ
+async function openNextYB(){
+  let recs=[];try{recs=await getRecs();}catch(_){}
+  const t=today();const ok=x=>x.mapKey&&typeof ILLUS!=='undefined'&&(ILLUS[x.mapKey]||[]).length&&ROUND_BASE(x.date);
+  const L=(typeof roundList==='function'?roundList(recs):ROUND_DEFS).filter(ok);
+  const done=x=>!!(x.result&&x.result.score);
+  const up=L.filter(x=>x.date>=t&&!done(x)).sort((a,b)=>a.date<b.date?-1:1),past=L.filter(x=>x.date<t||done(x)).sort((a,b)=>a.date<b.date?1:-1);
+  const card=(x,i)=>{const n=diffDays(t,x.date);
+    if(i===0)return `<button class="hero w-full p-4 text-left active:scale-[.99]" onclick="ybFromList('${x.date}')"><div class="relative z-[1] grid gap-1.5">
+      <div class="flex items-center justify-between text-[12px] font-bold opacity-90"><span>📗 次のラウンド</span><span class="rounded-full bg-white/20 px-2.5 py-0.5">${n===0?'今日':'あと '+n+' 日'}</span></div>
+      <div class="font-display text-[22px] leading-tight">${esc(x.course)}</div>
+      <div class="text-[13px] opacity-90">${md(x.date)}${x.time?'・'+esc(x.time):''}${x.target?'・目標 '+x.target:''}</div>
+      <div class="mt-1 inline-flex w-fit rounded-full bg-white px-3.5 py-1.5 text-[13px] font-bold text-accent">ヤーデージブックを開く →</div></div></button>`;
+    return `<button class="card flex w-full items-center gap-3 p-3.5 text-left active:scale-[.99]" onclick="ybFromList('${x.date}')"><div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-2xl">📗</div>
+      <div class="min-w-0 flex-1"><div class="truncate font-bold">${esc(x.course)}</div><div class="text-[12px] text-muted">${md(x.date)}${x.time?'・'+esc(x.time):''}${x.target?'・目標 '+x.target:''}</div></div><div class="text-right text-[12px] font-bold text-accent">あと<br><span class="num text-xl">${n}</span>日</div></button>`;};
+  const pcard=x=>`<button class="card flex w-full items-center gap-3 p-3.5 text-left opacity-95 active:scale-[.99]" onclick="ybFromList('${x.date}')"><div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-line text-2xl">📘</div>
+      <div class="min-w-0 flex-1"><div class="truncate font-bold">${esc(x.course)}</div><div class="text-[12px] text-muted">${md(x.date)}${x.target?'・目標 '+x.target:''}</div></div>${done(x)?`<div class="text-right"><div class="text-[11px] text-muted">スコア</div><div class="num text-2xl font-semibold">${x.result.score}</div></div>`:''}</button>`;
+  let el=$('yblist');if(!el){el=document.createElement('div');el.id='yblist';el.className='fixed inset-0 z-40 hidden items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center';el.onclick=ev=>{if(ev.target===el)closeYBList();};document.body.appendChild(el);}
+  el.innerHTML=`<div class="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-[28px] bg-bg p-5 shadow-2xl sm:rounded-[28px]" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px)">
+    <div class="mb-4 flex items-center justify-between"><div><div class="font-display text-xl">ヤーデージブック</div><div class="text-[12px] text-muted">押すとそのラウンドのブックが開きます</div></div><button class="btn-sm shrink-0 whitespace-nowrap" onclick="closeYBList()">閉じる</button></div>
+    <div class="lbl mb-2">これから</div><div class="grid gap-2.5">${up.map(card).join('')||'<div class="text-[13px] text-muted">予定のラウンドはありません</div>'}</div>
+    ${past.length?`<div class="lbl mb-2 mt-5">これまで</div><div class="grid gap-2.5">${past.map(pcard).join('')}</div>`:''}
+  </div>`;
+  el.classList.remove('hidden');el.classList.add('flex');}
+function closeYBList(){const el=$('yblist');if(el){el.classList.add('hidden');el.classList.remove('flex');}}
+function ybFromList(d){closeYBList();openYardageBook(d);}
 // 大きく3つ（トレーニング・飛距離・ラウンド）→ 押すと中の項目を選べる
 const GOLF_GROUPS={train:[['genie','ジーニー'],['y1','トレ1'],['y2','トレ2'],['y3','トレ3'],['check','チェック']],dist:[['clubs','飛距離'],['swing','スイング'],['d300','300y']],round:[['rounds','ラウンド']]};
 const GOLF_LAST={};
