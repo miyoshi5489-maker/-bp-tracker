@@ -145,8 +145,8 @@ const KIND_LABEL={genie:'ジーニー',goltore:'ゴルトレ',run:'ラン',gym:'
 const KIND_DOT={genie:'var(--accent)',goltore:'var(--sand)',run:'var(--sky)',gym:'var(--fg)',pilates:'var(--plum)',off:'var(--line)',event:'var(--warn)',prep:'var(--warn)'};
 
 // ── ルーター（下のメニュー5つ＋ページ内の切り替え） ──
-const PAGES=['today','golf','marathon'];
-const GROUPS={today:[['today','今日']],golf:[['golf','ゴルフ']],run:[['marathon','マラソン']]};
+const PAGES=['today','golf','runstats','marathon'];
+const GROUPS={today:[['today','今日']],golf:[['golf','ゴルフ']],run:[['runstats','分析'],['marathon','マラソン計画']]};
 const groupOf=p=>Object.keys(GROUPS).find(g=>GROUPS[g].some(([k])=>k===p))||'today';
 const LAST_IN={};
 let CUR='today';
@@ -159,7 +159,7 @@ function show(p,opt){
   document.querySelectorAll('.page').forEach(s=>s.classList.toggle('hidden',s.id!=='p-'+p));
   if(history.replaceState)history.replaceState(null,'','#'+p);
   window.scrollTo({top:0});
-  ({study:()=>window.renderStudy&&renderStudy(),today:renderToday,golf:()=>renderGolf(opt&&opt.routine),marathon:renderMarathon,week:renderWeek,month:renderMonth,history:renderHistory,stats:renderStats,log:()=>{}}[p]||(()=>{}))();
+  ({study:()=>window.renderStudy&&renderStudy(),today:renderToday,golf:()=>renderGolf(opt&&opt.routine),marathon:renderMarathon,runstats:()=>window.renderRunStats&&renderRunStats(),week:renderWeek,month:renderMonth,history:renderHistory,stats:renderStats,log:()=>{}}[p]||(()=>{}))();
 }
 document.querySelectorAll('#bottomnav .bn').forEach(b=>b.addEventListener('click',()=>show(LAST_IN[b.dataset.g]||GROUPS[b.dataset.g][0][0])));
 
@@ -219,16 +219,12 @@ async function renderToday(){
   <div class="grid grid-cols-3 gap-2.5">
     <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-pop-soft text-base">🔥</div><div class="num text-2xl font-semibold leading-tight">${st}<span class="text-xs text-muted"> 日</span></div><div class="lbl">連続で記録</div></div>
     <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-accent-soft text-base">💪</div><div class="num text-2xl font-semibold leading-tight">${wd.done}<span class="text-xs text-muted"> / ${wd.plan}</span></div><div class="lbl">今週やった日</div></div>
-    <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-accent2-soft text-base">🏃</div><div class="num text-2xl font-semibold leading-tight">${km1(wAct)}<span class="text-xs text-muted"> / ${wPlan}</span></div><div class="lbl">今週のラン km</div></div>
+    <div class="card p-3 text-center"><div class="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-full bg-accent2-soft text-base">🏃</div><div class="num whitespace-nowrap text-xl font-semibold leading-tight">${km1(wAct)}<span class="text-xs text-muted"> / ${wPlan}</span></div><div class="lbl">今週のラン km</div></div>
   </div>
   ${m>=0?`<div class="card flex items-center gap-3 p-3.5"><div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sky-soft text-xl">🏅</div><div class="min-w-0 flex-1"><div class="lbl">篠山マラソン 3/7（日）</div><div class="text-[12px] text-muted">目標 サブ4 → 3時間30分</div></div><div class="text-right"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted"> 日</span></div></div>`:''}
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}
-  <div id="act-box" class="grid gap-2"></div>
-  ${(p.note||[]).map(n=>`<p class="-mt-2 text-[13px] text-muted">・${esc(n)}</p>`).join('')}
-  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('marathon')">ランの計画</button></div>
-    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="${d<=t?`actOpen('${d}')`:''}" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>
-  <div class="grid gap-2"><h2 class="h2">明日の予定</h2>${dayCard(tm,null)}</div>`;
-  if(window.renderActual)renderActual(ACT_DATE||t);
+  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('runstats')">ランの分析</button></div>
+    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('runstats')" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>`;
 }
 
 // ── ゴルフ ──
@@ -329,7 +325,7 @@ async function saveGolf(){
 }
 
 // ── マラソン ──
-function paceStr(sec){const m=Math.floor(sec/60),s=Math.round(sec%60);return `${m}'${pad(s)}"`;}
+function paceStr(sec){const t=Math.round(sec),m=Math.floor(t/60),s=t%60;return `${m}'${pad(s)}"`;}
 function hms(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=Math.round(sec%60);return `${h}:${pad(m)}:${pad(s)}`;}
 async function renderMarathon(){
   const el=$('p-marathon');const t=today();
