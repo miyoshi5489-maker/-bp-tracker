@@ -29,11 +29,11 @@ function ybSvg(I,hi,m,o){
     ['L','R'].forEach(k=>{const t=sd[k]||'';if(!/^OB(?!の記載)/.test(t))return;const sg=k==='R'?1:-1;const [f,e]=rg[k]||[0,9999];const pts=[];
       for(let d=Math.max(0,f*s);d<=Math.min(Lr,e*s)+0.1;d+=4){const a=routeAt(r,Math.min(d,Lr));let px=a.p[0]-a.u[1]*sg*36*s,py=a.p[1]+a.u[0]*sg*36*s;px=Math.max(2,Math.min(I.w-2,px));pts.push([px,py]);}
       if(pts.length<2)return;const pp=pts.map(p=>p.join(',')).join(' ');
-      v+=`<polyline points="${pp}" fill="none" stroke="#fff" stroke-width="${.9*K}"/><polyline points="${pp}" fill="none" stroke="#d32f2f" stroke-width="${.45*K}" stroke-dasharray="${1.6*K} ${1*K}"/>`;
+      v+=hmOB(pp,K*.6);
       const q=pts[Math.floor((pts.length-1)*.45)];v+=`<rect x="${q[0]-2.6*K}" y="${q[1]-1.6*K}" width="${5.2*K}" height="${3.2*K}" rx="${.5*K}" fill="#d32f2f" stroke="#fff" stroke-width="${.2*K}"/><text x="${q[0]}" y="${q[1]+.85*K}" font-size="${2.4*K}" font-weight="bold" fill="#fff" text-anchor="middle">OB</text>`;});}
   // ルート
   const pts=T.map(t=>toPx(t[0],t[1]));let prev=T0;
-  [...pts,P].forEach(q=>{v+=`<line x1="${prev[0]}" y1="${prev[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#fff" stroke-width="${.8*K}"/><line x1="${prev[0]}" y1="${prev[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#e65100" stroke-width="${.45*K}" stroke-dasharray="${1.2*K} ${.7*K}"/>`;prev=q;});
+  v+=hmRoute([prev,...pts,P].map(q=>q.join(',')).join(' '),.42*K);
   v+=`<circle cx="${T0[0]}" cy="${T0[1]}" r="${1.1*K}" fill="#fff" stroke="#111" stroke-width="${.3*K}"/>`;
   v+=`<line x1="${P[0]}" y1="${P[1]}" x2="${P[0]}" y2="${P[1]-3.6*K}" stroke="#111" stroke-width="${.25*K}"/><path d="M${P[0]} ${P[1]-3.6*K} l${2*K} ${.7*K} l${-2*K} ${.7*K}z" fill="#e53935"/>`;
   if(o.hzk&&typeof hzSvg==='function')v+=`<g class="hzi">${hzSvg(o.hzk,o.n,DT,K*.62,null,I.w)}</g><g class="hzo">${hzSvg(o.hzk,o.n,DT,K*.62,null,I.w,'out',IH)}</g>`;

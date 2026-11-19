@@ -1,3 +1,6 @@
+// 自分が打つ線＝黄色の実線（黒いふち）／OB＝赤い線に白い杭の点。見た目をはっきり分ける
+function hmRoute(pts,w){return `<polyline points="${pts}" fill="none" stroke="#111" stroke-opacity=".55" stroke-width="${w*2.2}" stroke-linejoin="round" stroke-linecap="round"/><polyline points="${pts}" fill="none" stroke="#ffd54a" stroke-width="${w*1.15}" stroke-linejoin="round" stroke-linecap="round"/>`;}
+function hmOB(pts,L){return `<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="${1.1*L}"/><polyline points="${pts}" fill="none" stroke="#d32f2f" stroke-width="${.55*L}"/><polyline points="${pts}" fill="none" stroke="#d32f2f" stroke-width="${2.6*L}" stroke-linecap="round" stroke-dasharray="0 ${6*L}"/><polyline points="${pts}" fill="none" stroke="#fff" stroke-width="${1.5*L}" stroke-linecap="round" stroke-dasharray="0 ${6*L}"/>`;}
 // ─────────────────────────────────────────────
 // ホールマップ（ヤーデージブック風の図）
 //   座標はヤード。y＝レギュラーティーからの前方向の距離、x＝左右（右がプラス）。
@@ -134,8 +137,7 @@ function holeSVG(m,par,yards,opt){m=tmAdjust(m);
     s+=`<text x="${cx}" y="${-cy+Math.max(6,1.5*(cl.sdCarry||8))+11}" font-size="8.5" fill="#ffd54a" text-anchor="middle" font-weight="bold">あなたの${cl.c}（平均）</text>`;}
   // 狙い
   let prev=[0,0];
-  T.forEach((t,i)=>{s+=`<line x1="${prev[0]}" y1="${-prev[1]}" x2="${t[0]}" y2="${-t[1]}" stroke="#ffd54a" stroke-width="2" stroke-dasharray="5 4"/>`;prev=t;});
-  s+=`<line x1="${prev[0]}" y1="${-prev[1]}" x2="${PX}" y2="${-PY}" stroke="#ffd54a" stroke-width="2" stroke-dasharray="5 4"/>`;
+  s+=hmRoute([prev,...T,[PX,PY]].map(t=>t[0]+','+(-t[1])).join(' '),2);
   prev=[0,0];
   T.forEach((t,i)=>{const d=Math.round(Math.hypot(t[0]-prev[0],t[1]-prev[1]));const rest=Math.round(Math.hypot(PX-t[0],PY-t[1]));prev=t;
     const right=(maxX-t[0])>=(t[0]-minX);const tx=right?t[0]+14:t[0]-14;
@@ -233,7 +235,7 @@ function illusView(I,hi,m,opt){m=tmAdjust(m);const L=(opt&&opt.L)||1;const DT=(o
   if(cl&&cl.side!=null&&T[0]){const a=routeAt(r,(cl.total||cl.carry)*s);const c=[a.p[0]-a.u[1]*cl.side*s,a.p[1]+a.u[0]*cl.side*s];const ang=Math.atan2(a.u[0],-a.u[1])*180/Math.PI;
     v+=`<ellipse cx="${c[0]}" cy="${c[1]}" rx="${Math.max(3,1.5*(cl.sdSide||10)*s)}" ry="${Math.max(3,1.5*(cl.sdCarry||8)*s)}" transform="rotate(${ang} ${c[0]} ${c[1]})" fill="#ffb300" fill-opacity=".22" stroke="#e65100" stroke-width=".7" stroke-dasharray="2 1.5"/>`;}
   let prev=T0;const pts=T.map(t=>toPx(t[0],t[1]));v+=`<circle cx="${T0[0]}" cy="${T0[1]}" r="${3*L}" fill="#fff" stroke="#111" stroke-width=".8"/>`;
-  [...pts,P].forEach(q=>{v+=`<line x1="${prev[0]}" y1="${prev[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#e65100" stroke-width="1" stroke-dasharray="2.5 1.5"/>`;prev=q;});
+  {const rp=[prev,...pts,P].map(q=>q.join(',')).join(' ');v+=hmRoute(rp,1);}
   v+=`<line x1="${P[0]}" y1="${P[1]}" x2="${P[0]}" y2="${P[1]-9}" stroke="#111" stroke-width=".6"/><path d="M${P[0]} ${P[1]-9} l5 1.8 l-5 1.8z" fill="#e53935"/>`;
   let pv=[0,0];
   T.forEach((t,i)=>{const q=pts[i];const d=i===0?Math.round(Math.hypot(q[0]-T0[0],q[1]-T0[1])/s):Math.round(Math.hypot(t[0]-pv[0],t[1]-pv[1]));pv=t;const rest=Math.round(Math.hypot(P[0]-q[0],P[1]-q[1])/s);
@@ -244,10 +246,10 @@ function illusView(I,hi,m,opt){m=tmAdjust(m);const L=(opt&&opt.L)||1;const DT=(o
   if(opt&&opt.sides){const sd=opt.sides;const Lr=r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-r[i-1][0],q[1]-r[i-1][1]):0,0);const rg=(opt.obr||{});
     ['L','R'].forEach(k=>{const t=sd[k]||'';if(!/^OB(?!の記載)/.test(t))return;const sg=k==='R'?1:-1;const [f,e]=rg[k]||[0,9999];const pts=[];
       for(let d=Math.max(0,f*s);d<=Math.min(Lr,e*s)+0.1;d+=4){const a=routeAt(r,Math.min(d,Lr));let px=a.p[0]-a.u[1]*sg*36*s,py=a.p[1]+a.u[0]*sg*36*s;px=Math.max(2,Math.min(I.w-2,px));pts.push([px,py]);}
-      if(pts.length<2)return;v+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-width="${1.6*L}" stroke-dasharray="${4*L} ${3*L}"/><polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#d32f2f" stroke-width="${0.8*L}" stroke-dasharray="${4*L} ${3*L}"/>`;
+      if(pts.length<2)return;v+=hmOB(pts.map(p=>p.join(',')).join(' '),L);
       [0.3,0.75].forEach(fr=>{const q=pts[Math.floor((pts.length-1)*fr)];v+=`<g transform="${SC(q[0],q[1])}"><rect x="${q[0]-8}" y="${q[1]-5}" width="16" height="10" rx="2" fill="#d32f2f" stroke="#fff" stroke-width=".6"/><text x="${q[0]}" y="${q[1]+2.6}" font-size="6.5" font-weight="bold" fill="#fff" text-anchor="middle">OB</text></g>`;});});
     if(/^OB(?!の記載)/.test(sd.B||'')){const a=routeAt(r,1e9);const bx=G[0]+a.u[0]*22*s,by=G[1]+a.u[1]*22*s;const px=-a.u[1],py=a.u[0];const w=30*s;
-      v+=`<line x1="${bx-px*w}" y1="${by-py*w}" x2="${bx+px*w}" y2="${by+py*w}" stroke="#fff" stroke-width="${1.6*L}" stroke-dasharray="${4*L} ${3*L}"/><line x1="${bx-px*w}" y1="${by-py*w}" x2="${bx+px*w}" y2="${by+py*w}" stroke="#d32f2f" stroke-width="${0.8*L}" stroke-dasharray="${4*L} ${3*L}"/>`;}}
+      v+=hmOB(`${bx-px*w},${by-py*w} ${bx+px*w},${by+py*w}`,L);}}
   if(opt&&opt.sides){const sd=opt.sides;const L=r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-r[i-1][0],q[1]-r[i-1][1]):0,0);const a=routeAt(r,L*0.2);
     const bad=t=>sideKind(t)==='bad';const lab=t=>t.replace(/（.*/,'');
     [['L',2,'start','← 左'],['R',I.w-2,'end','右 →']].forEach(([k,xx,an,hd])=>{const t=sd[k];if(sideKind(t)==='na')return;const c=bad(t)?'#c62828':sideKind(t)==='good'?'#2e7d32':'#555';const w=Math.max(30,lab(t).length*5.4+6);const bx=an==='start'?xx:xx-w;
