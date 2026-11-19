@@ -18,21 +18,23 @@ const today=()=>ymd(new Date());
 const PHASES=[
   {id:'golf',name:'ゴルフ期',sub:'10/20 ラウンドに向けて回旋とパワー',from:'2026-09-28',to:'2026-10-21'},
   {id:'base',name:'土台期',sub:'週30km台まで距離を伸ばす。12/19に10kmテスト',from:'2026-10-22',to:'2026-12-27'},
-  {id:'marathon',name:'マラソン期',sub:'週50〜60km・ロング32kmまで。1/30にハーフのテスト。3時間30分切り',from:'2026-12-28',to:'2027-03-07'},
+  {id:'marathon',name:'マラソン期',sub:'フルマラソン用：木曜の晩にロング（30km級2回）、土曜はマラソンペース走。1/30にハーフのテスト',from:'2026-12-28',to:'2027-03-07'},
 ];
 
 // 土曜ロング走（週の月曜日 → km）
+// ロング走（週の月曜日 → km）。11/23の週からは木曜の晩（水曜でもOK）。フルマラソン用に30km級を2回
 const LONG={
   '2026-10-19':8,'2026-10-26':10,'2026-11-02':12,'2026-11-09':13,'2026-11-16':14,'2026-11-23':0,
   '2026-11-30':12,'2026-12-07':14,'2026-12-14':0,'2026-12-21':16,
-  '2026-12-28':18,'2027-01-04':20,'2027-01-11':24,'2027-01-18':16,'2027-01-25':0,
-  '2027-02-01':28,'2027-02-08':32,'2027-02-15':24,'2027-02-22':16,'2027-03-01':3,
+  '2026-12-28':18,'2027-01-04':20,'2027-01-11':24,'2027-01-18':18,'2027-01-25':0,
+  '2027-02-01':28,'2027-02-08':32,'2027-02-15':26,'2027-02-22':18,'2027-03-01':0,
 };
 const LONG_NOTE={
-  '2026-11-23':'ラウンド週のためお休み','2026-12-14':'この週は10kmテスト（12/19）','2027-01-18':'回復週。距離を落とす','2027-01-25':'この週はハーフのテスト（1/30）',
-  '2027-02-08':'最長走。給水・補食の練習も','2027-02-15':'うち15kmをマラソンペース',
-  '2027-02-22':'調整開始。疲れを抜く','2027-03-01':'前日の刺激走。ゆっくり3km',
+  '2026-11-23':'ラウンド週のためお休み','2026-12-14':'この週は土曜に10kmテスト','2027-01-18':'回復週。距離を落とす','2027-01-25':'この週は土曜にハーフのテスト',
+  '2027-01-11':'最後の5kmだけマラソンペース','2027-02-01':'最後の8kmをマラソンペース','2027-02-08':'最長走。給水・補食（ジェル）を本番と同じに',
+  '2027-02-15':'最後の12kmをマラソンペース（本番の予行）','2027-02-22':'調整開始。ゆっくり',
 };
+const longDow=mon=>mon>='2026-11-23'?4:6; // 4＝木曜（水曜に入れ替えOK）、6＝土曜
 
 // ペースは3段階で上げる（3時間30分切り＝4'58/km）。テストの結果で次の段階へ進む
 const PACE_STAGES=[
@@ -107,32 +109,42 @@ function planFor(s){
     const wk=Math.floor(diffDays('2026-10-19',s)/7);
     const day=((wk%3)+3)%3+1;
     const late=s>='2026-11-30',later=s>='2026-12-14';
-    const easy=s<'2026-11-09'?6:8;
+    const easy=s<'2026-11-09'?6:8;const LD=longDow(mon);const lkm=LONG[mon]!=null?LONG[mon]:8;
+    const longItem=()=>it('run','ロング走（晩）',{km:lkm,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+P.long+'。水曜にずらしてもOK（その時は水木を入れ替え）'});
     if(dow===1){items.push(it('genie','ジーニー ⓪〜③（30分版）',{routine:'genie',part:'short'}),pplItem('base','legs'));}
     if(dow===2){items.push(it('run',late?'イージーラン＋流し':'イージーラン',{km:late&&s<'2026-12-07'?6:easy,detail:P.easy+(late?'。最後に100m×4本を気持ちよく速く（流し）':'')}));}
     if(dow===3){items.push(it('genie','ジーニー ⓪ほぐし・②肩胸椎',{routine:'genie',part:'upper'}),pplItem('base','push'));if(later)items.push(it('run','ゆっくりジョグ',{km:5,detail:P.easy}));}
-    if(dow===4){items.push(it('goltore',`ゴルトレ Day${day}`,{routine:'y'+day}),it('run','イージーラン',{km:late?6:5,detail:P.easy}));}
+    if(dow===4){items.push(it('goltore',`ゴルトレ Day${day}`,{routine:'y'+day}));if(LD===4&&lkm)items.push(longItem());else items.push(it('run','イージーラン',{km:late?6:5,detail:P.easy}));}
     if(dow===5){items.push(it('genie','ジーニー ⑤⑥ジャンプ・回旋（15分）',{routine:'genie',part:'power'}),pplItem('base','pull'));}
-    if(dow===6){const km=LONG[mon]!=null?LONG[mon]:8;if(km)items.push(it('run','ロング走',{km,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+P.long}));items.push(it('pilates','ピラティスチェア 10分'));}
+    if(dow===6){if(LD===6&&lkm)items.push(longItem());else if(late)items.push(it('run','イージーラン＋流し',{km:later?8:6,detail:P.easy+'。最後に100m×4本の流し'}));items.push(it('pilates','ピラティスチェア 10分'));}
     if(dow===0){items.push(it('off','完全OFF',{detail:'ストレッチと散歩のみ'}));}
   }
 
   if(ph.id==='marathon'){
+    // フルマラソン用：火＝閾値（テンポ／1km）、木の晩＝ロング（マラソンペース入り）、土＝マラソンペース走、他はゆっくり
     const P=paceAt(s);
     const wk=Math.floor(diffDays('2026-12-28',s)/7);
     const taper=s>='2027-02-22';
     const race=s>='2027-03-01';
+    const lkm=LONG[mon]!=null?LONG[mon]:16;
     if(dow===1){items.push(it('genie','ジーニー ⓪〜③（30分版）',{routine:'genie',part:'short'}),(race?it('off','筋トレお休み',{detail:'レース週'}):pplItem('marathon','legs')));}
     if(dow===2){
       if(race)items.push(it('run','刺激走',{km:6,detail:`うち3kmをマラソンペース ${P.mp}`}));
-      else if(wk%2===1)items.push(it('run','インターバル',{km:taper||s<'2027-01-11'?8:10,detail:`1km×${taper?3:5}本 ${P.interval}（つなぎ400mジョグ）。アップ・ダウン込み`}));
+      else if(wk%2===1)items.push(it('run','1kmインターバル',{km:taper?8:10,detail:`1km×${taper?3:5}本 ${P.interval}（つなぎ400mジョグ）。アップ・ダウン込み`}));
       else items.push(it('run','テンポ走',{km:taper||s<'2027-01-11'?8:10,detail:`${taper?4:6}kmを ${P.tempo}。アップ・ダウン込み`}));
     }
-    if(dow===3){items.push(pplItem('marathon','upper'));if(!race)items.push(it('run','イージーラン',{km:taper||s<'2027-01-11'?5:(s<'2027-01-25'?6:8),detail:P.easy}));}
-    // 2020年（神戸バレンタイン 20km 4'12"/km）の頃は週2回きつい練習をしていた → インターバルの週は木曜にペース走を足す
-    if(dow===4){const tempoThu=!race&&!taper&&wk%2===1;items.push(it('run',race?'イージーラン':(tempoThu?'ペース走':'イージーラン＋流し'),{km:race?5:(taper||s<'2027-01-11'?6:8),detail:tempoThu?`うち4kmを ${P.tempo}（2020年の週2回きつい練習を少しずつ戻す）。あとはゆっくり`:P.easy+(race?'':'。最後に100m×4本の流し')}),it('goltore','骨盤分離＋ヒップツイスト',{routine:'y2',part:'short'}));}
+    if(dow===3){items.push(pplItem('marathon','upper'));if(!race)items.push(it('run','イージーラン',{km:taper||s<'2027-01-11'?5:6,detail:P.easy}));}
+    if(dow===4){if(race)items.push(it('run','イージーラン',{km:5,detail:P.easy}));
+      else if(lkm)items.push(it('run','ロング走（晩）',{km:lkm,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+P.long+'。水曜にずらしてもOK'}));
+      else items.push(it('run','イージーラン＋流し',{km:6,detail:P.easy+'。最後に100m×4本の流し'}));
+      items.push(it('goltore','骨盤分離＋ヒップツイスト',{routine:'y2',part:'short'}));}
     if(dow===5){items.push(it('off','OFF',{detail:race?'レース2日前。よく寝る':'ストレッチのみ'}));}
-    if(dow===6){const km=LONG[mon]!=null?LONG[mon]:16;if(km)items.push(it('run',race?'前日刺激走':'ロング走',{km,detail:(LONG_NOTE[mon]?LONG_NOTE[mon]+'。':'')+(race?'':(mon==='2027-02-15'?`前半9kmは ${P.long}、後半15kmを ${P.mp}`:P.long))}));}
+    if(dow===6){
+      if(race)items.push(it('run','前日刺激走',{km:3,detail:'ゆっくり3km＋流し2本'}));
+      else if(taper)items.push(it('run','マラソンペース走',{km:10,detail:`うち6kmを ${P.mp}。本番の靴・補給で`}));
+      else if(lkm>=26||s<'2027-01-09'||mon==='2027-01-18')items.push(it('run','イージーラン＋流し',{km:8,detail:P.easy+'。最後に100m×4本の流し'}));
+      else{const mp=s<'2027-01-23'?6:8;items.push(it('run','マラソンペース走',{km:mp+6,detail:`アップ3km→${mp}kmを ${P.mp}→ダウン3km`}));}
+    }
     if(dow===0){items.push(race?it('off','OFF'):it('run','回復ジョグ',{km:taper?5:6,detail:'ゆっくり。脚が重ければOFF'}));}
   }
 
@@ -144,7 +156,7 @@ function nextRound(t){return ROUNDS.find(r=>r>=t&&!(typeof ROUND_DEFS!=='undefin
 function plannedKm(from,to){let s=from,t=0;while(s<=to){planFor(s).items.forEach(i=>{if(i.km&&i.kind!=='event')t+=i.km;});s=addDays(s,1);}return t;}
 
 function longRuns(){
-  return Object.keys(LONG).filter(m=>LONG[m]>0).map(m=>({date:addDays(m,5),km:LONG[m],note:LONG_NOTE[m]||''}));
+  return Object.keys(LONG).filter(m=>LONG[m]>0).map(m=>({date:addDays(m,longDow(m)-1),km:LONG[m],note:LONG_NOTE[m]||''}));
 }
 
 window.PLAN={PPL,PPL_NAME,ROUND,ROUNDS,nextRound,RACE,PHASES,PACE,PACE_STAGES,paceAt,planFor,plannedKm,longRuns,phaseOf,util:{pad,ymd,parse,addDays,diffDays,mondayOf,today}};
