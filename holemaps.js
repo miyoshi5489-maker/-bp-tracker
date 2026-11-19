@@ -301,16 +301,16 @@ function drawHoleMap(){
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}
-  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=false;const side0=hasView&&hmSideOn();const flt=false;const side=side0&&!flt;const gv=HM.view==='green'||pv0;
+  const col=h[7]==='hard'?'bg-warn':h[7]==='mid'?'bg-sand':'bg-accent';const hasView=!!(PHOTOS[x.mapKey]||HOLE_VIDEOS[x.mapKey]);const pv0=false;const nar=!hmWide();const vid=nar&&hasView&&!!HM.pv;const side0=nar?vid:hasView&&hmSideOn();const flt=false;const side=side0&&!flt;const gv=HM.view==='green'||pv0;
   el.innerHTML=`
    <div class="flex items-center gap-2 border-b border-line bg-surface px-3 py-2" style="padding-top:calc(env(safe-area-inset-top,0px) + 8px)">
     <span class="grid h-10 w-10 place-items-center rounded-lg ${col} font-mono text-lg font-bold text-surface">${h[0]}</span>
     <div class="min-w-0 flex-1"><div class="font-bold leading-tight">${PAR_BADGE(h[1])} Par${h[1]}・${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2]}y <span class="text-[11px] font-normal text-muted">${TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][0]:''}</span></div><div class="text-[12px] text-muted">目標 <b class="text-accent">${h[4]}</b>　ティー ${esc(h[5])}</div></div>
-    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';drawHoleMap()">ホール</button><button class="${gv&&!pv0?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';drawHoleMap()">グリーン</button>${hasView?`<button class="${side0?'on':''} !min-h-[36px] !px-2" onclick="hmSideToggle()" aria-pressed="${side0}">景色${side0?' ✓':''}</button>`:''}</div>
+    <div class="seg !p-0.5 text-[12px]"><button class="${gv?'':'on'} !min-h-[36px] !px-2" onclick="HM.view='hole';HM.pv=0;drawHoleMap()">ホール</button><button class="${gv&&!pv0&&!vid?'on':''} !min-h-[36px] !px-2" onclick="HM.view='green';HM.pv=0;drawHoleMap()">グリーン</button>${hasView?(nar?`<button class="${vid?'on':''} !min-h-[36px] !px-2" onclick="HM.view='hole';HM.pv=1;HM.tap=null;HM.L=0;drawHoleMap()" aria-pressed="${vid}">動画</button>`:`<button class="${side0?'on':''} !min-h-[36px] !px-2" onclick="hmSideToggle()" aria-pressed="${side0}">景色${side0?' ✓':''}</button>`):''}</div>
     <button class="btn-sm !px-2" onclick="closeHoleMap()">✕</button>
    </div>
    <div class="flex min-h-0 flex-1 flex-col lg:flex-row-reverse">
-   <div id="hm-split" class="flex min-h-0 flex-1 flex-row"><div class="relative min-h-0 min-w-0 flex-1">
+   <div id="hm-split" class="flex min-h-0 flex-1 flex-row"><div class="relative min-h-0 min-w-0 flex-1${vid?' hidden':''}">
     <div id="hm-scroll" class="absolute inset-0 overflow-auto bg-[#2f5d31]" style="touch-action:pan-x pan-y;overscroll-behavior:contain">
      ${pv0?hmPhotoView(x,h,PH):gv?`<div class="mx-auto grid max-w-md gap-2 p-3"><div class="text-center text-[12px] font-bold text-white">グリーンをタップすると、今日のピンの位置になります（ピンシートを見て）</div>
        ${(()=>{const gy=greenYards(x,h,m);const ps=pinSheetOf(x.date,h[0]);const src=ps&&!localStorage.getItem(pinKey(x.date,h[0]))?'📋 ピンシート':pin.y||pin.x?'✋ 自分で置いた位置':'⚠ ピン情報なし（真ん中で計算）';
@@ -332,7 +332,7 @@ function drawHoleMap(){
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
      <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
-   </div>${side?`<div id="hm-div" role="separator" aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex w-3 shrink-0 cursor-col-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a]"><span class="block h-12 w-1 rounded bg-white/70"></span></div><div id="hm-side" class="w-[36%] shrink-0 overflow-y-auto border-l border-white/20 bg-[#24492a] md:w-[44%] relative">${hmVid(x.mapKey,h[0])?hmBoxHTML(x,h):''}${hmPhotoView(x,h,PH,!!hmVid(x.mapKey,h[0]))}</div>`:''}</div>
+   </div>${side?`<div id="hm-div" role="separator"${vid?' style="display:none"':''} aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex w-3 shrink-0 cursor-col-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a]"><span class="block h-12 w-1 rounded bg-white/70"></span></div><div id="hm-side" class="w-[36%] shrink-0 overflow-y-auto border-l border-white/20 bg-[#24492a] md:w-[44%] relative">${hmVid(x.mapKey,h[0])?hmBoxHTML(x,h):''}${hmPhotoView(x,h,PH,!!hmVid(x.mapKey,h[0]))}</div>`:''}</div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
     ${x.plans?`<div class="grid grid-cols-2 gap-1 rounded-xl bg-line p-1">${[['','100切り',ROUND_DEFS.find(r=>r.date===x.date).target],...Object.entries(x.plans).map(([k,P])=>[k,P.name,P.target])].map(([k,n,t])=>`<button class="min-h-[40px] rounded-lg text-[13px] font-bold" style="${(x.planKey||'')===k?'background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)':'color:var(--muted)'}" onclick="setPlan('${x.date}','${k}')">${n}プラン（目標${t}）</button>`).join('')}</div>`:''}
     ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
@@ -437,7 +437,7 @@ function hmSideToggle(){try{localStorage.setItem('hm:side',hmSideOn()?'0':'1');}
 // マップと景色の境目をドラッグして幅（スマホ縦は高さ）を変える。割合を覚えておく
 const hmWide=()=>window.matchMedia('(min-width:768px)').matches;
 function hmSideApply(){const sd=$('hm-side');if(!sd)return;let v={};try{v=JSON.parse(localStorage.getItem('hm:sidesz')||'{}')||{};}catch{}
-  sd.style.height='';sd.style.maxHeight='';sd.style.width=(hmWide()?(v.w||44):(v.wn||36))+'%';} // スマホも左右並び（右の動画は36%、境目をドラッグで変えられる）
+  sd.style.height='';sd.style.maxHeight='';if(!hmWide()&&HM&&HM.pv){sd.style.width='100%';sd.style.borderLeft='0';return;}sd.style.width=(hmWide()?(v.w||44):(v.wn||36))+'%';} // スマホも左右並び（右の動画は36%、境目をドラッグで変えられる）
 function hmRefit(){const sc=$('hm-scroll'),inn=$('hm-in'),pad=$('hm-pad');if(!sc||!inn||!HM||!HM.vb)return;
   const cx=sc.scrollLeft+sc.clientWidth/2-(pad?pad.offsetLeft:0)-inn.offsetLeft,cy=sc.scrollTop+sc.clientHeight/2-(pad?pad.offsetTop:0)-inn.offsetTop;const fx=cx/inn.offsetWidth,fy=cy/inn.offsetHeight;
   HM.base=Math.min((HM.IL?sc.clientWidth-2*hzGut():sc.clientWidth),(sc.clientHeight-10)*HM.vb.width/HM.vb.height);inn.style.width=HM.base*HM.z+'px';
@@ -489,7 +489,7 @@ function hmBoxClamp(save){const b=$('hm-box'),sd=$('hm-side');if(!b||!sd)return;
   if(save)try{localStorage.setItem('hm:boxpos',JSON.stringify({l:b.offsetLeft/W,t:b.offsetTop,w:w/W}));}catch{}}
 function hmBoxSetup(){const b=$('hm-box'),sd=$('hm-side'),bar=$('hm-bbar'),rs=$('hm-bres');if(!b||!sd)return;const ifr=b.querySelector('iframe');const sp=$('hm-vspace');
   let v=null;try{v=JSON.parse(localStorage.getItem('hm:boxpos')||'null');}catch{}
-  const W=sd.clientWidth;const m=W<300?4:12;if(v&&W>=300){b.style.width=(v.w*W)+'px';b.style.left=(v.l*W)+'px';b.style.top=v.t+'px';}else{b.style.width=(W-2*m)+'px';b.style.left=m+'px';b.style.top=m+'px';}
+  const W=sd.clientWidth;const m=W<300?4:12;if(v&&hmWide()){b.style.width=(v.w*W)+'px';b.style.left=(v.l*W)+'px';b.style.top=v.t+'px';}else{b.style.width=(W-2*m)+'px';b.style.left=m+'px';b.style.top=m+'px';}
   hmBoxClamp();if(sp)sp.style.height=Math.max(0,b.offsetTop+b.offsetHeight-12)+'px';
   const drag=(el,mv)=>{let st=null;el.addEventListener('pointerdown',e=>{st={x:e.clientX,y:e.clientY,l:b.offsetLeft,t:b.offsetTop,w:b.offsetWidth};el.setPointerCapture(e.pointerId);ifr.style.pointerEvents='none';e.preventDefault();});
     el.addEventListener('pointermove',e=>{if(st)mv(st,e.clientX-st.x,e.clientY-st.y);});
