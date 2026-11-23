@@ -65,7 +65,7 @@ function buildClubs(recs){
 const clubList=()=>CLUB_ORDER.filter(c=>MYCLUBS[c]).map(c=>MYCLUBS[c]);
 function clubCode(s){const m=String(s||'').match(/1W|3W|5W|7W|UT|4H|[4-9]I|PW|AW|SW|LW|52°|58°/);if(!m)return null;return {UT:'4H',AW:'52°',SW:'58°',LW:'58°'}[m[0]]||m[0];}
 // 残り距離にいちばん合うクラブ（キャリーが残り距離以上で一番短いもの）
-// コースで実際に使った番手の距離（10/20 東条湖のラウンド後に洋平さんが決めた表）。残り距離からのクラブ選びはこれを優先する
+// コースで使う番手の距離。11/23のトラックマンの当たりの良い球（芯に当たって左右15y以内）のトータルから作り直した（洋平さんの指示）。残り距離のクラブ選びはこの表を優先
 const COURSE_YARDS={date:'2026-11-23',rows:[['58°',0,85],['52°',85,100],['PW',100,115],['9I',115,135],['8I',135,148],['7I',148,160],['6I',160,180],['4H',180,200],['5W',200,999]]};
 function clubFor(dist,skip){
   if(typeof COURSE_YARDS!=='undefined'&&typeof MYCLUBS!=='undefined'){const row=COURSE_YARDS.rows.find(r=>dist<r[2]&&!(skip||[]).includes(r[0]))||COURSE_YARDS.rows.filter(r=>!(skip||[]).includes(r[0])).slice(-1)[0];
