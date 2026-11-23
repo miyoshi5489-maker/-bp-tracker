@@ -65,8 +65,8 @@ function buildClubs(recs){
 const clubList=()=>CLUB_ORDER.filter(c=>MYCLUBS[c]).map(c=>MYCLUBS[c]);
 function clubCode(s){const m=String(s||'').match(/1W|3W|5W|7W|UT|4H|[4-9]I|PW|AW|SW|LW|52°|58°/);if(!m)return null;return {UT:'4H',AW:'52°',SW:'58°',LW:'58°'}[m[0]]||m[0];}
 // 残り距離にいちばん合うクラブ（キャリーが残り距離以上で一番短いもの）
-// コースで使う番手の距離。11/23のトラックマンの当たりの良い球（芯に当たって左右15y以内）のトータルから作り直した（洋平さんの指示）。残り距離のクラブ選びはこの表を優先
-const COURSE_YARDS={date:'2026-11-23',rows:[['58°',0,85],['52°',85,100],['PW',100,120],['9I',120,135],['8I',135,150],['7I',150,165],['6I',165,180],['4H',180,200],['5W',200,999]]};
+// コースで使う番手の距離。11/23：5Wは調子が悪いので表から外し、180y〜は4H（洋平さんの指示）。11/23のトラックマンの当たりの良い球（芯に当たって左右15y以内）のトータルから作り直した（洋平さんの指示）。残り距離のクラブ選びはこの表を優先
+const COURSE_YARDS={date:'2026-11-23',rows:[['58°',0,85],['52°',85,100],['PW',100,120],['9I',120,135],['8I',135,150],['7I',150,165],['6I',165,180],['4H',180,999]]};
 function clubFor(dist,skip){
   if(typeof COURSE_YARDS!=='undefined'&&typeof MYCLUBS!=='undefined'){const row=COURSE_YARDS.rows.find(r=>dist<r[2]&&!(skip||[]).includes(r[0]))||COURSE_YARDS.rows.filter(r=>!(skip||[]).includes(r[0])).slice(-1)[0];
     if(row){const c=MYCLUBS[row[0]]||{c:row[0],carry:(row[1]+Math.min(row[2],row[1]+20))/2};return {...c,c:row[0],course:[row[1],row[2]]};}}
