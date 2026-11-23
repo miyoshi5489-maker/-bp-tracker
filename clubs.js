@@ -99,7 +99,7 @@ async function renderClubs(){
   const tmN=L.filter(x=>x.src.startsWith('TM')).length;
   el.innerHTML=`
   <div class="grid gap-1"><div class="font-display text-2xl">マイ飛距離</div><div class="text-[12px] text-muted">ラウンドのマップのクラブ選び・残り距離のおすすめ・ブレの範囲は、この表を使います。</div></div>
-  <div class="card grid gap-2 p-4"><div class="font-bold">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)} 東条湖のラウンドから）</div><div class="text-[12px] text-muted">残り距離からのクラブ選び（キャディ）は、この表を優先します。</div>
+  <div class="card grid gap-2 p-4"><div class="font-bold">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)} 更新・10/20東条湖のラウンドの表を、11/23のトラックマンでウェッジだけ直した）</div><div class="text-[12px] text-muted">残り距離からのクラブ選び（キャディ）は、この表を優先します。</div>
    <div class="grid grid-cols-3 gap-1.5 text-center sm:grid-cols-9">${COURSE_YARDS.rows.map(r=>`<div class="rounded-lg bg-accent-soft px-1 py-1.5"><div class="text-[13px] font-bold">${r[0]}</div><div class="num text-[12px] text-muted">${r[1]===0?'〜'+r[2]:r[2]>=999?r[1]+'〜':r[1]+'〜'+r[2]}y</div></div>`).join('')}</div></div>
   ${tmN?'':`<div class="rounded-xl bg-warn-soft px-3 py-2 text-[13px] text-warn">まだトラックマンのデータがありません。いまは<b>仮の距離</b>です。セット：D・5W・4H・5〜9I・PW・52°・58°</div>`}
   <div class="card overflow-hidden">
