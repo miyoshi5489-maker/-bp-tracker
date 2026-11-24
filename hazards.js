@@ -101,13 +101,14 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
   const cw=t=>[...t].reduce((s,ch)=>s+(/[\x00-\x7f]/.test(ch)?2.9:4.6),0);
   const H1=8.4*u,H2=13*u;let v='';
   const lab=(o,x,y,w,hh)=>o.gap?`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="${o.gc[1]}" stroke="${o.gc[0]}" stroke-width="${1*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.2*u}" font-weight="bold" fill="${o.gc[2]}" text-anchor="middle">すき間<tspan fill="${o.gc[0]}">${o.w}</tspan>y</text><text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="${o.gc[2]}" text-anchor="middle">${o.sub}</text>`:`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="#fff" fill-opacity="${out?1:.93}" stroke="${o.col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.6*u}" font-weight="bold" fill="${o.col}" text-anchor="middle">${o.txt}</text>${o.sub?`<text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="#455a64" text-anchor="middle">${o.sub}</text>`:''}`;
-  if(out){
-    // 左右は「コースの中心から左か右か」で決める（左のバンカーは左側の余白に）
-    // すき間（バンカー・池がない区間）も同じ列に並べる：前後のバンカーの高さの間に置き、ラベルが少ない側へ（洋平さんの指示）
+  // すき間（バンカー・池がない区間）：前後のバンカーの高さの間に置く。印刷用（図の中）でも出す（洋平さんの指示）
     if(typeof hzLines==='function'){const z=hzLines(key,n,dt);const hz=items.filter(o=>!o.h.g&&o.f!=null).map(o=>[(o.f+o.c)/2,o.h.cy]).sort((a,b)=>a[0]-b[0]);
       const cyAt=yd=>{if(hz.length<2)return hz.length?hz[0][1]:null;let k=hz.findIndex(p=>p[0]>=yd);if(k<=0)k=k<0?hz.length-1:1;const [a,b]=[hz[k-1],hz[k]];return a[1]+(b[1]-a[1])*(yd-a[0])/((b[0]-a[0])||1);};
       const GAPC=[['#00acc1','#e0f7fa','#006064'],['#d81b60','#fce4ec','#880e4f'],['#8e24aa','#f3e5f5','#4a148c'],['#f57c00','#fff3e0','#e65100']]; // すき間ごとに色を変える（水色・ピンク・紫・オレンジ）
       (z&&z.rows||[]).filter(g=>g.k==='gap').forEach((g,gi)=>{const cy=cyAt((g.f+g.c)/2);if(cy==null)return;const hs=items.filter(o=>!o.gap&&!o.h.g&&o.f!=null),ha=items.filter(o=>!o.gap&&o.f!=null);const prev=hs.filter(o=>o.c<=g.f+3).sort((a,b)=>b.c-a.c)[0],next=ha.filter(o=>o.f>=g.c-3).sort((a,b)=>a.f-b.f)[0];const A=prev&&prev.h,B=next&&next.h;const gcy=A&&B?(A.cy+B.cy)/2:cy,gcx=A&&B?(A.cx+B.cx)/2:W/2;items.push({gap:1,gc:GAPC[gi%GAPC.length],w:g.w,ref:prev||next,A,B,h:{cy:gcy,cx:gcx,x:null},txt:`すき間${g.w}y`,sub:`${g.f}〜${g.c}`,col:'#1b5e20'});});}
+  if(out){
+    // 左右は「コースの中心から左か右か」で決める（左のバンカーは左側の余白に）
+    // すき間（バンカー・池がない区間）も同じ列に並べる：前後のバンカーの高さの間に置き、ラベルが少ない側へ（洋平さんの指示）
     const nL=items.filter(o=>!o.gap&&((o.h.x!=null&&Math.abs(o.h.x)>=4)?o.h.x<0:o.h.cx<W/2)).length,nR=items.filter(o=>!o.gap).length-nL;
     const side=o=>{if(o.gap)return o.ref?side(o.ref):(nL<=nR?'L':'R');const x=o.h.x;return (x!=null&&Math.abs(x)>=4)?(x<0?'L':'R'):(o.h.cx<W/2?'L':'R');};
     const HH=gl?H2:H1,G=1.4*u,J=(typeof hzGut==='function'&&hzGut()<HZ_GUT?3:8)*u;
@@ -126,6 +127,7 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
         v+=`<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="${1.1*u}" stroke-linejoin="round"/><polyline points="${pts}" fill="none" stroke="${o.col}" stroke-width="${.55*u}" stroke-linejoin="round"/><circle cx="${bx}" cy="${o.h.cy}" r="${.9*u}" fill="${o.col}" stroke="#fff" stroke-width="${.3*u}"/>`+lab(o,x,y,w,HH);});});
     return v;}
   const placed=[];// 図の中に置く時は、ラベル同士が重ならないように上下にずらす
+  items.filter(o=>o.gap&&o.A&&o.B).forEach(o=>{v+=`<line x1="${o.A.cx}" y1="${o.A.cy}" x2="${o.B.cx}" y2="${o.B.cy}" stroke="#fff" stroke-width="${1.6*u}" stroke-linecap="round"/><line x1="${o.A.cx}" y1="${o.A.cy}" x2="${o.B.cx}" y2="${o.B.cy}" stroke="${o.gc[0]}" stroke-width="${1*u}" stroke-linecap="round"/>`;});
   items.sort((p,q)=>p.h.cy-q.h.cy).forEach(o=>{const h=o.h;const hh=o.sub?H2:H1;const w=(Math.max(cw(o.txt),cw(o.sub)*.8)+7)*u;const right=h.cx<W/2;let x=right?h.cx+(h.hw||4)+1.5*u:h.cx-(h.hw||4)-1.5*u-w;x=Math.max(1,Math.min(W-w-1,x));let y=h.cy-hh/2;
     for(let k=0;k<12;k++){const hit=placed.find(b=>x<b.x+b.w+1&&x+w+1>b.x&&y<b.y+b.h+1&&y+hh+1>b.y);if(!hit)break;y=hit.y+hit.h+1.2*u;}placed.push({x,y,w,h:hh});
     const g=lab(o,x,y,w,hh);v+=wrap?wrap(x+w/2,h.cy,g):g;});

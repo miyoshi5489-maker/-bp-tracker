@@ -155,9 +155,9 @@ function ybDateOnce(html){const d=typeof TM_BUILTIN!=='undefined'&&TM_BUILTIN.da
 // 出典（ショットナビ・じゃらんゴルフなど）は文の途中から外して、ページのいちばん下にまとめる（洋平さんの指示）
 function ybSrcOut(html,src){const SR=/^(?:古い)?(ショットナビ|じゃらんゴルフ|じゃらん|GDOゴルフ場予約|GDOの記事|GDO|ゴリゴル動画|ゴリゴルチャンネル|公式|プレー記|楽天GORA|GORA)/;
   const nm=x=>({'じゃらん':'じゃらんゴルフ','GDOの記事':'GDO','GDOゴルフ場予約':'GDO','GORA':'楽天GORA','ゴリゴルチャンネル':'ゴリゴル動画'}[x]||x);
-  const fix=seg=>seg.replace(/（([^（）]*)）/g,(all,inner)=>{const keep=[];inner.split('・').forEach(tok=>{const m=tok.match(SR);if(!m){keep.push(tok);return;}src.add(nm(m[1]));const rest=tok.slice(m[0].length).replace(/^の(?!記事)/,'');if(rest&&!/^(の記事|記事)$/.test(rest))keep.push(rest);});return keep.length?`（${keep.join('・')}）`:'';});
+  const fix=seg=>seg.replace(/（([^（）]*)）/g,(all,inner)=>{const keep=[];inner.split('・').forEach(tok=>{const m=tok.match(SR);if(!m){keep.push(tok);return;}const rest=tok.slice(m[0].length);if(!rest||/^(の記事|記事)$/.test(rest)){src.add(nm(m[1]));return;}if(/^の(図|動画|景色|写真)/.test(rest)){src.add(nm(m[1]));keep.push(rest.slice(1));return;}keep.push(tok);});return keep.length?`（${keep.join('・')}）`:'';});
   // タグの外の文字だけ直す（カッコがタグをまたぐ時は1つにつなげてから）
-  return html.split(/(<[^>]+>)/).map(x=>x[0]==='<'?x:fix(x)).join('').replace(/<span class="(?:yb-aim-n|text-muted)">\s*<\/span>/g,'').replace(/<span class="text-muted">（([^<]*)）<\/span>/g,(a,b)=>{const keep=b.split('・').filter(tok=>{const m=tok.match(SR);if(m){src.add(nm(m[1]));return false;}return true;});return keep.length?`<span class="text-muted">（${keep.join('・')}）</span>`:'';});}
+  return html.split(/(<[^>]+>)/).map(x=>x[0]==='<'?x:fix(x)).join('').replace(/<span class="(?:yb-aim-n|text-muted)">\s*<\/span>/g,'').replace(/<span class="text-muted">（([^<]*)）<\/span>/g,(a,b)=>{const keep=b.split('・').filter(tok=>{const m=tok.match(SR);if(m&&(tok.length===m[0].length||/^(の記事|記事)$/.test(tok.slice(m[0].length)))){src.add(nm(m[1]));return false;}return true;});return keep.length?`<span class="text-muted">（${keep.join('・')}）</span>`:'';});}
 // 左・右・前・奥を1行に：「OB：右・奥（ショットナビ）」のように同じ中身はまとめる（洋平さんの指示：2行使わない）
 function ybSideLine(sd){if(!sd)return '';const SRC=/（([^（）]*(ショットナビ|GDO|じゃらん|動画|公式|プレー記|記事|GORA)[^（）]*)）$/;
   const E=[['左',sd.L],['右',sd.R],['前',sd.F],['奥',sd.B]].filter(e=>e[1]);const src=new Set();const g={};const na=[];
