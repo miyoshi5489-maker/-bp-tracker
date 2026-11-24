@@ -97,7 +97,7 @@ function ybCard(x,h,x2){
    <div class="yb-body">${fig}
     <div class="yb-txt">
      <div class="yb-tee">1打目 <b>${esc(h[5])}</b></div>${shotLines}${aim}${(()=>{const z=typeof hzLines==='function'?hzLines(key,h[0],dt):null;if(!z||(!z.tee.length&&!z.grn.length&&!z.sec.length))return '';return `<div class="yb-hz">${hzHtml(z)}</div>`;})()}
-     <ul class="yb-cad">${cad.map(t=>`<li>${ybBr(t)}</li>`).join('')}</ul>
+     <ul class="yb-cad">${cad.map(t=>ybCadLi(t)).join('')}</ul>
      <div class="yb-plan">${ybAim(h[6])}</div>
     </div></div>
    <div class="yb-score">${['打数','パット','FW','OB・池','メモ'].map((t,i)=>{const sc=i===0?ybScore(x,h[0]):null;return `<div><span>${t}</span>${sc?`<b style="display:block;text-align:center;font-size:15pt;line-height:1;color:${ybDiffCol(sc-h[4])}">${sc}</b>`:''}</div>`;}).join('')}</div>
@@ -173,4 +173,17 @@ function ybAim(t){if(!t)return '';t=String(t);let head='';const m=t.match(/^([^�
   return `<div class="yb-aim-h"><b>狙い</b>${head?`<span>${esc(head)}</span>`:''}</div>${rows}`;}
 
 // 箇条書きの中の文も「。」ごとに改行（カッコやタグの中は切らない）
+// キャディの1行を種類ごとに色分けし、危ない所（OB・池・崖）と狙い所を太字にする（洋平さんの指示：大事な所を太く、色をつけて目立たせる）
+function ybKind(t){const p=String(t).replace(/<[^>]+>/g,'');
+  if(/^グリーン：/.test(p))return 'grn';if(/^高低差：/.test(p))return 'elev';if(/^ドライバー：/.test(p))return 'dr';
+  if(/^左 |^右 /.test(p))return 'side';if(/^(前|奥) ✕/.test(p)||/OB(?!率)|池|崖/.test(p))return 'ob';return 'etc';}
+function ybEmphText(s){return s.replace(/(すぐOB|OB(?!率)|崖|池)/g,'<b class="yb-red">$1</b>').replace(/(セーフ)/g,'<b class="yb-safe">$1</b>')
+  .replace(/([^、。：→（）<>\s　]{1,16}(?:を狙いたい|を狙う|が狙い目|を向いて構える|狙い)(?![目た]))/g,'<b class="yb-key">$1</b>');}
+function ybEmph(h){let o='',dep=0;return h.split(/(<[^>]+>)/).map(x=>{if(x[0]==='<'){if(/^<span class="text-muted/.test(x))dep++;else if(dep&&x==='</span>')dep--;return x;}return dep?x:ybEmphText(x);}).join('');}
+function ybCadLi(t){const k=ybKind(t);let h=ybBr(t);
+  const TAG={grn:['グリーン','#2e7d32'],elev:['高低差','#1565c0']}[k];
+  if(k==='grn')h=h.replace(/^グリーン：(?:<br>)?/,'');
+  if(k==='elev')h=h.replace(/^<b>高低差<\/b>：(?:<br>)?([^<　]+)/,'<b class="yb-big">$1</b>');
+  h=ybEmph(h);
+  return `<li class="yb-k yb-k-${k}">${TAG?`<span class="yb-tag" style="background:${TAG[1]}">${TAG[0]}</span>`:''}${h}</li>`;}
 function ybBr(t){t=String(t).replace(/(<\/[^>]+>)?[\s　]*→[\s　]*/g,(m,a)=>(a||'')+'<br>→ ').replace(/^((?:<[^>]+>)*[^<。]{1,14}(?:<\/[^>]+>)+)[\s　]+/,'$1<br>');let o='',dep=0,tag=false;const n=t.length;for(let i=0;i<n;i++){const c=t[i];if(c==='<')tag=true;if(!tag){if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);}o+=c;if(c==='>')tag=false;if(c==='。'&&!dep&&!tag&&i<n-1&&!/^\s*(<\/[^>]+>\s*)*$/.test(t.slice(i+1)))o+='<br>';}return o;}
