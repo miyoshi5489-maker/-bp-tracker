@@ -106,7 +106,7 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
     // すき間（バンカー・池がない区間）も同じ列に並べる：前後のバンカーの高さの間に置き、ラベルが少ない側へ（洋平さんの指示）
     if(typeof hzLines==='function'){const z=hzLines(key,n,dt);const hz=items.filter(o=>!o.h.g&&o.f!=null).map(o=>[(o.f+o.c)/2,o.h.cy]).sort((a,b)=>a[0]-b[0]);
       const cyAt=yd=>{if(hz.length<2)return hz.length?hz[0][1]:null;let k=hz.findIndex(p=>p[0]>=yd);if(k<=0)k=k<0?hz.length-1:1;const [a,b]=[hz[k-1],hz[k]];return a[1]+(b[1]-a[1])*(yd-a[0])/((b[0]-a[0])||1);};
-      (z&&z.rows||[]).filter(g=>g.k==='gap').forEach(g=>{const cy=cyAt((g.f+g.c)/2);if(cy==null)return;const hs=items.filter(o=>!o.gap&&!o.h.g&&o.f!=null);const prev=hs.filter(o=>o.c<=g.f+3).sort((a,b)=>b.c-a.c)[0],next=hs.filter(o=>o.f>=g.c-3).sort((a,b)=>a.f-b.f)[0];items.push({gap:1,w:g.w,ref:prev||next,h:{cy,cx:W/2,x:null},txt:`すき間${g.w}y`,sub:`${g.f}〜${g.c}`,col:'#1b5e20'});});}
+      (z&&z.rows||[]).filter(g=>g.k==='gap').forEach(g=>{const cy=cyAt((g.f+g.c)/2);if(cy==null)return;const hs=items.filter(o=>!o.gap&&!o.h.g&&o.f!=null);const prev=hs.filter(o=>o.c<=g.f+3).sort((a,b)=>b.c-a.c)[0],next=hs.filter(o=>o.f>=g.c-3).sort((a,b)=>a.f-b.f)[0];const A=prev&&prev.h,B=next&&next.h;const gcy=A&&B?(A.cy+B.cy)/2:cy,gcx=A&&B?(A.cx+B.cx)/2:W/2;items.push({gap:1,w:g.w,ref:prev||next,A,B,h:{cy:gcy,cx:gcx,x:null},txt:`すき間${g.w}y`,sub:`${g.f}〜${g.c}`,col:'#1b5e20'});});}
     const nL=items.filter(o=>!o.gap&&((o.h.x!=null&&Math.abs(o.h.x)>=4)?o.h.x<0:o.h.cx<W/2)).length,nR=items.filter(o=>!o.gap).length-nL;
     const side=o=>{if(o.gap)return o.ref?side(o.ref):(nL<=nR?'L':'R');const x=o.h.x;return (x!=null&&Math.abs(x)>=4)?(x<0?'L':'R'):(o.h.cx<W/2?'L':'R');};
     const HH=gl?H2:H1,G=1.4*u,J=(typeof hzGut==='function'&&hzGut()<HZ_GUT?3:8)*u;
@@ -116,7 +116,11 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
       if(H){for(let i=it.length-1;i>=0;i--){ys[i]=Math.min(ys[i],(i<it.length-1?ys[i+1]-HH-G:H-HH));}}
       let ey=-1e9;
       it.forEach((o,i)=>{const y=ys[i],ly=y+HH/2;const x=sd==='L'?-w-J:W+J;const ax=sd==='L'?x+w:x;const ex=sd==='L'?0:W;
-        if(o.gap){v+=lab(o,x,y,w,HH);return;} // 前後のバンカーのラベルの間に並ぶ（下の数字は前のバンカーの終わり〜次の始まり）
+        if(o.gap){const gc='#2e7d32';let s='';
+          if(o.A&&o.B)s+=`<line x1="${o.A.cx}" y1="${o.A.cy}" x2="${o.B.cx}" y2="${o.B.cy}" stroke="#fff" stroke-opacity=".75" stroke-width="${1.3*u}" stroke-linecap="round"/><line x1="${o.A.cx}" y1="${o.A.cy}" x2="${o.B.cx}" y2="${o.B.cy}" stroke="${gc}" stroke-width="${.7*u}" stroke-dasharray="${1.4*u} ${1*u}" stroke-linecap="round"/>`;
+          const mx=o.h.cx,my=o.h.cy;const p2=`${ax},${ly} ${ex},${ly} ${mx},${my}`;
+          s+=`<polyline points="${p2}" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="${.9*u}"/><polyline points="${p2}" fill="none" stroke="${gc}" stroke-width="${.45*u}" stroke-dasharray="${1*u} ${.8*u}"/><circle cx="${mx}" cy="${my}" r="${.9*u}" fill="#fff" stroke="${gc}" stroke-width="${.4*u}"/>`;
+          v+=s+lab(o,x,y,w,HH);return;} // すき間：前後のバンカーを薄い点線で結び、そのまん中から外のラベルへ
         const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));ey=Math.max(o.h.cy,ey+2.6*u);
         const pts=`${ax},${ly} ${ex},${ey} ${bx},${ey} ${bx},${o.h.cy}`;
         v+=`<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="${1.1*u}" stroke-linejoin="round"/><polyline points="${pts}" fill="none" stroke="${o.col}" stroke-width="${.55*u}" stroke-linejoin="round"/><circle cx="${bx}" cy="${o.h.cy}" r="${.9*u}" fill="${o.col}" stroke="#fff" stroke-width="${.3*u}"/>`+lab(o,x,y,w,HH);});});

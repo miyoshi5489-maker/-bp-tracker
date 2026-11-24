@@ -83,7 +83,8 @@ function ybCard(x,h,x2){
     fig=`<div class="yb-fig" data-k="${key}" data-n="${h[0]}" data-dt="${dt}" data-u="${k}" onclick="ybTap(event,this)" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH};--hr:${(IH/IL.w).toFixed(3)}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
     shots=ybShots(IL,hi,m,dt);}
   const cad0=caddie(x,h,m);const iL=cad0.findIndex(t=>/>左 /.test(t));if(iL>=0&&/>右 /.test(cad0[iL+1]||''))cad0.splice(iL,2,cad0[iL]+'<br>'+cad0[iL+1]);
-  const cad=cad0.filter(t=>!/同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
+  const cad1=cad0.filter(t=>!/同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
+  const cad=ybDedupe(cad1,h[6]); // 同じページで「狙い」と同じ文は書かない（洋平さんの指示：重複なし・シンプルに）
   const st=(HOLE_STATS[key]||{})[h[0]];
   const shotLines=shots.map(s=>{const cc=liveClub(s.club)||(clubCode(s.club)&&MYCLUBS[clubCode(s.club)]);
     return `<div class="yb-shot"><span class="yb-no">${s.n}</span><b>${esc(s.club||'')}</b> ${s.d}y${cc&&s.n===1?`<span class="yb-mut">（キャリー${Math.round(cc.carry)}・トータル${Math.round(cc.total||cc.carry)}）</span>`:''} → 残り<b>${s.rest}y</b></div>`;}).join('');
@@ -132,6 +133,19 @@ function ybMag(x){
    <div class="yb-mag-foot"><span>${credit}</span><span>みよトレ ゴルフ部</span></div>
   </div>`;
 }
+// ── 同じページの重複をなくす：文を「。」で切り、ほぼ同じ文（文字の2つ組の重なりが6割以上）は2回目から消す
+function ybNorm(t){return String(t).replace(/<[^>]+>/g,'').replace(/（[^（）]*）|\([^()]*\)/g,'').replace(/11\/\d+の当たりの良い球(の|で)?/g,'').replace(/[\s　、。・：「」→]/g,'');}
+function ybBig(t){const n=ybNorm(t);const S=new Set();for(let i=0;i<n.length-1;i++)S.add(n.slice(i,i+2));return S;}
+function ybSim(a,b){if(!a.size||!b.size)return 0;let k=0;a.forEach(x=>{if(b.has(x))k++;});return k/Math.min(a.size,b.size);}
+function ybSents(t){const o=[];let cur='',dep=0;for(const c of String(t)){if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);cur+=c;if(c==='。'&&!dep){o.push(cur);cur='';}}if(cur.trim())o.push(cur);return o;}
+function ybDedupe(lines,aim){const seen=ybSents(aim||'').map(ybBig).filter(b=>b.size>=3);const dup=t=>{const b=ybBig(t);if(b.size<3)return false;return seen.some(x=>ybSim(b,x)>=.45);};
+  return lines.map(t=>{
+    let m=t.match(/^(<span class="[^"]*"><b>ドライバー：[^<]*<\/b><\/span>)　(.*)$/);
+    if(m){const keep=ybSents(m[2]).filter(x=>!dup(x));keep.forEach(x=>seen.push(ybBig(x)));return m[1]+(keep.length?'　'+keep.join(''):'');}
+    m=t.match(/^グリーン：(.*)$/);
+    if(m){const keep=ybSents(m[1]).filter(x=>!dup(x));keep.forEach(x=>seen.push(ybBig(x)));return keep.length?'グリーン：'+keep.join(''):null;}
+    if(/^<span class="text-(muted|fg|accent|warn)">(左|右|前|奥) /.test(t)||/^<b>高低差/.test(t))return t;
+    if(dup(t))return null;seen.push(ybBig(t));return t;}).filter(Boolean);}
 function ybCover(x){
   const cl=YB_ORDER.map(c=>MYCLUBS&&MYCLUBS[c]).filter(Boolean);
   const H=x.holes;const sum=(a,i)=>a.reduce((s,h)=>s+h[i],0);const out=H.filter(h=>h[0]<=9),inn=H.filter(h=>h[0]>=10);
@@ -193,6 +207,7 @@ function drawYardageBook(){
 // 狙いの文章を読みやすく：見出し → 1文ずつ行に分ける → 「→」の流れは段に分ける → （カッコの補足）は小さく
 function ybAim(t){if(!t)return '';t=String(t);let head='';const m=t.match(/^([^。：]{2,26})：/);if(m){head=m[1];t=t.slice(m[0].length);}
   const ss=[];let cur='',dep=0;for(const c of t){if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);cur+=c;if(c==='。'&&!dep){ss.push(cur);cur='';}}if(cur.trim())ss.push(cur);
+  {const kept=[];const ss2=ss.filter(x=>{const b=ybBig(x);if(b.size>=4&&kept.some(k=>ybSim(b,k)>=.6))return false;kept.push(b);return true;});ss.length=0;ss.push(...ss2);}
   const small=x=>esc(x).replace(/（([^（）]*)）/g,'<span class="yb-aim-n">（$1）</span>');
   const ic=x0=>{const x=x0.replace(/（[^（）]*）/g,'');return /^[23]打目/.test(x)?'⛳':/OB|しない|注意|出やすい|ダメ|禁止|避け/.test(x)?'⚠️':/スタート前|温め|素振り/.test(x)?'🔥':/ドライバー|ティー|1打目|ウッド|ユーティ|アイアン/.test(x)?'🏌️':/グリーン|アプローチ|パット/.test(x)?'⛳':'・';};
   const rows=ss.map(x=>x.trim().replace(/。$/,'')).filter(Boolean).map(x=>{const st=x.split('→').map(y=>y.trim()).filter(Boolean);
