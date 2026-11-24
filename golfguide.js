@@ -107,7 +107,7 @@ function gFmt(s){let lab='',body=s;const m=s.match(/^<b>([^<]{1,14})<\/b>：/);i
     if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);
     cur+=c;if(c==='。'&&!dep&&!inB&&i<body.length-1){out.push(cur);cur='';}}
   if(cur)out.push(cur);
-  return (lab?`<span class="gl">${lab}</span>`:'')+out.map(x=>`<span class="gs">${x}</span>`).join('');}
+  return (lab?`<span class="gl">${lab}</span>`:'')+out.map(x=>`<span class="gs">${x.replace(/（([^（）<>]{2,})）/g,'<span class="gp">（$1）</span>')}</span>`).join('');}
 function slopeGuideCards(){
   if(typeof SLOPE_GUIDE==='undefined')return [];
   return SLOPE_GUIDE.flatMap(g=>g.parts.map(p=>{const kd=slopeKind(g),nm=kd==='shot'?'傾斜':'バンカー';
