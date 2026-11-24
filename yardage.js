@@ -249,7 +249,7 @@ function ybEmph(h,aim){let dep=0;return h.split(/(<[^>]+>)/).map(x=>{if(x[0]==='
 function ybCadLi(t){const k=ybKind(t);let h=ybBr(t);
   const TAG={grn:['グリーン','#2e7d32'],elev:['高低差','#1565c0']}[k];
   if(k==='grn')h=h.replace(/^グリーン：(?:<br>)?/,'');
-  if(k==='elev')h=h.replace(/<span class="text-muted">[^<]*<\/span>/,m=>/何ヤード分かは情報なし/.test(m)?'<span class="text-muted">何y分かは情報なし（高低差1m≒1y）</span>':'').replace(/^<b>高低差<\/b>：(?:<br>)?/,'').replace(/^([^<　]+)/,'<b class="yb-big">$1</b>');
+  if(k==='elev')h=h.replace(/<span class="text-muted">[^<]*<\/span>/,m=>/何ヤード分かは情報なし/.test(m)?'<span class="text-muted">何y分かは情報なし（高低差1m≒1y）</span>':/「/.test(m)?'':m).replace(/^<b>高低差<\/b>：(?:<br>)?/,'').replace(/^([^<　]+)/,'<b class="yb-big">$1</b>');
   h=ybEmph(h);
   return `<li class="yb-k yb-k-${k}">${TAG?`<span class="yb-tag" style="background:${TAG[1]}">${TAG[0]}</span>`:''}${h}</li>`;}
 function ybBr(t){t=String(t).replace(/(<\/[^>]+>)?[\s　]*→[\s　]*/g,(m,a)=>(a||'')+'<br>→ ').replace(/^((?:<[^>]+>)*[^<。]{1,14}(?:<\/[^>]+>)+)[\s　]+/,'$1<br>');let o='',dep=0,tag=false;const n=t.length;for(let i=0;i<n;i++){const c=t[i];if(c==='<')tag=true;if(!tag){if('（(「'.includes(c))dep++;else if('）)」'.includes(c))dep=Math.max(0,dep-1);}o+=c;if(c==='>')tag=false;if(c==='。'&&!dep&&!tag&&i<n-1&&!/^\s*(<\/[^>]+>\s*)*$/.test(t.slice(i+1)))o+='<br>';}return o;}
