@@ -28,7 +28,7 @@ function ybSvg(I,hi,m,o){
   if(o.sides){const sd=o.sides;const Lr=r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-r[i-1][0],q[1]-r[i-1][1]):0,0);const rg=o.obr||{};
     ['L','R'].forEach(k=>{const t=sd[k]||'';if(!/^OB(?!の記載)/.test(t))return;const sg=k==='R'?1:-1;const [f,e]=rg[k]||[0,9999];const pts=[];
       for(let d=Math.max(0,f*s);d<=Math.min(Lr,e*s)+0.1;d+=4){const a=routeAt(r,Math.min(d,Lr));let px=a.p[0]-a.u[1]*sg*36*s,py=a.p[1]+a.u[0]*sg*36*s;px=Math.max(2,Math.min(I.w-2,px));pts.push([px,py]);}
-      if(pts.length<2)return;const pp=pts.map(p=>p.join(',')).join(' ');
+      if(typeof obSmooth==='function'){const sm=obSmooth(pts);pts.length=0;pts.push(...sm);}if(pts.length<2)return;const pp=pts.map(p=>p.join(',')).join(' ');
       v+=hmOB(pp,K*.6);
       const q=pts[Math.floor((pts.length-1)*.45)];v+=`<rect x="${q[0]-2.6*K}" y="${q[1]-1.6*K}" width="${5.2*K}" height="${3.2*K}" rx="${.5*K}" fill="#d32f2f" stroke="#fff" stroke-width="${.2*K}"/><text x="${q[0]}" y="${q[1]+.85*K}" font-size="${2.4*K}" font-weight="bold" fill="#fff" text-anchor="middle">OB</text>`;});}
   // ルート
