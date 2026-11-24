@@ -118,8 +118,7 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
       it.forEach((o,i)=>{const y=ys[i],ly=y+HH/2;const x=sd==='L'?-w-J:W+J;const ax=sd==='L'?x+w:x;const ex=sd==='L'?0:W;
         if(o.gap){const gc='#2e7d32';let s='';
           if(o.A&&o.B)s+=`<line x1="${o.A.cx}" y1="${o.A.cy}" x2="${o.B.cx}" y2="${o.B.cy}" stroke="#fff" stroke-opacity=".75" stroke-width="${1.3*u}" stroke-linecap="round"/><line x1="${o.A.cx}" y1="${o.A.cy}" x2="${o.B.cx}" y2="${o.B.cy}" stroke="${gc}" stroke-width="${.7*u}" stroke-dasharray="${1.4*u} ${1*u}" stroke-linecap="round"/>`;
-          const mx=o.h.cx,my=o.h.cy;const p2=`${ax},${ly} ${ex},${ly} ${mx},${my}`;
-          s+=`<polyline points="${p2}" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="${.9*u}"/><polyline points="${p2}" fill="none" stroke="${gc}" stroke-width="${.45*u}" stroke-dasharray="${1*u} ${.8*u}"/><circle cx="${mx}" cy="${my}" r="${.9*u}" fill="#fff" stroke="${gc}" stroke-width="${.4*u}"/>`;
+          // ラベルからの線は引かない（図に線を増やさない）。前後のバンカーのラベルの間に並ぶので、どのすき間か分かる
           v+=s+lab(o,x,y,w,HH);return;} // すき間：前後のバンカーを薄い点線で結び、そのまん中から外のラベルへ
         const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));ey=Math.max(o.h.cy,ey+2.6*u);
         const pts=`${ax},${ly} ${ex},${ey} ${bx},${ey} ${bx},${o.h.cy}`;
