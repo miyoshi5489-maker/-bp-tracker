@@ -69,13 +69,13 @@ function hzLines(key,n,dt){
   const tee=[],sec=[],grn=[],segs=[];const gm=new Map(); // グリーン周りは同じ側・同じ種類を1つにまとめる
   all.sort((a,b)=>a.f-b.f).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;const nm=(h.t==='b'?'バンカー':'池');const ic=h.t==='b'?'⛱':'💧';
     if(h.g){const k=h.t+hzSide(h.x);const o2=gm.get(k);if(!o2)gm.set(k,{...h,f,c:cc,ic,nm});else{o2.ge=Math.min(o2.ge,h.ge);o2.f=Math.min(o2.f,f);o2.c=Math.max(o2.c,cc);if(o2.gp!==h.gp)o2.gp='手前〜横';}segs.push([f,cc]);return;}
-    const toG=gl?Math.max(0,gl-h.c):null;const o={t:h.t,f,c:cc,txt:`${ic}${hzSide(h.x)}の${nm} <b>${f}</b>〜<b>${cc}</b>y${toG!=null?`<span class="hzg">（越えてグリーンまで${toG}y）</span>`:''}`};
+    const toG=gl?Math.max(0,Math.round(gl-(h.f+h.c)/2)):null;const o={t:h.t,f,c:cc,txt:`${ic}${hzSide(h.x)}の${nm} <b>${f}</b>〜<b>${cc}</b>y${toG!=null?`<span class="hzg">（ここからグリーン中央まで約${toG}y）</span>`:''}`};
     (f<=320?tee:sec).push(o);segs.push([f,cc]);});
   gm.forEach(h=>grn.push(`${h.ic}${hzSide(h.x)}の${h.nm}${h.ge!=null?`（グリーン中央から約<b>${h.ge}</b>y・${h.gp||'横'}・ティーから${h.f}〜${h.c}y）`:''}`));
   // バンカー・池がない区間（ティーショットの範囲）
   const gaps=[];let mx=null;segs.sort((a,b)=>a[0]-b[0]).forEach(([f,c])=>{if(mx!=null&&f-mx>=8&&mx<=330)gaps.push(`${mx}〜${f}y（${f-mx}y）`);mx=mx==null?c:Math.max(mx,c);});
   // 表の行：ティーからの順に バンカー・池 と すき間 を並べ、最後にグリーン周り
-  const rows=[];all.filter(h=>!h.g).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;rows.push({k:'h',t:h.t,sd:hzSide(h.x),f,c:cc,toG:gl?Math.max(0,gl-h.c):null});});
+  const rows=[];all.filter(h=>!h.g).forEach(h=>{const f=Math.max(0,Math.round(h.f-dt)),cc=Math.round(h.c-dt);if(cc<=0)return;rows.push({k:'h',t:h.t,sd:hzSide(h.x),f,c:cc,toG:gl?Math.max(0,Math.round(gl-(h.f+h.c)/2)):null});});
   {let mx=null;segs.slice().sort((a,b)=>a[0]-b[0]).forEach(([f,c])=>{if(mx!=null&&f-mx>=8&&mx<=330)rows.push({k:'gap',f:mx,c:f,w:f-mx});mx=mx==null?c:Math.max(mx,c);});}
   rows.sort((a,b)=>a.f-b.f||(a.k==='gap')-(b.k==='gap'));
   const grows=[...gm.values()].sort((a,b)=>a.f-b.f).map(h=>({k:'g',t:h.t,sd:hzSide(h.x),f:h.f,c:h.c,ge:h.ge,gp:h.gp||'横'}));
@@ -84,10 +84,10 @@ function hzLines(key,n,dt){
 // 1つの表にまとめる（ヤーデージブック・ホールマップ共通）：名前｜ティーから｜グリーンまで
 function hzHtml(z){if(!z)return '';const nm=t=>t==='b'?'バンカー':'池',ic=t=>t==='b'?'⛱':'💧';
   const tr=r=>r.k==='gap'?`<tr class="hzt-gap"><td>すき間 <b>${r.w}</b>y</td><td>${r.f}〜${r.c}</td><td></td></tr>`
-    :r.k==='g'?`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>中央へ <b>${r.ge}</b>・${r.gp}</td></tr>`
-    :`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>${r.toG!=null?`越えて <b>${r.toG}</b>`:''}</td></tr>`;
+    :r.k==='g'?`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>中央まで <b>${r.ge}</b>・${r.gp}</td></tr>`
+    :`<tr><td>${ic(r.t)} ${r.sd}${nm(r.t)}</td><td><b>${r.f}</b>〜<b>${r.c}</b></td><td>${r.toG!=null?`中央まで <b>${r.toG}</b>`:''}</td></tr>`;
   const body=(z.rows||[]).map(tr).join('')||'<tr><td colspan="3">グリーンまでバンカー・池なし</td></tr>';
-  return `<table class="hzt"><thead><tr><th></th><th>ティーから（y）</th><th>グリーンまで（y）</th></tr></thead><tbody>${body}${(z.grows||[]).length?`<tr class="hzt-sec"><td colspan="3">グリーン周り</td></tr>${z.grows.map(tr).join('')}`:''}</tbody></table>`;}
+  return `<table class="hzt"><thead><tr><th></th><th>ティーから（y）</th><th>グリーン中央まで（y）</th></tr></thead><tbody>${body}${(z.grows||[]).length?`<tr class="hzt-sec"><td colspan="3">グリーン周り</td></tr>${z.grows.map(tr).join('')}`:''}</tbody></table>`;}
 
 // 図の上のラベル：バンカー・池の横に「手前〜越える」ヤード（グリーン周りは除く）
 function hzSvg(key,n,dt,u,wrap,W,mode,H){
@@ -95,9 +95,9 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;const out=mode==='out';
   const src=hzSrc(key,n);const items=[];const gl=(L.find(h=>h.gl)||{}).gl||0;const gm=hzGMatch(L,src,gl);
   L.forEach(h0=>{if(h0.cx==null)return;const col=h0.t==='b'?'#8d6e00':'#1565c0';
-    if(h0.g){const z=gm.get(h0);const f=Math.max(0,Math.round((z?z.f:h0.f)-dt)),c=Math.round((z?z.c:h0.c)-dt);items.push({h:h0,txt:`${f}〜${c}`,sub:`G中央へ${h0.ge}`,col,f,c});return;}
+    if(h0.g){const z=gm.get(h0);const f=Math.max(0,Math.round((z?z.f:h0.f)-dt)),c=Math.round((z?z.c:h0.c)-dt);items.push({h:h0,txt:`${f}〜${c}`,sub:`G中央まで${h0.ge}`,col,f,c});return;}
     const z=src.filter(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20).sort((a,b)=>Math.abs(a.f+a.c-h0.f-h0.c)+Math.abs(a.x-h0.x)/2-Math.abs(b.f+b.c-h0.f-h0.c)-Math.abs(b.x-h0.x)/2)[0];if(!z&&h0.c<60)return;const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0)return;
-    items.push({h,txt:`${f}〜${c}`,sub:gl?`G迄${Math.max(0,gl-h.c)}`:'',col,f,c});});
+    items.push({h,txt:`${f}〜${c}`,sub:gl?`G中央まで${Math.max(0,Math.round(gl-(h.f+h.c)/2))}`:'',col,f,c});}); // バンカーのまん中からグリーン中央まで（洋平さんの指示）
   const cw=t=>[...t].reduce((s,ch)=>s+(/[\x00-\x7f]/.test(ch)?2.9:4.6),0);
   const H1=8.4*u,H2=13*u;let v='';
   const lab=(o,x,y,w,hh)=>o.gap?`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="${o.gc[1]}" stroke="${o.gc[0]}" stroke-width="${1*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.2*u}" font-weight="bold" fill="${o.gc[2]}" text-anchor="middle">すき間<tspan fill="${o.gc[0]}">${o.w}</tspan>y</text><text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="${o.gc[2]}" text-anchor="middle">${o.sub}</text>`:`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="#fff" fill-opacity="${out?1:.93}" stroke="${o.col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.6*u}" font-weight="bold" fill="${o.col}" text-anchor="middle">${o.txt}</text>${o.sub?`<text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="#455a64" text-anchor="middle">${o.sub}</text>`:''}`;
