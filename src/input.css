@@ -127,7 +127,7 @@
 #yb.yb-m .yb-mag-strip figure{border-radius:6px;border-width:1px}
 #yb.yb-m .yb-mag-strip figcaption{font-size:11px;padding:1px 6px;border-top-right-radius:6px}
 #yb.yb-m .yb-mag-foot{font-size:10px;padding:10px 20px 14px}
-.yb-plan{border-top:.2mm dashed #999;padding-top:.8mm}
+.yb-tm{font-size:.8em;color:#777;border-top:.2mm dashed #bbb;padding-top:.6mm;flex:none}.yb-plan{border-top:.2mm dashed #999;padding-top:.8mm}
 .yb-aim-h{display:flex;align-items:baseline;gap:.4em;flex-wrap:wrap;margin-bottom:.3em}.yb-aim-h span{font-size:.85em;font-weight:700;color:#555;background:#eef3ec;border-radius:.4em;padding:.05em .45em}
 .yb-aim-row{display:flex;gap:.4em;align-items:flex-start;line-height:1.55;margin:.28em 0}.yb-aim-ic{flex:0 0 1.3em;text-align:center}
 .yb-aim-flow>div{margin:.05em 0}.yb-aim-ar{color:#e65100;font-weight:800;margin:0 .3em 0 .1em}.yb-cad li{line-height:1.6;margin:.25em 0}.yb-aim-n{font-size:.82em;color:#777}

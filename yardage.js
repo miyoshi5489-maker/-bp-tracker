@@ -91,7 +91,7 @@ function ybCard(x,h,x2){
   const aim=''; // ずれの文は出さない（図の楕円で見る）
   const other=x2?x2.holes.find(r=>r[0]===h[0]):null;
   const col=h[7]==='hard'?'#c62828':h[7]==='mid'?'#b7791f':'#2e7d32';
-  return `<div class="yb-card">
+  return ybDateOnce(`<div class="yb-card">
    <div class="yb-head"><div class="yb-num" style="background:${col}">${h[0]}</div>
     <div class="yb-ttl"><div><b>${PAR_NAME(h[1])}</b> Par${h[1]}・<b>${yd}y</b><span class="yb-mut">（${esc(teeName)}）</span></div><div class="yb-mut">HC${h[3]}${st?`・難易度${st.rank}位・OB率${Math.round(st.ob)}%`:''}</div></div>
     ${(()=>{const sc=ybScore(x,h[0]);return sc?`<div class="yb-goal"><div class="yb-mut">結果</div><b style="color:${ybDiffCol(sc-h[4])}">${sc}</b><div class="yb-mut">目標${h[4]}（${sc-h[4]>0?'+':''}${sc-h[4]}）</div></div>`:'';})()}<div class="yb-goal"><div class="yb-mut">目標</div><b>${h[4]}</b>${other?`<div class="yb-mut">${esc(x2.planName)} ${other[4]}</div>`:''}</div></div>
@@ -102,8 +102,8 @@ function ybCard(x,h,x2){
      <div class="yb-plan">${ybEmph(ybAim(h[6]),1)}</div>
     </div></div>
    <div class="yb-score">${['打数','パット','FW','OB・池','メモ'].map((t,i)=>{const sc=i===0?ybScore(x,h[0]):null;return `<div><span>${t}</span>${sc?`<b style="display:block;text-align:center;font-size:15pt;line-height:1;color:${ybDiffCol(sc-h[4])}">${sc}</b>`:''}</div>`;}).join('')}</div>
-   <div class="yb-foot">${IL?esc(IL.credit)+'（縮図・距離は目安）':''}<span>${h[0]}</span></div>
-  </div>`;
+   <!--YBTM--><div class="yb-foot">${IL?esc(IL.credit)+'（縮図・距離は目安）':''}<span>${h[0]}</span></div>
+  </div>`);
 }
 // 雑誌風の表紙（コースの写真＋今日の見出し）。写真はPHOTOS（公式）とCOURSE_VIEWの全景（楽天GORA）
 function ybMag(x){
@@ -146,6 +146,11 @@ function ybDedupe(lines,aim){const seen=ybSents(aim||'').map(ybBig).filter(b=>b.
     if(m){const keep=ybSents(m[1]).filter(x=>!dup(x));keep.forEach(x=>seen.push(ybBig(x)));return keep.length?'グリーン：'+keep.join(''):null;}
     if(/^<span class="text-(muted|fg|accent|warn)">(左|右|前|奥) /.test(t)||/^<b>高低差/.test(t))return t;
     if(dup(t))return null;seen.push(ybBig(t));return t;}).filter(Boolean);}
+// 練習の日付（11/23など）はページの中で何度も書かず、いちばん下に1回だけ書く（洋平さんの指示）
+function ybDateOnce(html){const d=typeof TM_BUILTIN!=='undefined'&&TM_BUILTIN.date;if(!d)return html.replace('<!--YBTM-->','');const md=`${+d.slice(5,7)}/${+d.slice(8)}`;const D=md.replace('/','\\/');
+  let t=html.replace(new RegExp(`（${D}の(?:当たりの良い|良かった)球で`,'g'),'（').replace(new RegExp(`${D}の(?:当たりの良い|良かった)球(?:のトータル|はトータル)`,'g'),'トータル')
+    .replace(new RegExp(`${D}の(?:当たりの良い|良かった)球(?:でも|で|は|の)?`,'g'),'').replace(new RegExp(`${D}の番手表`,'g'),'番手表').replace(new RegExp(`${D}[はの]`,'g'),'');
+  return t.replace('<!--YBTM-->',`<div class="yb-tm">クラブの距離・球すじは${md}の練習（トラックマンの当たりの良い球）から</div>`);}
 function ybCover(x){
   const cl=YB_ORDER.map(c=>MYCLUBS&&MYCLUBS[c]).filter(Boolean);
   const H=x.holes;const sum=(a,i)=>a.reduce((s,h)=>s+h[i],0);const out=H.filter(h=>h[0]<=9),inn=H.filter(h=>h[0]>=10);
