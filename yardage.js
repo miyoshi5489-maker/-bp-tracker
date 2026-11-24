@@ -104,6 +104,34 @@ function ybCard(x,h,x2){
    <div class="yb-foot">${IL?esc(IL.credit)+'（縮図・距離は目安）':''}<span>${h[0]}</span></div>
   </div>`;
 }
+// 雑誌風の表紙（コースの写真＋今日の見出し）。写真はPHOTOS（公式）とCOURSE_VIEWの全景（楽天GORA）
+function ybMag(x){
+  const ph=(typeof PHOTOS!=='undefined'&&PHOTOS[x.mapKey])||{};const pv=(typeof COURSE_VIEW!=='undefined'&&COURSE_VIEW[x.mapKey])||{};
+  const ks=Object.keys(ph);const hero=ks.length?ph[ks[0]]:(pv.pano?pv.pano[0]:'');const strip=ks.slice(1,4);
+  const d=new Date(x.date+'T00:00');const wd='日月火水木金土'[d.getDay()];
+  const g=typeof dwGroups==='function'?dwGroups(x):null;const H=x.holes||[];const sum=i=>H.reduce((s,h)=>s+h[i],0);
+  const m7=typeof MYCLUBS!=='undefined'&&MYCLUBS['1W'];
+  const credit=[ks.length?'写真：'+esc(x.course)+' 公式サイト':'',(!ks.length&&pv.pano)?'写真：'+esc(pv.pano[1]):''].filter(Boolean).join('・');
+  const lines=[
+    [`目標 <b>${x.target}</b>`,`${esc(x.planName)}への18ホール（OUT ${H.filter(h=>h[0]<=9).reduce((s,h)=>s+h[4],0)}・IN ${H.filter(h=>h[0]>=10).reduce((s,h)=>s+h[4],0)}）`],
+    g?[`ドライバーは <b>${g.use.length}</b>ホール`,`使わないホールは${g.no.length}つ。OBを0にする作戦`]:null,
+    m7?[`ドライバー <b>${Math.round(m7.total||m7.carry)}</b>y`,`${m7.date?+m7.date.slice(5,7)+'/'+(+m7.date.slice(8))+'の':''}当たりの良い球で番手表を作り直し`]:null,
+    [`全${H.length}ホールの<b>攻略</b>`,'バンカー・池までの距離、狙い所、グリーンの傾き'],
+  ].filter(Boolean);
+  return `<div class="yb-card yb-mag">
+   ${hero?`<img class="yb-mag-hero" src="${hero}" alt="${esc(x.course)}" referrerpolicy="no-referrer" onerror="this.remove()">`:''}
+   <div class="yb-mag-shade"></div>
+   <div class="yb-mag-top"><div class="yb-mag-mast">ヤーデージブック</div><div class="yb-mag-issue">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${wd}）号</div></div>
+   <div class="yb-mag-mid">
+    <div class="yb-mag-kick">${esc(x.time||'')}${x.tee?'・'+esc(x.tee):''}${sum(1)?'・パー'+sum(1):''}</div>
+    <div class="yb-mag-course">${esc(x.course)}</div>
+    <div class="yb-mag-sub">攻略特集</div>
+   </div>
+   <div class="yb-mag-lines">${lines.map(l=>`<div><div class="yb-mag-l1">${l[0]}</div><div class="yb-mag-l2">${l[1]}</div></div>`).join('')}</div>
+   ${strip.length?`<div class="yb-mag-strip">${strip.map(k=>`<figure><img src="${ph[k]}" alt="${k}番" referrerpolicy="no-referrer" onerror="this.parentNode.remove()"><figcaption>${k}番</figcaption></figure>`).join('')}</div>`:''}
+   <div class="yb-mag-foot"><span>${credit}</span><span>みよトレ ゴルフ部</span></div>
+  </div>`;
+}
 function ybCover(x){
   const cl=YB_ORDER.map(c=>MYCLUBS&&MYCLUBS[c]).filter(Boolean);
   const H=x.holes;const sum=(a,i)=>a.reduce((s,h)=>s+h[i],0);const out=H.filter(h=>h[0]<=9),inn=H.filter(h=>h[0]>=10);
@@ -117,7 +145,7 @@ function ybCover(x){
    ${typeof COURSE_YARDS!=='undefined'?`<div class="yb-sec">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)}）</div><table class="yb-tbl"><tr>${COURSE_YARDS.rows.map(r=>`<th>${r[0]}</th>`).join('')}</tr><tr>${COURSE_YARDS.rows.map(r=>`<td>${r[1]===0?'〜'+r[2]:r[2]>=999?r[1]+'〜':r[1]+'〜'+r[2]}</td>`).join('')}</tr></table>`:''}
    ${x.result&&x.result.score?'':`<div class="yb-sec">全番手の飛距離（トラックマン・当たりの良い球の平均）</div><table class="yb-tbl"><tr><th>クラブ</th><th>キャリー</th><th>トータル</th><th>左右</th><th>測った日</th></tr>${(typeof CLUB_ORDER!=='undefined'?CLUB_ORDER.map(k=>cl.find(c=>c.c===k)).filter(Boolean):cl).map(c=>`<tr><td>${c.c}</td><td>${Math.round(c.carry)}</td><td>${Math.round(c.total||c.carry)}</td><td>${c.side!=null?(c.side>0?'右':'左')+Math.abs(Math.round(c.side)):'－'}</td><td>${c.date?(+c.date.slice(5,7))+'/'+(+c.date.slice(8)):'－'}</td></tr>`).join('')}</table>`}
    <!--YBMENU-->
-   <div class="yb-foot">作成 ${new Date().toLocaleDateString('ja-JP')}・最新データで作り直すには、アプリで開き直して印刷<span>表紙</span></div>
+   <div class="yb-foot">作成 ${new Date().toLocaleDateString('ja-JP')}・最新データで作り直すには、アプリで開き直して印刷<span>作戦</span></div>
   </div>`;
 }
 // パーからの差：±0・+1・-1。パー以下は緑、ボギーは黄土、ダブル以上は赤
@@ -136,9 +164,9 @@ function drawYardageBook(){
   const x0=ybPlan(YB.date,YB.plan);const x={...x0,planName:YB.plan?(x0.plans[YB.plan].name):'100切り'};
   const alt=YB.plan?'':Object.keys(x0.plans||{})[0];const xa=x0.plans?ybPlan(YB.date,alt):null;const x2=xa?{...xa,planName:alt?(x0.plans[alt].name):'100切り'}:null;
   const order=(x.order||['out','in']).flatMap(k=>x.holes.filter(h=>k==='out'?h[0]<=9:h[0]>=10));
-  const GC=typeof slopeGuideCards==='function'?slopeGuideCards():[];const cards=[ybCover(x),...order.map(h=>ybCard(x,h,x2)),ybScoreCard(x),...GC]; // 最終ホールの次はすぐスコア、ガイドはその後ろ
-  const SI=1+order.length;
-  const G0=SI+1;cards[0]=cards[0].replace('<!--YBMENU-->',typeof slopeGuideMenu==='function'?slopeGuideMenu(G0,SI,order):'');
+  const GC=typeof slopeGuideCards==='function'?slopeGuideCards():[];const cards=[ybMag(x),ybCover(x),...order.map(h=>ybCard(x,h,x2)),ybScoreCard(x),...GC]; // 最終ホールの次はすぐスコア、ガイドはその後ろ
+  const SI=2+order.length;
+  const G0=SI+1;cards[1]=cards[1].replace('<!--YBMENU-->',typeof slopeGuideMenu==='function'?slopeGuideMenu(G0,SI,order):'');
   // 切って重ねるだけで順番になる並べ方：シートs・位置p に cards[p*S+s]
   const S=Math.ceil(cards.length/4);const sheets=[...Array(S)].map((_,s)=>[0,1,2,3].map(p=>cards[p*S+s]||'<div class="yb-card"></div>'));
   let el=$('yb');if(!el){el=document.createElement('div');el.id='yb';document.body.appendChild(el);document.body.style.overflow='hidden';document.body.classList.add('yb-open');}
@@ -147,8 +175,8 @@ function drawYardageBook(){
     <button class="btn-sm" onclick="closeYardageBook()">✕ 閉じる</button>
     ${x0.plans?`<div class="seg !p-0.5 text-[12px]"><button class="${YB.plan?'':'on'} !min-h-[34px] !px-2" onclick="YB.plan='';drawYardageBook()">100切り</button>${Object.entries(x0.plans).map(([k,P])=>`<button class="${YB.plan===k?'on':''} !min-h-[34px] !px-2" onclick="YB.plan='${k}';drawYardageBook()">${P.name}</button>`).join('')}</div>`:''}
     <button class="btn !min-h-[38px] !px-3" onclick="window.print()">🖨 印刷</button></div>
-   <div class="yb-help">A4で<b>倍率100％（実際のサイズ）・余白なし</b>で印刷 → ${S}枚を重ねて点線で十字に切る → <b>左上→右上→左下→右下</b>の束の順に重ねると、表紙・1〜18番・傾斜とバンカーの打ち方・スコアの順になります → 左はじをホッチキスで留める。</div>
-   ${mob?`<div class="yb-jump"><button class="yb-jc" data-i="0" onclick="ybGo(0)">表紙</button>${order.map((h,k)=>`<button class="yb-jp${h[1]}" data-i="${k+1}" onclick="ybGo(${k+1})">${h[0]}</button>`).join('')}<button class="yb-js" data-i="${SI}" onclick="ybGo(${SI})">スコア</button></div>`:''}
+   <div class="yb-help">A4で<b>倍率100％（実際のサイズ）・余白なし</b>で印刷 → ${S}枚を重ねて点線で十字に切る → <b>左上→右上→左下→右下</b>の束の順に重ねると、表紙・作戦・1〜18番・スコア・傾斜とバンカーの打ち方の順になります → 左はじをホッチキスで留める。</div>
+   ${mob?`<div class="yb-jump"><button class="yb-jc" data-i="0" onclick="ybGo(0)">表紙</button><button class="yb-jc" data-i="1" onclick="ybGo(1)">作戦</button>${order.map((h,k)=>`<button class="yb-jp${h[1]}" data-i="${k+2}" onclick="ybGo(${k+2})">${h[0]}</button>`).join('')}<button class="yb-js" data-i="${SI}" onclick="ybGo(${SI})">スコア</button></div>`:''}
    <div class="yb-screen">${cards.join('')}</div>
    <div class="yb-print">${sheets.map(c=>`<div class="yb-sheet">${c.join('')}<i class="yb-cut-v"></i><i class="yb-cut-h"></i></div>`).join('')}</div>`;
   if(typeof jpWalk==='function')jpWalk(el);
