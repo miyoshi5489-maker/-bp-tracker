@@ -117,7 +117,7 @@ function slopeGuideCards(){
     <div class="yb-sec">${nm}の共通ルール</div>
     <ul class="yb-gbase">${g.base.map(b=>`<li>${gFmt(b)}</li>`).join('')}</ul>
     <div class="yb-mut">動画 ${Math.floor(p.t/60)}:${String(p.t%60).padStart(2,'0')}〜</div>
-    <div class="yb-scr yb-gbtns"><a class="yb-gvid" href="https://youtu.be/${g.vid}?t=${p.t}" target="_blank" rel="noopener">▶ 動画のこの場面を見る</a><button class="yb-gback" onclick="ybGo(1)">← 作戦のメニューへ</button></div>
+    <div class="yb-scr yb-gbtns"><a class="yb-gvid" href="https://youtu.be/${g.vid}?t=${p.t}" target="_blank" rel="noopener">▶ 動画のこの場面を見る</a><button class="yb-gback" onclick="ybGo(0)">← 表紙のメニューへ</button></div>
    </div>
    <div class="yb-foot">出典：${g.src}（YouTube）<span>${nm}：${slopeTab(g,p)}</span></div></div>`;}));
 }

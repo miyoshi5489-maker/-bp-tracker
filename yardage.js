@@ -165,7 +165,7 @@ function drawYardageBook(){
   const alt=YB.plan?'':Object.keys(x0.plans||{})[0];const xa=x0.plans?ybPlan(YB.date,alt):null;const x2=xa?{...xa,planName:alt?(x0.plans[alt].name):'100切り'}:null;
   const order=(x.order||['out','in']).flatMap(k=>x.holes.filter(h=>k==='out'?h[0]<=9:h[0]>=10));
   const GC=typeof slopeGuideCards==='function'?slopeGuideCards():[];const cards=[ybMag(x),ybCover(x),...order.map(h=>ybCard(x,h,x2)),ybScoreCard(x),...GC]; // 最終ホールの次はすぐスコア、ガイドはその後ろ
-  const SI=2+order.length;
+  const SI=1+order.length; // 画面の並び（表紙と作戦は1ページ）での番号
   const G0=SI+1;cards[1]=cards[1].replace('<!--YBMENU-->',typeof slopeGuideMenu==='function'?slopeGuideMenu(G0,SI,order):'');
   // 切って重ねるだけで順番になる並べ方：シートs・位置p に cards[p*S+s]
   const S=Math.ceil(cards.length/4);const sheets=[...Array(S)].map((_,s)=>[0,1,2,3].map(p=>cards[p*S+s]||'<div class="yb-card"></div>'));
@@ -176,8 +176,8 @@ function drawYardageBook(){
     ${x0.plans?`<div class="seg !p-0.5 text-[12px]"><button class="${YB.plan?'':'on'} !min-h-[34px] !px-2" onclick="YB.plan='';drawYardageBook()">100切り</button>${Object.entries(x0.plans).map(([k,P])=>`<button class="${YB.plan===k?'on':''} !min-h-[34px] !px-2" onclick="YB.plan='${k}';drawYardageBook()">${P.name}</button>`).join('')}</div>`:''}
     <button class="btn !min-h-[38px] !px-3" onclick="window.print()">🖨 印刷</button></div>
    <div class="yb-help">A4で<b>倍率100％（実際のサイズ）・余白なし</b>で印刷 → ${S}枚を重ねて点線で十字に切る → <b>左上→右上→左下→右下</b>の束の順に重ねると、表紙・作戦・1〜18番・スコア・傾斜とバンカーの打ち方の順になります → 左はじをホッチキスで留める。</div>
-   ${mob?`<div class="yb-jump"><button class="yb-jc" data-i="0" onclick="ybGo(0)">表紙</button><button class="yb-jc" data-i="1" onclick="ybGo(1)">作戦</button>${order.map((h,k)=>`<button class="yb-jp${h[1]}" data-i="${k+2}" onclick="ybGo(${k+2})">${h[0]}</button>`).join('')}<button class="yb-js" data-i="${SI}" onclick="ybGo(${SI})">スコア</button></div>`:''}
-   <div class="yb-screen">${cards.join('')}</div>
+   ${mob?`<div class="yb-jump"><button class="yb-jc" data-i="0" onclick="ybGo(0)">表紙</button>${order.map((h,k)=>`<button class="yb-jp${h[1]}" data-i="${k+1}" onclick="ybGo(${k+1})">${h[0]}</button>`).join('')}<button class="yb-js" data-i="${SI}" onclick="ybGo(${SI})">スコア</button></div>`:''}
+   <div class="yb-screen">${[`<div class="yb-card yb-combo">${cards[0].replace('class="yb-card yb-mag"','class="yb-mag"')}${cards[1].replace('class="yb-card yb-cover"','class="yb-cover yb-cover-in"')}</div>`,...cards.slice(2)].join('')}</div>
    <div class="yb-print">${sheets.map(c=>`<div class="yb-sheet">${c.join('')}<i class="yb-cut-v"></i><i class="yb-cut-h"></i></div>`).join('')}</div>`;
   if(typeof jpWalk==='function')jpWalk(el);
   if(mob){const sc=el.querySelector('.yb-screen');sc.scrollLeft=keepX;const mark=()=>{const i=Math.round(sc.scrollLeft/sc.clientWidth);el.querySelectorAll('.yb-jump button').forEach(b=>{const on=+b.dataset.i===i;b.classList.toggle('on',on);if(on)b.scrollIntoView({block:'nearest',inline:'nearest'});});};sc.onscroll=()=>{clearTimeout(sc._t);sc._t=setTimeout(mark,80);};mark();}
