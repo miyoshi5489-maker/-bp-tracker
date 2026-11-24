@@ -123,7 +123,7 @@ function ybMag(x){
    <div class="yb-mag-shade"></div>
    <div class="yb-mag-top"><div class="yb-mag-mast">ヤーデージブック</div><div class="yb-mag-issue">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${wd}）号</div></div>
    <div class="yb-mag-mid">
-    <div class="yb-mag-kick">${esc(x.time||'')}${x.tee?'・'+esc(x.tee):''}${sum(1)?'・パー'+sum(1):''}</div>
+    <div class="yb-mag-kick">${esc(x.time||'')}${x.tee?'・'+esc(x.tee):''}${sum(1)&&!/パー/.test(x.tee||'')?'・パー'+sum(1):''}</div>
     <div class="yb-mag-course">${esc(x.course)}</div>
     <div class="yb-mag-sub">攻略特集</div>
    </div>
@@ -183,11 +183,11 @@ function drawYardageBook(){
   if(mob){const sc=el.querySelector('.yb-screen');sc.scrollLeft=keepX;const mark=()=>{const i=Math.round(sc.scrollLeft/sc.clientWidth);el.querySelectorAll('.yb-jump button').forEach(b=>{const on=+b.dataset.i===i;b.classList.toggle('on',on);if(on)b.scrollIntoView({block:'nearest',inline:'nearest'});});};sc.onscroll=()=>{clearTimeout(sc._t);sc._t=setTimeout(mark,80);};mark();}
   const fit=()=>{const sc=el.querySelector('.yb-screen');if(!sc||mob)return;const pw=YB_CARD_W*96/25.4;sc.style.zoom=Math.min(1.4,(el.clientWidth-16)/pw);};fit();
   // 文字があふれるカードは文字を小さくする（印刷用にも同じ大きさを写す）
-  requestAnimationFrame(()=>{el.classList.add('yb-measure');if(mob)el.classList.remove('yb-m');const sc=[...el.querySelectorAll('.yb-screen .yb-txt')];const fs=sc.map(t=>{let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}return f;});
+  requestAnimationFrame(()=>{const y0=el.scrollTop;el.classList.add('yb-measure');if(mob)el.classList.remove('yb-m');const sc=[...el.querySelectorAll('.yb-screen .yb-txt')];const fs=sc.map(t=>{let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}return f;});
     const pr=[...el.querySelectorAll('.yb-print .yb-card')];const idx=sheets.flatMap((c,s)=>[0,1,2,3].map(p=>p*S+s));
     const scards=[...el.querySelectorAll('.yb-screen .yb-card')];
     pr.forEach((c,i)=>{const t=c.querySelector('.yb-txt');const ci=idx[i];const st=scards[ci]&&scards[ci].querySelector('.yb-txt');if(t&&st)t.style.fontSize=st.style.fontSize;});
-    el.classList.remove('yb-measure');if(mob){el.classList.add('yb-m');const s2=el.querySelector('.yb-screen');s2.style.zoom='';s2.scrollLeft=keepX;}});
+    el.classList.remove('yb-measure');if(mob){el.classList.add('yb-m');const s2=el.querySelector('.yb-screen');s2.style.zoom='';s2.scrollLeft=keepX;}el.scrollTop=y0;});
 }
 
 // 狙いの文章を読みやすく：見出し → 1文ずつ行に分ける → 「→」の流れは段に分ける → （カッコの補足）は小さく
