@@ -82,7 +82,7 @@ function ybCard(x,h,x2){
   if(IL){const hi=IL.holes[h[0]];const IH=hi.h||IL.h;let hmm=YB_IMG_H,wmm=hmm*IL.w/IH;if(wmm>YB_IMG_MAXW){wmm=YB_IMG_MAXW;hmm=wmm*IH/IL.w;}const k=IH/hmm;
     fig=`<div class="yb-fig" data-k="${key}" data-n="${h[0]}" data-dt="${dt}" data-u="${k}" onclick="ybTap(event,this)" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH};--hr:${(IH/IL.w).toFixed(3)}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
     shots=ybShots(IL,hi,m,dt);}
-  const cad0=caddie(x,h,m);const iL=cad0.findIndex(t=>/>左 /.test(t));if(iL>=0&&/>右 /.test(cad0[iL+1]||''))cad0.splice(iL,2,cad0[iL]+'<br>'+cad0[iL+1]);
+  const cad0=caddie(x,h,m).filter(t=>!/^<span class="[^"]*">(左|右|前|奥) [？◯△✕] /.test(t));{const sl=ybSideLine(sides);if(sl)cad0.unshift(sl);} // 左右前奥は1行にまとめる
   const cad1=cad0.filter(t=>!/同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
   const cad=ybDedupe(cad1,h[6]); // 同じページで「狙い」と同じ文は書かない（洋平さんの指示：重複なし・シンプルに）
   const st=(HOLE_STATS[key]||{})[h[0]];
@@ -141,7 +141,7 @@ function ybSents(t){const o=[];let cur='',dep=0;for(const c of String(t)){if('�
 function ybDedupe(lines,aim){const seen=ybSents(aim||'').map(ybBig).filter(b=>b.size>=3);const dup=t=>{const b=ybBig(t);if(b.size<3)return false;return seen.some(x=>ybSim(b,x)>=.45);};
   return lines.map(t=>{
     let m=t.match(/^(<span class="[^"]*"><b>ドライバー：[^<]*<\/b><\/span>)　(.*)$/);
-    if(m){const keep=ybSents(m[2]).filter(x=>!dup(x));keep.forEach(x=>seen.push(ybBig(x)));return m[1]+(keep.length?'　'+keep.join(''):'');}
+    if(m){const keep=ybSents(m[2]).filter(x=>!dup(x));keep.forEach(x=>seen.push(ybBig(x)));return keep.length?m[1]+'　'+keep.join(''):null;} // 「ドライバー：使う」だけなら書かない
     m=t.match(/^グリーン：(.*)$/);
     if(m){const keep=ybSents(m[1]).filter(x=>!dup(x));keep.forEach(x=>seen.push(ybBig(x)));return keep.length?'グリーン：'+keep.join(''):null;}
     if(/^<span class="text-(muted|fg|accent|warn)">(左|右|前|奥) /.test(t)||/^<b>高低差/.test(t))return t;
@@ -150,7 +150,25 @@ function ybDedupe(lines,aim){const seen=ybSents(aim||'').map(ybBig).filter(b=>b.
 function ybDateOnce(html){const d=typeof TM_BUILTIN!=='undefined'&&TM_BUILTIN.date;if(!d)return html.replace('<!--YBTM-->','');const md=`${+d.slice(5,7)}/${+d.slice(8)}`;const D=md.replace('/','\\/');
   let t=html.replace(new RegExp(`（${D}の(?:当たりの良い|良かった)球で`,'g'),'（').replace(new RegExp(`${D}の(?:当たりの良い|良かった)球(?:のトータル|はトータル)`,'g'),'トータル')
     .replace(new RegExp(`${D}の(?:当たりの良い|良かった)球(?:でも|で|は|の)?`,'g'),'').replace(new RegExp(`${D}の番手表`,'g'),'番手表').replace(new RegExp(`${D}[はの]`,'g'),'');
-  return t.replace('<!--YBTM-->',`<div class="yb-tm">クラブの距離・球すじは${md}の練習（トラックマンの当たりの良い球）から</div>`);}
+  const src=new Set();t=ybSrcOut(t,src);
+  return t.replace('<!--YBTM-->',`<div class="yb-tm">クラブの距離・球すじは${md}の練習（トラックマンの当たりの良い球）から${src.size?`<br>出典：${[...src].join('・')}`:''}</div>`);}
+// 出典（ショットナビ・じゃらんゴルフなど）は文の途中から外して、ページのいちばん下にまとめる（洋平さんの指示）
+function ybSrcOut(html,src){const SR=/^(?:古い)?(ショットナビ|じゃらんゴルフ|じゃらん|GDOゴルフ場予約|GDOの記事|GDO|ゴリゴル動画|ゴリゴルチャンネル|公式|プレー記|楽天GORA|GORA)/;
+  const nm=x=>({'じゃらん':'じゃらんゴルフ','GDOの記事':'GDO','GDOゴルフ場予約':'GDO','GORA':'楽天GORA','ゴリゴルチャンネル':'ゴリゴル動画'}[x]||x);
+  const fix=seg=>seg.replace(/（([^（）]*)）/g,(all,inner)=>{const keep=[];inner.split('・').forEach(tok=>{const m=tok.match(SR);if(!m){keep.push(tok);return;}src.add(nm(m[1]));const rest=tok.slice(m[0].length).replace(/^の(?!記事)/,'');if(rest&&!/^(の記事|記事)$/.test(rest))keep.push(rest);});return keep.length?`（${keep.join('・')}）`:'';});
+  // タグの外の文字だけ直す（カッコがタグをまたぐ時は1つにつなげてから）
+  return html.split(/(<[^>]+>)/).map(x=>x[0]==='<'?x:fix(x)).join('').replace(/<span class="(?:yb-aim-n|text-muted)">\s*<\/span>/g,'').replace(/<span class="text-muted">（([^<]*)）<\/span>/g,(a,b)=>{const keep=b.split('・').filter(tok=>{const m=tok.match(SR);if(m){src.add(nm(m[1]));return false;}return true;});return keep.length?`<span class="text-muted">（${keep.join('・')}）</span>`:'';});}
+// 左・右・前・奥を1行に：「OB：右・奥（ショットナビ）」のように同じ中身はまとめる（洋平さんの指示：2行使わない）
+function ybSideLine(sd){if(!sd)return '';const SRC=/（([^（）]*(ショットナビ|GDO|じゃらん|動画|公式|プレー記|記事|GORA)[^（）]*)）$/;
+  const E=[['左',sd.L],['右',sd.R],['前',sd.F],['奥',sd.B]].filter(e=>e[1]);const src=new Set();const g={};const na=[];
+  E.forEach(([k,t])=>{let v=String(t);const m=v.match(SRC);if(m){m[1].split('・').forEach(x=>src.add(x));v=v.replace(SRC,'');}
+    const kd=typeof sideKind==='function'?sideKind(t):'neutral';if(kd==='na'){na.push(k);return;}
+    let head=v,det='';const m2=v.match(/^(OB|セーフ)(.*)$/);if(m2){head=m2[1];det=m2[2].replace(/^[、・]/,'');}
+    const key=kd+'|'+head;(g[key]=g[key]||{kd,head,items:[]}).items.push(k+(det?`<span class="yb-sd">${esc(det)}</span>`:''));});
+  const cls={bad:'text-warn',good:'text-accent',neutral:'text-fg'};
+  const parts=Object.values(g).sort((a,b)=>(a.kd==='bad'?0:1)-(b.kd==='bad'?0:1)).map(o=>`<span class="${cls[o.kd]}"><b>${esc(o.head)}</b>：${o.items.join('・')}</span>`);
+  if(na.length)parts.push(`<span class="text-muted">${na.join('・')}は情報なし</span>`);
+  if(!parts.length)return '';return parts.join('　')+(src.size?` <span class="text-muted">（${[...src].map(esc).join('・')}）</span>`:'');}
 function ybCover(x){
   const cl=YB_ORDER.map(c=>MYCLUBS&&MYCLUBS[c]).filter(Boolean);
   const H=x.holes;const sum=(a,i)=>a.reduce((s,h)=>s+h[i],0);const out=H.filter(h=>h[0]<=9),inn=H.filter(h=>h[0]>=10);
