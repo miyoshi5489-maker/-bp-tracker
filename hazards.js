@@ -95,15 +95,20 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
   const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;const out=mode==='out';
   const src=hzSrc(key,n);const items=[];const gl=(L.find(h=>h.gl)||{}).gl||0;const gm=hzGMatch(L,src,gl);
   L.forEach(h0=>{if(h0.cx==null)return;const col=h0.t==='b'?'#8d6e00':'#1565c0';
-    if(h0.g){const z=gm.get(h0);const f=Math.max(0,Math.round((z?z.f:h0.f)-dt)),c=Math.round((z?z.c:h0.c)-dt);items.push({h:h0,txt:`${f}〜${c}`,sub:`G中央へ${h0.ge}`,col});return;}
+    if(h0.g){const z=gm.get(h0);const f=Math.max(0,Math.round((z?z.f:h0.f)-dt)),c=Math.round((z?z.c:h0.c)-dt);items.push({h:h0,txt:`${f}〜${c}`,sub:`G中央へ${h0.ge}`,col,f,c});return;}
     const z=src.filter(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20).sort((a,b)=>Math.abs(a.f+a.c-h0.f-h0.c)+Math.abs(a.x-h0.x)/2-Math.abs(b.f+b.c-h0.f-h0.c)-Math.abs(b.x-h0.x)/2)[0];if(!z&&h0.c<60)return;const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0)return;
-    items.push({h,txt:`${f}〜${c}`,sub:gl?`G迄${Math.max(0,gl-h.c)}`:'',col});});
+    items.push({h,txt:`${f}〜${c}`,sub:gl?`G迄${Math.max(0,gl-h.c)}`:'',col,f,c});});
   const cw=t=>[...t].reduce((s,ch)=>s+(/[\x00-\x7f]/.test(ch)?2.9:4.6),0);
   const H1=8.4*u,H2=13*u;let v='';
-  const lab=(o,x,y,w,hh)=>`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="#fff" fill-opacity="${out?1:.93}" stroke="${o.col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.6*u}" font-weight="bold" fill="${o.col}" text-anchor="middle">${o.txt}</text>${o.sub?`<text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="#455a64" text-anchor="middle">${o.sub}</text>`:''}`;
+  const lab=(o,x,y,w,hh)=>o.gap?`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="#1b5e20" stroke="#fff" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.2*u}" font-weight="bold" fill="#fff" text-anchor="middle">すき間 <tspan fill="#ffd54a">${o.w}</tspan>y</text><text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="#c8e6c9" text-anchor="middle">${o.sub}</text>`:`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="#fff" fill-opacity="${out?1:.93}" stroke="${o.col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.6*u}" font-weight="bold" fill="${o.col}" text-anchor="middle">${o.txt}</text>${o.sub?`<text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="#455a64" text-anchor="middle">${o.sub}</text>`:''}`;
   if(out){
     // 左右は「コースの中心から左か右か」で決める（左のバンカーは左側の余白に）
-    const side=o=>{const x=o.h.x;return (x!=null&&Math.abs(x)>=4)?(x<0?'L':'R'):(o.h.cx<W/2?'L':'R');};
+    // すき間（バンカー・池がない区間）も同じ列に並べる：前後のバンカーの高さの間に置き、ラベルが少ない側へ（洋平さんの指示）
+    if(typeof hzLines==='function'){const z=hzLines(key,n,dt);const hz=items.filter(o=>!o.h.g&&o.f!=null).map(o=>[(o.f+o.c)/2,o.h.cy]).sort((a,b)=>a[0]-b[0]);
+      const cyAt=yd=>{if(hz.length<2)return hz.length?hz[0][1]:null;let k=hz.findIndex(p=>p[0]>=yd);if(k<=0)k=k<0?hz.length-1:1;const [a,b]=[hz[k-1],hz[k]];return a[1]+(b[1]-a[1])*(yd-a[0])/((b[0]-a[0])||1);};
+      (z&&z.rows||[]).filter(g=>g.k==='gap').forEach(g=>{const cy=cyAt((g.f+g.c)/2);if(cy==null)return;items.push({gap:1,w:g.w,h:{cy,cx:W/2,x:null},txt:`すき間 ${g.w}y`,sub:`${g.f}〜${g.c}`,col:'#1b5e20'});});}
+    const nL=items.filter(o=>!o.gap&&((o.h.x!=null&&Math.abs(o.h.x)>=4)?o.h.x<0:o.h.cx<W/2)).length,nR=items.filter(o=>!o.gap).length-nL;
+    const side=o=>{if(o.gap)return nL<=nR?'L':'R';const x=o.h.x;return (x!=null&&Math.abs(x)>=4)?(x<0?'L':'R'):(o.h.cx<W/2?'L':'R');};
     const HH=gl?H2:H1,G=1.4*u,J=(typeof hzGut==='function'&&hzGut()<HZ_GUT?3:8)*u;
     ['L','R'].forEach(sd=>{const it=items.filter(o=>side(o)===sd).sort((a,b)=>a.h.cy-b.h.cy);if(!it.length)return;
       const w=(Math.max(...it.map(o=>Math.max(cw(o.txt),cw(o.sub)*.8)))+7)*u; // 同じ側は全部同じ幅・同じ高さ
@@ -111,6 +116,7 @@ function hzSvg(key,n,dt,u,wrap,W,mode,H){
       if(H){for(let i=it.length-1;i>=0;i--){ys[i]=Math.min(ys[i],(i<it.length-1?ys[i+1]-HH-G:H-HH));}}
       let ey=-1e9;
       it.forEach((o,i)=>{const y=ys[i],ly=y+HH/2;const x=sd==='L'?-w-J:W+J;const ax=sd==='L'?x+w:x;const ex=sd==='L'?0:W;
+        if(o.gap){v+=lab(o,x,y,w,HH);return;}
         const bx=sd==='L'?Math.max(0,o.h.cx-(o.h.hw||4)):Math.min(W,o.h.cx+(o.h.hw||4));ey=Math.max(o.h.cy,ey+2.6*u);
         const pts=`${ax},${ly} ${ex},${ey} ${bx},${ey} ${bx},${o.h.cy}`;
         v+=`<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="${1.1*u}" stroke-linejoin="round"/><polyline points="${pts}" fill="none" stroke="${o.col}" stroke-width="${.55*u}" stroke-linejoin="round"/><circle cx="${bx}" cy="${o.h.cy}" r="${.9*u}" fill="${o.col}" stroke="#fff" stroke-width="${.3*u}"/>`+lab(o,x,y,w,HH);});});

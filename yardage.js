@@ -37,12 +37,6 @@ function ybSvg(I,hi,m,o){
   v+=`<circle cx="${T0[0]}" cy="${T0[1]}" r="${1.1*K}" fill="#fff" stroke="#111" stroke-width="${.3*K}"/>`;
   v+=`<line x1="${P[0]}" y1="${P[1]}" x2="${P[0]}" y2="${P[1]-3.6*K}" stroke="#111" stroke-width="${.25*K}"/><path d="M${P[0]} ${P[1]-3.6*K} l${2*K} ${.7*K} l${-2*K} ${.7*K}z" fill="#e53935"/>`;
   if(o.hzk&&typeof hzSvg==='function')v+=`<g class="hzi">${hzSvg(o.hzk,o.n,DT,K*.62,null,I.w)}</g><g class="hzo">${hzSvg(o.hzk,o.n,DT,K*.62,null,I.w,'out',IH)}</g>`;
-  // バンカー・池のすき間（ティーショットの範囲）を図の上に：区間の両はしに白い点線、まん中に「すき間 Ny」（洋平さんの指示で下の表の代わり）
-  if(o.hzk&&typeof hzLines==='function'){const z=hzLines(o.hzk,o.n,DT);const lx=T[0]?T[0][0]:0,ly=T[0]?T[0][1]:250;
-    (z&&z.rows||[]).filter(g=>g.k==='gap').forEach(g=>{const tk=yd=>{const a=toPx(-11,yd+DT),b=toPx(11,yd+DT);return `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#111" stroke-opacity=".55" stroke-width="${.55*K}"/><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#fff" stroke-width="${.3*K}" stroke-dasharray="${.8*K} ${.5*K}"/>`;};
-      const mid=(g.f+g.c)/2;const sx=lx*Math.min(1,mid/Math.max(1,ly));const off=sx>2?-13:13;const q=toPx(sx+off,mid+DT);
-      const t1=`すき間 ${g.w}y`;const w=(t1.length*2.05+1.6)*K,h=3.4*K;
-      v+=tk(g.f)+tk(g.c)+`<rect x="${q[0]-w/2}" y="${q[1]-h/2}" width="${w}" height="${h}" rx="${h/2}" fill="#1b5e20" stroke="#fff" stroke-width="${.25*K}"/><text x="${q[0]}" y="${q[1]+.85*K}" font-size="${2.3*K}" font-weight="bold" fill="#fff" text-anchor="middle">すき間 <tspan fill="#ffd54a">${g.w}</tspan>y</text>`;});}
   pts.forEach((q,i)=>{v+=`<circle cx="${q[0]}" cy="${q[1]}" r="${1.9*K}" fill="#ffd54a" stroke="#e65100" stroke-width="${.35*K}"/><text x="${q[0]}" y="${q[1]+.9*K}" font-size="${2.6*K}" font-weight="bold" fill="#111" text-anchor="middle">${i+1}</text>`;});
   return v+'</svg>';
 }
