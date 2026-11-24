@@ -129,7 +129,7 @@ function ybMag(x){
    <div class="yb-mag-shade"></div>
    <div class="yb-mag-top"><div class="yb-mag-mast">ヤーデージブック</div><div class="yb-mag-issue">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${wd}）号</div></div>
    <div class="yb-mag-mid">
-    <div class="yb-mag-kick">${esc(x.time||'')}${x.tee?'・'+esc(x.tee):''}${sum(1)&&!/パー/.test(x.tee||'')?'・パー'+sum(1):''}</div>
+    <div class="yb-mag-kick">${esc(x.time||'')}${x.tee?'・'+esc(x.tee):''}${sum(1)&&!/パー|Par/i.test(x.tee||'')?'・パー'+sum(1):''}</div>
     <div class="yb-mag-course">${esc(x.course)}</div>
     <div class="yb-mag-sub">攻略特集</div>
    </div>
