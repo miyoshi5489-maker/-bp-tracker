@@ -17,8 +17,8 @@ const today=()=>ymd(new Date());
 
 const PHASES=[
   {id:'golf',name:'ゴルフ期',sub:'10/20 ラウンドに向けて回旋とパワー',from:'2026-09-28',to:'2026-10-21'},
-  {id:'base',name:'土台期',sub:'週30km台まで距離を伸ばす。12/19に10kmテスト',from:'2026-10-22',to:'2026-12-27'},
-  {id:'marathon',name:'マラソン期',sub:'フルマラソン用：木曜の朝にロング（30km級2回）、日曜はマラソンペース走。土曜は走らない。1/28にハーフのテスト',from:'2026-12-28',to:'2027-03-07'},
+  {id:'base',name:'土台期',sub:'週30km台まで距離を伸ばす。12月は150km、12/26か27にハーフをレースペースで',from:'2026-10-22',to:'2026-12-27'},
+  {id:'marathon',name:'マラソン期',sub:'1月は200km・30km走2回、2月中旬にレースペースで32km（35km）',from:'2026-12-28',to:'2027-03-07'},
 ];
 
 // ロング走（週の月曜日 → km）。11/16の週からは木曜の朝（水曜でもOK）。土曜は走らない。フルマラソン用に30km級を2回
@@ -38,8 +38,8 @@ const longDow=mon=>mon>='2026-11-16'?4:6; // 4＝木曜（水曜に入れ替えO
 // ペースは3段階で上げる（3時間30分切り＝4'58/km）。テストの結果で次の段階へ進む
 const PACE_STAGES=[
   {from:'2000-01-01',name:'今の力（〜1/3）',why:'11/10の8.1km 5\'14"（心拍167）から',easy:"6'20〜6'55/km",long:"6'10〜6'40/km",mp:"5'25〜5'30/km",tempo:"5'05〜5'10/km",interval:"4'40〜4'45/km"},
-  {from:'2027-01-04',name:'1月（10kmテスト49分以内なら）',why:'12/19の10kmテストで確認。46分以内なら2月の段階へ飛び級',easy:"5'55〜6'30/km",long:"5'50〜6'20/km",mp:"5'10〜5'15/km",tempo:"4'48〜4'53/km",interval:"4'25〜4'30/km"},
-  {from:'2027-02-01',name:'2月〜本番（3時間30分切り）',why:'1/30のハーフ1時間43分以内なら',easy:"5'35〜6'10/km",long:"5'30〜6'00/km",mp:"4'55〜5'00/km",tempo:"4'35〜4'40/km",interval:"4'14〜4'18/km"},
+  {from:'2027-01-04',name:'1月',why:'12/26か27のハーフをレースペース（4\'58"/km）で走れたら',easy:"5'55〜6'30/km",long:"5'50〜6'20/km",mp:"5'10〜5'15/km",tempo:"4'48〜4'53/km",interval:"4'25〜4'30/km"},
+  {from:'2027-02-01',name:'2月〜本番（3時間30分切り）',why:'1/23か24の30km走②で、最後の10kmを5\'05"/kmで走れたら',easy:"5'35〜6'10/km",long:"5'30〜6'00/km",mp:"4'55〜5'00/km",tempo:"4'35〜4'40/km",interval:"4'14〜4'18/km"},
 ];
 const paceAt=s=>PACE_STAGES.filter(x=>s>=x.from).pop();
 const PACE=paceAt(today());
@@ -70,7 +70,7 @@ const CAT_OF={legs:'legs',push:'push',pull:'pull',upper:'full'};
 function pplItem(phase,day,extra){const ex=PPL[phase][day];return it('gym',PPL_NAME[day],Object.assign({cat:CAT_OF[day],ppl:day,ex,detail:ex.map(e=>`${e[0]} ${e[1]}×${e[2]}${e[3]?'（'+e[3]+'）':''}`).join('・')},extra||{}));}
 
 
-function planFor(s){
+function planDay(s){
   const ph=phaseOf(s);
   if(!ph)return{phase:null,items:[]};
   const dow=parse(s).getDay(); // 0日〜6土
@@ -150,12 +150,38 @@ function planFor(s){
   return{phase:ph,items,note};
 }
 
+// ── ランは週ごとのプラン（11/30〜本番）。日ごとに決めず、その週のうちに好きな日で走る（洋平さんの指示）
+//   月の目標：12月150km・1月200km。12月にハーフをレースペースで1回、1月に30km走2回、2月中旬にレースペースで32km（または35km）
+const RP="4'58\"/km";
+const RUN_WEEKS=[
+  {mon:'2026-11-30',km:30,title:'12月の入り',key:[['ロング','14km',P=>P.long],['テンポ走','8km（うち5kmを速め）',P=>P.tempo]],easy:'イージー2〜3回（5〜6km）'},
+  {mon:'2026-12-07',km:33,title:'距離を伸ばす',key:[['ロング','16km',P=>P.long],['1kmインターバル','10km（1km×5本）',P=>P.interval]],easy:'イージー2〜3回（5〜6km）'},
+  {mon:'2026-12-14',km:36,title:'レースペースに慣れる',key:[['ロング','18km',P=>P.long],['マラソンペース走','12km（うち6kmを '+RP+'）',()=>RP]],easy:'イージー2回（6km）'},
+  {mon:'2026-12-21',km:38,title:'★ハーフをレースペースで',key:[['ハーフ走（土か日）','21.1kmを '+RP+'（1時間44分50秒）',()=>RP]],easy:'週の前半はイージー3回（5〜8km）＋流し。2日前からは軽く',star:'half'},
+  {mon:'2026-12-28',km:32,title:'年末年始・回復',key:[['ロング','20km（ゆっくり）',P=>P.long]],easy:'イージー3回（4〜6km）'},
+  {mon:'2027-01-04',km:44,title:'★30km走①',key:[['30km走（土か日）','30km。ゆっくり入り、最後の5kmだけ5\'10"/km',P=>P.long],['テンポ走','8km（うち6km）',P=>P.tempo]],easy:'イージー2回（3日前から軽く）',star:'30a'},
+  {mon:'2027-01-11',km:46,title:'スピードとロング',key:[['ロング','22km（最後の8kmをマラソンペース）',P=>P.mp],['1kmインターバル','10km（1km×6本）',P=>P.interval]],easy:'イージー2〜3回'},
+  {mon:'2027-01-18',km:46,title:'★30km走②',key:[['30km走（土か日）','30km。最後の10kmを5\'05"/km',P=>P.long],['テンポ走','8km（うち5km）',P=>P.tempo]],easy:'イージー2回（3日前から軽く）',star:'30b'},
+  {mon:'2027-01-25',km:50,title:'1月の仕上げ',key:[['ロング','24km（うち12kmを '+RP+'）',()=>RP],['マラソンペース走','14km（うち8kmを '+RP+'）',()=>RP]],easy:'イージー2〜3回'},
+  {mon:'2027-02-01',km:44,title:'疲れを抜きつつ',key:[['ロング','20km',P=>P.long],['テンポ走','10km（うち8km）',P=>P.tempo]],easy:'イージー2〜3回'},
+  {mon:'2027-02-08',km:50,title:'★レースペースで32km（35km）',key:[['レースペース走（2/13土か2/14日）','32km（調子が良ければ35km）を '+RP+'。給水・ジェルは本番と同じに',()=>RP]],easy:'週の前半はイージー3回（6〜8km）。2日前からは軽く',star:'rp32'},
+  {mon:'2027-02-15',km:36,title:'回復してから最後のロング',key:[['ロング','18km（最後の5kmを '+RP+'）',()=>RP],['1kmインターバル','8km（1km×4本）',P=>P.interval]],easy:'週の前半はゆっくりだけ'},
+  {mon:'2027-02-22',km:28,title:'調整（テーパー）',key:[['マラソンペース走','12km（うち6kmを '+RP+'）',()=>RP],['ロング','14km（ゆっくり）',P=>P.long]],easy:'イージー1〜2回'},
+  {mon:'2027-03-01',km:14,title:'レース週',key:[['刺激走','6km（うち3kmを '+RP+'）',()=>RP]],easy:'あとは3〜5kmのジョグだけ。前日は散歩',star:'race'},
+];
+const runWeek=s=>RUN_WEEKS.find(w=>w.mon===mondayOf(s))||null;
+const weekText=w=>{const P=paceAt(w.mon);return w.key.map(k=>`${k[0]} ${k[1]}（${k[2](P)}）`).join('／')+'／'+w.easy+`（${P.easy}）`;};
+function planFor(s){const p=planDay(s);const w=runWeek(s);if(!w||s===RACE||!p.phase)return p;
+  const items=p.items.filter(i=>i.kind!=='run'&&!(i.kind==='off'&&/走らない|OFF/.test(i.label)));
+  items.push(it('run','今週のラン（週プラン）',{week:true,detail:`今週の合計 ${w.km}km：${weekText(w)}`}));
+  return {...p,items};}
+
 function nextRound(t){return ROUNDS.find(r=>r>=t&&!(typeof ROUND_DEFS!=='undefined'&&((ROUND_DEFS.find(x=>x.date===r)||{}).result||{}).score))||null;}
-function plannedKm(from,to){let s=from,t=0;while(s<=to){planFor(s).items.forEach(i=>{if(i.km&&i.kind!=='event')t+=i.km;});s=addDays(s,1);}return t;}
+function plannedKm(from,to){let s=from,t=0;while(s<=to){const w=runWeek(s);if(w&&s!==RACE)t+=w.km/7;else planFor(s).items.forEach(i=>{if(i.km&&i.kind!=='event')t+=i.km;});s=addDays(s,1);}return Math.round(t*10)/10;}
 
 function longRuns(){
   return Object.keys(LONG).filter(m=>LONG[m]>0).map(m=>({date:addDays(m,longDow(m)-1),km:LONG[m],note:LONG_NOTE[m]||''}));
 }
 
-window.PLAN={PPL,PPL_NAME,ROUND,ROUNDS,nextRound,RACE,PHASES,PACE,PACE_STAGES,paceAt,planFor,plannedKm,longRuns,phaseOf,util:{pad,ymd,parse,addDays,diffDays,mondayOf,today}};
+window.PLAN={RUN_WEEKS,runWeek,weekText,PPL,PPL_NAME,ROUND,ROUNDS,nextRound,RACE,PHASES,PACE,PACE_STAGES,paceAt,planFor,plannedKm,longRuns,phaseOf,util:{pad,ymd,parse,addDays,diffDays,mondayOf,today}};
 })();

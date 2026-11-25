@@ -198,7 +198,7 @@ function bar(v,max,color){const w=max>0?Math.min(100,v/max*100):0;return `<div c
 // ── 今日 ──
 // 連続日数（記録がある日が何日続いているか。今日まだなら昨日から数える）
 function streakDays(bd){let d=today(),n=0;const has=x=>dayActual(bd[x]).any;if(!has(d))d=addDays(d,-1);while(has(d)){n++;d=addDays(d,-1);}return n;}
-function weekDone(bd,mon){let plan=0,done=0;for(let i=0;i<7;i++){const d=addDays(mon,i);if(d>today())continue;const items=planFor(d).items.filter(x=>x.kind!=='off');if(!items.length)continue;plan++;const a=dayActual(bd[d]);if(a.any)done++;}return{plan,done};}
+function weekDone(bd,mon){let plan=0,done=0;for(let i=0;i<7;i++){const d=addDays(mon,i);if(d>today())continue;const items=planFor(d).items.filter(x=>x.kind!=='off'&&!x.week);if(!items.length)continue;plan++;const a=dayActual(bd[d]);if(a.any)done++;}return{plan,done};}
 async function renderToday(){
   const el=$('p-today');const t=today();
   if(!el.innerHTML)el.innerHTML='<div class="text-sm text-muted">読み込み中…</div>';
@@ -227,7 +227,7 @@ async function renderToday(){
   ${m>=0?`<div class="card flex items-center gap-3 p-3.5"><div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sky-soft text-xl">🏅</div><div class="min-w-0 flex-1"><div class="lbl">篠山マラソン 3/7（日）</div><div class="text-[12px] text-muted">目標 3時間30分切り</div></div><div class="text-right"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted"> 日</span></div></div>`:''}
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}
   <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('runstats')">ランを見る</button></div>
-    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('runstats')" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off').slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>`;
+    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('runstats')" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off'&&!i.week).slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>`;
 }
 
 // ── ゴルフ ──
@@ -399,7 +399,7 @@ async function renderMonth(){
     <div class="grid grid-cols-7 border-b border-line text-center text-[11px] text-muted">${['月','火','水','木','金','土','日'].map(w=>`<div class="py-1.5">${w}</div>`).join('')}</div>
     <div class="grid grid-cols-7">${cells.map(c=>{const inM=c.startsWith(MONTH);const pp=planFor(c);const aa=dayActual(bd[c]);const ev=pp.items.find(i=>i.kind==='event');const k=pp.items.reduce((a,i)=>a+(i.km&&i.kind!=='event'?i.km:0),0);const done=aa.any;return `<button onclick="MSEL='${c}';renderMonth()" class="grid min-h-[64px] content-start gap-0.5 border-b border-r border-line p-1 text-left ${inM?'':'opacity-40'} ${c===MSEL?'bg-accent-soft':''} ${ev?'bg-warn-soft':''}">
       <div class="flex items-center justify-between"><span class="num text-xs font-semibold ${c===t?'rounded bg-fg px-1 text-bg':''}">${parse(c).getDate()}</span><span class="text-[11px] font-bold text-accent">${done?'✓':''}</span></div>
-      <div class="flex flex-wrap gap-0.5">${pp.items.filter(i=>i.kind!=='off').map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')}</div>
+      <div class="flex flex-wrap gap-0.5">${pp.items.filter(i=>i.kind!=='off'&&!i.week).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')}</div>
       ${ev?`<div class="text-[10px] font-bold leading-tight text-warn">${ev.label.slice(0,6)}</div>`:(k?`<div class="num text-[10px] text-sky">${k}km</div>`:'')}
     </button>`;}).join('')}</div>
   </div>
