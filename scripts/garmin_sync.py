@@ -43,7 +43,7 @@ def _list(x):
     return []
 
 
-def friends(api, my_name):
+def friends(api, my_name, my_full=''):
     """Garminのランニングチャレンジに入っている仲間の、今の距離と最近のランを集める。
     公開リポジトリのログに他人のデータを出さないよう、print は件数とキーの名前だけ。"""
     out = {'at': date.today().isoformat(), 'challenge': None, 'people': []}
@@ -69,9 +69,10 @@ def friends(api, my_name):
     for p in players:
         dn = p.get('displayName') or p.get('userDisplayName')
         nm = p.get('fullName') or p.get('displayName') or ''
-        score = p.get('score') if p.get('score') is not None else p.get('value')
-        person = {'name': nm, 'me': dn == my_name, 'score': score, 'runs': []}
-        if dn and dn != my_name:
+        score = p.get('totalNumber')
+        me = bool(dn and dn == my_name) or (my_full and nm.replace(' ', '') == my_full.replace(' ', ''))
+        person = {'name': nm, 'me': me, 'score': score, 'today': p.get('todayNumber'), 'runs': []}
+        if dn and not me:
             try:
                 acts = _list(api.connectapi(f'/activitylist-service/activities/{dn}', params={'start': 0, 'limit': 30}))
                 if acts:
@@ -153,7 +154,11 @@ def main():
         last['note'] += f'｜Garmin予想フル {pred}'
     try:
         my_dn = getattr(api, 'display_name', None) or getattr(getattr(api, 'garth', None), 'profile', {}).get('displayName')
-        fr = friends(api, my_dn)
+        try:
+            my_full = api.get_full_name() or ''
+        except Exception:
+            my_full = ''
+        fr = friends(api, my_dn, my_full)
         if fr:
             rows.append({'id': FRIENDS_ID, 'date': '2000-01-01', 'cat': 'run', 'exercises': [], 'run_dist': 0, 'run_time': 0,
                          'run_pace_min': 0, 'run_pace_sec': 0, 'run_hr': 0, 'run_cal': 0, 'walk_dist': 0, 'walk_time': 0,
