@@ -9,6 +9,16 @@ const pace=r=>r.runTime/r.runDist;
 const ok=r=>r.runDist>=2&&pace(r)>=210&&pace(r)<=600;   // 短いウォームアップや入力ミスを外す
 const eff=r=>r.runHr>0?(r.runDist*1000/(r.runTime/60))/r.runHr:0;
 const riegel=r=>r.runTime*Math.pow(42.195/r.runDist,1.06); // マラソンの予想（目安）
+// GarminのVO2max・フル予想（Garmin自動の記録のメモに入る：「｜VO2max 52｜Garmin予想フル 3:41:20」）
+const vo2Of=r=>{const m=(r.note||'').match(/VO2max (\d+(?:\.\d+)?)/);return m?+m[1]:0;};
+const gpOf=r=>{const m=(r.note||'').match(/Garmin予想フル (\d+):(\d\d):(\d\d)/);return m?(+m[1])*3600+(+m[2])*60+(+m[3]):0;};
+// VO2max（VDOT）からフルの時間：ダニエルズの式（スタミナが十分ある前提なので、速めに出る目安）
+const vdotMarathon=v=>{const f=t=>{const vel=42195/t;return (-4.6+0.182258*vel+0.000104*vel*vel)/(0.8+0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t))-v;};let a=100,b=500;for(let i=0;i<60;i++){const m=(a+b)/2;if(f(m)>0)a=m;else b=m;}return (a+b)/2*60;};
+// 一緒に篠山を走る仲間（毎月チャレンジ）。数字は洋平さんから聞いたら Claude がここを更新する（null＝情報なし）
+const RUN_FRIENDS=[
+  {name:'勇貴くん',pred:null,predFrom:'',months:{}},
+  {name:'沖田雄介くん',pred:null,predFrom:'',months:{}},
+];
 
 // 週の距離：計画（うすい枠）と実際（塗り）
 function weekChart(rows,curIdx){
@@ -23,6 +33,7 @@ function weekChart(rows,curIdx){
   return s+'</svg>';
 }
 
+window.toggleRunFriends=function(){try{const v=localStorage.getItem('yohei_run_friends')!=='0';localStorage.setItem('yohei_run_friends',v?'0':'1');}catch{}window.renderRunStats();};
 window.renderRunStats=async function(){
   const el=$('p-runstats');const t=today();if(!el.innerHTML)el.innerHTML='<div class="text-sm text-muted">読み込み中…</div>';
   const recs=await getRecs();const bd=byDate(recs);
@@ -31,7 +42,14 @@ window.renderRunStats=async function(){
   // 予想タイム：直近6週の5km以上のランから一番良いもの（全力でない日も含むので、実力より遅めに出る目安）
   const recent=runs.filter(r=>ok(r)&&r.runDist>=5&&r.date>=addDays(t,-41));
   const best=recent.sort((a,b)=>riegel(a)-riegel(b))[0];const pred=best?riegel(best):null;
-  const gap=pred?pred-GOAL:null;
+  // VO2max とGarminの予想（一番新しい値）。練習で記録が入るたびに自動で変わる
+  const vRuns=runs.filter(r=>vo2Of(r));const vLast=vRuns[vRuns.length-1];const vPred=vLast?vdotMarathon(vo2Of(vLast)):null;
+  const gRuns=runs.filter(r=>gpOf(r));const gLast=gRuns[gRuns.length-1];const gPred=gLast?gpOf(gLast):null;
+  const main=gPred||vPred||pred;const mainFrom=gPred?'Garminの予想':vPred?'VO2maxから':'直近のランから';
+  const gap=main?main-GOAL:null;
+  const hist=runs.filter(r=>vo2Of(r)||gpOf(r)).slice(-8).reverse();
+  const fShow=(()=>{try{return localStorage.getItem('yohei_run_friends')!=='0';}catch{return true;}})();
+  const ym=t.slice(0,7);const myMonth=runs.filter(r=>r.date.startsWith(ym)).reduce((x,r)=>x+r.runDist,0);
   // 関門
   const runOn=(d,sp)=>runs.filter(r=>sp?(r.date>=addDays(d,sp[0])&&r.date<=addDays(d,sp[1])):r.date===d).sort((a,b)=>b.runDist-a.runDist)[0];
   const gates=[
@@ -67,11 +85,26 @@ window.renderRunStats=async function(){
     <div class="flex items-center justify-between text-[12px] font-bold opacity-90"><span>篠山マラソン 3/7（日）</span><span class="rounded-full bg-white/20 px-2.5 py-0.5">あと ${days} 日</span></div>
     <div class="grid grid-cols-2 gap-2">
       <div class="rounded-2xl bg-white/15 p-3"><div class="text-[11px] font-bold opacity-90">目標</div><div class="num text-[26px] font-semibold leading-tight">3:30:00</div><div class="text-[11px] opacity-90">4'58/km</div></div>
-      <div class="rounded-2xl bg-white/15 p-3"><div class="text-[11px] font-bold opacity-90">今の予想</div><div class="num text-[26px] font-semibold leading-tight">${pred?fmtT(pred):'—'}</div><div class="text-[11px] opacity-90">${pred?paceStr(pred/42.195)+'/km':'5km以上のランで計算'}</div></div>
+      <div class="rounded-2xl bg-white/15 p-3"><div class="text-[11px] font-bold opacity-90">今の予想（${mainFrom}）</div><div class="num text-[26px] font-semibold leading-tight">${main?fmtT(main):'—'}</div><div class="text-[11px] opacity-90">${main?paceStr(main/42.195)+'/km':'5km以上のランで計算'}</div></div>
     </div>
-    ${pred?`<div class="text-[14px] font-bold">${gap>0?`あと <span class="num text-xl">${Math.round(gap/60)}</span> 分 縮める`:'目標ペースに届いています'}</div>`:''}
+    ${main?`<div class="text-[14px] font-bold">${gap>0?`あと <span class="num text-xl">${Math.round(gap/60)}</span> 分 縮める`:'目標ペースに届いています'}</div>`:''}
   </div></div>
-  ${best?`<p class="-mt-3 px-1 text-[11px] text-muted">予想は ${md(best.date)} の ${km1(best.runDist)}km（${paceStr(pace(best))}/km・心拍${best.runHr||'-'}）からの計算。全力で走った日ではないので、実力より遅めに出る目安です。</p>`:''}
+  <div class="grid gap-2"><h2 class="h2">予想タイムの内訳</h2>
+    <div class="card divide-y divide-line px-4 text-[13px]">
+      <div class="flex items-center justify-between gap-3 py-2.5"><div><div class="font-bold">Garminの予想</div><div class="text-[11.5px] text-muted">${gLast?md(gLast.date)+'の時点。VO2maxと練習の量から':'情報なし（次にGarminで走ると入ります）'}</div></div><div class="num shrink-0 font-semibold">${gPred?fmtT(gPred):'—'}</div></div>
+      <div class="flex items-center justify-between gap-3 py-2.5"><div><div class="font-bold">VO2max ${vLast?vo2Of(vLast):'—'} から</div><div class="text-[11.5px] text-muted">${vLast?md(vLast.date)+'のラン。スタミナが十分ある前提なので、速めに出る目安':'情報なし（次にGarminで走ると入ります）'}</div></div><div class="num shrink-0 font-semibold">${vPred?fmtT(vPred):'—'}</div></div>
+      <div class="flex items-center justify-between gap-3 py-2.5"><div><div class="font-bold">直近のランから</div><div class="text-[11.5px] text-muted">${best?`${md(best.date)}の${km1(best.runDist)}km（${paceStr(pace(best))}/km・心拍${best.runHr||'-'}）。全力ではないので遅めに出る目安`:'直近6週に5km以上のランなし'}</div></div><div class="num shrink-0 font-semibold">${pred?fmtT(pred):'—'}</div></div>
+    </div>
+    ${hist.length?`<div class="card overflow-hidden"><table class="w-full text-[13px]"><thead><tr class="text-[11px] text-muted"><th class="px-3 py-2 text-left">練習</th><th class="py-2 text-right">VO2max</th><th class="py-2 text-right">VO2maxから</th><th class="px-3 py-2 text-right">Garmin予想</th></tr></thead><tbody>${hist.map(r=>`<tr class="border-t border-line"><td class="px-3 py-2">${md(r.date)} ${km1(r.runDist)}km</td><td class="num py-2 text-right">${vo2Of(r)||'—'}</td><td class="num py-2 text-right">${vo2Of(r)?fmtT(vdotMarathon(vo2Of(r))):'—'}</td><td class="num px-3 py-2 text-right">${gpOf(r)?fmtT(gpOf(r)):'—'}</td></tr>`).join('')}</tbody></table></div><p class="text-[11px] text-muted">Garminで走るたびに自動で更新されます。</p>`:''}
+  </div>
+
+  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">仲間と篠山（毎月チャレンジ）</h2><button class="chip" onclick="toggleRunFriends()">${fShow?'隠す':'表示する'}</button></div>
+    ${fShow?`<div class="card overflow-hidden"><table class="w-full text-[13px]"><thead><tr class="text-[11px] text-muted"><th class="px-3 py-2 text-left"></th><th class="py-2 text-right">${+ym.slice(5)}月の距離</th><th class="px-3 py-2 text-right">フルの予想</th></tr></thead><tbody>
+      <tr class="border-t border-line font-bold"><td class="px-3 py-2">洋平さん</td><td class="num py-2 text-right">${km1(myMonth)}km</td><td class="num px-3 py-2 text-right">${main?fmtT(main):'—'}</td></tr>
+      ${RUN_FRIENDS.map(f=>{const mk=f.months[ym];return `<tr class="border-t border-line"><td class="px-3 py-2">${esc(f.name)}</td><td class="num py-2 text-right">${mk!=null?km1(mk)+'km':'<span class="text-muted">情報なし</span>'}</td><td class="num px-3 py-2 text-right">${f.pred?esc(f.pred):'<span class="text-muted">情報なし</span>'}</td></tr>`;}).join('')}
+    </tbody></table></div>
+    <p class="text-[11px] text-muted">洋平さんの数字はGarminから自動。2人の距離・予想は、スクショや数字を送ってもらえればその都度更新します。${RUN_FRIENDS.filter(f=>f.predFrom).map(f=>`${esc(f.name)}の予想：${esc(f.predFrom)}`).join('／')}</p>`:''}
+  </div>
 
   <div class="grid gap-2"><h2 class="h2">次の関門</h2>
     <div class="card divide-y divide-line px-4">${gates.map(g=>`<div class="flex items-center gap-3 py-3"><div class="w-14 shrink-0 text-center"><div class="num text-[13px] font-bold">${+g.d.slice(5,7)}/${+g.d.slice(8)}</div><div class="text-[10px] text-muted">${g.left>0?'あと'+g.left+'日':g.left===0?'今日':''}</div></div>

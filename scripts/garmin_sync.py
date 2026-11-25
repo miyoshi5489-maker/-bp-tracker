@@ -36,7 +36,19 @@ def main():
     auth = {'Authorization': 'Bearer ' + tok['access_token']}
     end = date.today() + timedelta(days=1)
     start = max(date.fromisoformat(SINCE), end - timedelta(days=DAYS))
-    acts = garmin().get_activities_by_date(start.isoformat(), end.isoformat())
+    api = garmin()
+    acts = api.get_activities_by_date(start.isoformat(), end.isoformat())
+    # Garminのフルマラソン予想（今の値）。取れなければ何もしない
+    pred = None
+    try:
+        rp = api.get_race_predictions()
+        if isinstance(rp, list):
+            rp = rp[0] if rp else None
+        if isinstance(rp, dict) and rp.get('timeMarathon'):
+            h, m = divmod(int(rp['timeMarathon']), 3600)
+            pred = f'{h}:{m // 60:02d}:{m % 60:02d}'
+    except Exception as e:
+        print('レース予想を読めませんでした:', str(e)[:120])
     have = http('GET', f"{SB_URL}/rest/v1/training_logs?date=gte.{start.isoformat()}&select=id,date,run_dist,walk_dist", headers=auth) or []
     rows = []
     skipped = {}
@@ -66,12 +78,18 @@ def main():
         row = {'id': aid, 'date': d, 'cat': 'run', 'exercises': [], 'run_dist': 0, 'run_time': 0, 'run_pace_min': 0,
                'run_pace_sec': 0, 'run_hr': 0, 'run_cal': 0, 'walk_dist': 0, 'walk_time': 0,
                'note': 'Garmin自動：' + (a.get('activityName') or kind)}
+        if kind in RUN and a.get('vO2MaxValue'):
+            row['note'] += f"｜VO2max {round(float(a['vO2MaxValue']), 1):g}"   # その日のランで出たVO2max
         if kind in RUN:
             row.update(run_dist=km, run_time=sec, run_pace_min=pm, run_pace_sec=ps,
                        run_hr=int(round(a.get('averageHR') or 0)), run_cal=int(round(a.get('calories') or 0)))
         else:
             row.update(walk_dist=km, walk_time=sec)
         rows.append(row)
+    runs = [r for r in rows if r['run_dist'] > 0]
+    if pred and runs:
+        last = max(runs, key=lambda r: (r['date'], r['id']))   # 一番新しいランに今の予想を付ける
+        last['note'] += f'｜Garmin予想フル {pred}'
     if rows:
         http('POST', SB_URL + '/rest/v1/training_logs', rows, {**auth, 'Prefer': 'resolution=merge-duplicates'})
     print(f'Garmin: {len(acts)}件を確認、{len(rows)}件を記録（{start}〜）')
