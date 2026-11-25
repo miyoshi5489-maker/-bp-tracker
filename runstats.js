@@ -14,11 +14,13 @@ const vo2Of=r=>{const m=(r.note||'').match(/VO2max (\d+(?:\.\d+)?)/);return m?+m
 const gpOf=r=>{const m=(r.note||'').match(/Garmin予想フル (\d+):(\d\d):(\d\d)/);return m?(+m[1])*3600+(+m[2])*60+(+m[3]):0;};
 // VO2max（VDOT）からフルの時間：ダニエルズの式（スタミナが十分ある前提なので、速めに出る目安）
 const vdotMarathon=v=>{const f=t=>{const vel=42195/t;return (-4.6+0.182258*vel+0.000104*vel*vel)/(0.8+0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t))-v;};let a=100,b=500;for(let i=0;i<60;i++){const m=(a+b)/2;if(f(m)>0)a=m;else b=m;}return (a+b)/2*60;};
-// 一緒に篠山を走る仲間（毎月チャレンジ）。数字は洋平さんから聞いたら Claude がここを更新する（null＝情報なし）
-const RUN_FRIENDS=[
-  {name:'勇貴くん',pred:null,predFrom:'',months:{}},
-  {name:'沖田雄介くん',pred:null,predFrom:'',months:{}},
-];
+// 一緒に篠山を走る仲間（Garminのランニングチャレンジ）。Garmin自動取り込みが1時間ごとに RUN_FRIENDS_LIVE を作る
+const FRIEND_NAMES={'西田勇貴':'勇貴くん','大喜多佑介':'大喜多佑介くん'};
+const friendView=(p,t)=>{const R=(p.runs||[]).filter(r=>r.km>0&&r.sec>0).sort((a,b)=>a.d<b.d?1:-1);const P=r=>r.sec/r.km;
+  const okr=R.filter(r=>r.km>=5&&r.d>=addDays(t,-41)&&P(r)>=210&&P(r)<=600);const b=okr.sort((x,y)=>x.sec*Math.pow(42.195/x.km,1.06)-y.sec*Math.pow(42.195/y.km,1.06))[0];
+  const v=(R.find(r=>r.vo2)||{}).vo2||0;const w7=R.filter(r=>r.d>=addDays(t,-6));const ym=t.slice(0,7);
+  return {name:FRIEND_NAMES[p.name]||p.name,score:p.score,month:R.filter(r=>r.d.startsWith(ym)).reduce((x,r)=>x+r.km,0),last:R[0],w7n:w7.length,w7km:w7.reduce((x,r)=>x+r.km,0),
+    longest:Math.max(0,...R.filter(r=>r.d>=addDays(t,-41)).map(r=>r.km)),pred:b?b.sec*Math.pow(42.195/b.km,1.06):null,predRun:b,vo2:v,vPred:v?vdotMarathon(v):null,recent:R.slice(0,3)};};
 
 // 週の距離：計画（うすい枠）と実際（塗り）
 function weekChart(rows,curIdx){
@@ -49,7 +51,7 @@ window.renderRunStats=async function(){
   const gap=main?main-GOAL:null;
   const hist=runs.filter(r=>vo2Of(r)||gpOf(r)).slice(-8).reverse();
   const fShow=(()=>{try{return localStorage.getItem('yohei_run_friends')!=='0';}catch{return true;}})();
-  const ym=t.slice(0,7);const myMonth=runs.filter(r=>r.date.startsWith(ym)).reduce((x,r)=>x+r.runDist,0);
+  const FL=window.RUN_FRIENDS_LIVE;
   // 関門
   const runOn=(d,sp)=>runs.filter(r=>sp?(r.date>=addDays(d,sp[0])&&r.date<=addDays(d,sp[1])):r.date===d).sort((a,b)=>b.runDist-a.runDist)[0];
   const gates=[
@@ -98,12 +100,17 @@ window.renderRunStats=async function(){
     ${hist.length?`<div class="card overflow-hidden"><table class="w-full text-[13px]"><thead><tr class="text-[11px] text-muted"><th class="px-3 py-2 text-left">練習</th><th class="py-2 text-right">VO2max</th><th class="py-2 text-right">VO2maxから</th><th class="px-3 py-2 text-right">Garmin予想</th></tr></thead><tbody>${hist.map(r=>`<tr class="border-t border-line"><td class="px-3 py-2">${md(r.date)} ${km1(r.runDist)}km</td><td class="num py-2 text-right">${vo2Of(r)||'—'}</td><td class="num py-2 text-right">${vo2Of(r)?fmtT(vdotMarathon(vo2Of(r))):'—'}</td><td class="num px-3 py-2 text-right">${gpOf(r)?fmtT(gpOf(r)):'—'}</td></tr>`).join('')}</tbody></table></div><p class="text-[11px] text-muted">Garminで走るたびに自動で更新されます。</p>`:''}
   </div>
 
-  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">仲間と篠山（毎月チャレンジ）</h2><button class="chip" onclick="toggleRunFriends()">${fShow?'隠す':'表示する'}</button></div>
-    ${fShow?`<div class="card overflow-hidden"><table class="w-full text-[13px]"><thead><tr class="text-[11px] text-muted"><th class="px-3 py-2 text-left"></th><th class="py-2 text-right">${+ym.slice(5)}月の距離</th><th class="px-3 py-2 text-right">フルの予想</th></tr></thead><tbody>
-      <tr class="border-t border-line font-bold"><td class="px-3 py-2">洋平さん</td><td class="num py-2 text-right">${km1(myMonth)}km</td><td class="num px-3 py-2 text-right">${main?fmtT(main):'—'}</td></tr>
-      ${RUN_FRIENDS.map(f=>{const mk=f.months[ym];return `<tr class="border-t border-line"><td class="px-3 py-2">${esc(f.name)}</td><td class="num py-2 text-right">${mk!=null?km1(mk)+'km':'<span class="text-muted">情報なし</span>'}</td><td class="num px-3 py-2 text-right">${f.pred?esc(f.pred):'<span class="text-muted">情報なし</span>'}</td></tr>`;}).join('')}
+  <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">仲間と篠山（ランニングチャレンジ）</h2><button class="chip" onclick="toggleRunFriends()">${fShow?'隠す':'表示する'}</button></div>
+    ${fShow?(FL&&FL.people&&FL.people.length?`
+    <div class="card overflow-hidden"><table class="w-full text-[13px]"><thead><tr class="text-[11px] text-muted"><th class="px-3 py-2 text-left">${FL.challenge&&FL.challenge.end?`〜${md(FL.challenge.end)}`:''}</th><th class="py-2 text-right">チャレンジ</th><th class="px-3 py-2 text-right">フルの予想</th></tr></thead><tbody>
+      ${FL.people.slice().sort((a,b)=>(+b.score||0)-(+a.score||0)).map((p,i)=>{const f=p.me?null:friendView(p,t);return `<tr class="border-t border-line ${p.me?'font-bold':''}"><td class="px-3 py-2">${i+1}. ${p.me?'洋平さん':esc(f.name)}</td><td class="num py-2 text-right">${p.score!=null?km1(+p.score>1000?+p.score/100000:+p.score)+'km':'—'}</td><td class="num px-3 py-2 text-right">${p.me?(main?fmtT(main):'—'):(f.pred?fmtT(f.pred):'<span class="text-muted">情報なし</span>')}</td></tr>`;}).join('')}
     </tbody></table></div>
-    <p class="text-[11px] text-muted">洋平さんの数字はGarminから自動。2人の距離・予想は、スクショや数字を送ってもらえればその都度更新します。${RUN_FRIENDS.filter(f=>f.predFrom).map(f=>`${esc(f.name)}の予想：${esc(f.predFrom)}`).join('／')}</p>`:''}
+    ${FL.people.filter(p=>!p.me).map(p=>{const f=friendView(p,t);return `<div class="card p-4 text-[13px] leading-relaxed"><div class="mb-1 flex items-baseline justify-between"><b class="text-[15px]">${esc(f.name)}</b><span class="text-[11px] text-muted">${f.last?'最後のラン '+md(f.last.d):'最近のランなし'}</span></div>
+      <div>直近7日：<b class="num">${f.w7n}回・${km1(f.w7km)}km</b>　今月：<b class="num">${km1(f.month)}km</b>　6週の最長：<b class="num">${km1(f.longest)}km</b></div>
+      <div>フルの予想：<b class="num">${f.pred?fmtT(f.pred):'情報なし'}</b>${f.predRun?`<span class="text-muted">（${md(f.predRun.d)}の${km1(f.predRun.km)}km・${paceStr(f.predRun.sec/f.predRun.km)}/kmから）</span>`:'<span class="text-muted">（直近6週に5km以上のランなし）</span>'}${f.vo2?`　VO2max ${f.vo2}（${fmtT(f.vPred)}）`:''}</div>
+      ${f.recent.length?`<div class="mt-1 text-[12px] text-muted">${f.recent.map(r=>`${md(r.d)} ${km1(r.km)}km ${paceStr(r.sec/r.km)}/km${r.hr?'・心拍'+r.hr:''}`).join('<br>')}</div>`:''}</div>`;}).join('')}
+    <p class="text-[11px] text-muted">GarminのランニングチャレンジとSNS（ニュースフィード）から1時間ごとに自動で更新（${md(FL.at)}）。予想は直近6週で一番良い5km以上のランからの目安。</p>`
+    :'<div class="card p-4 text-[13px] text-muted">Garminのチャレンジをまだ読み込めていません（1時間ごとに自動で読みます）。</div>'):''}
   </div>
 
   <div class="grid gap-2"><h2 class="h2">次の関門</h2>

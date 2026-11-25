@@ -30,6 +30,67 @@ def garmin():
     return api
 
 
+FRIENDS_ID = 900000000000000001   # 仲間のまとめを入れる行（date 2000-01-01・アプリの記録には出さない）
+
+
+def _list(x):
+    if isinstance(x, list):
+        return x
+    if isinstance(x, dict):
+        for k in ('activityList', 'activities', 'adHocChallenges', 'challenges', 'players', 'items'):
+            if isinstance(x.get(k), list):
+                return x[k]
+    return []
+
+
+def friends(api, my_name):
+    """Garminのランニングチャレンジに入っている仲間の、今の距離と最近のランを集める。
+    公開リポジトリのログに他人のデータを出さないよう、print は件数とキーの名前だけ。"""
+    out = {'at': date.today().isoformat(), 'challenge': None, 'people': []}
+    try:
+        chs = _list(api.get_active_adhoc_challenges())
+    except Exception as e:
+        print('チャレンジを読めませんでした:', str(e)[:120]); return None
+    print('チャレンジ', len(chs), '件', sorted(chs[0].keys())[:40] if chs else '')
+    ch = next((c for c in chs if 'ラン' in str(c.get('adHocChallengeName') or c.get('name') or '')), chs[0] if chs else None)
+    if not ch:
+        return None
+    uuid = ch.get('uuid') or ch.get('adHocChallengeUuid') or ch.get('challengeUuid')
+    det = ch
+    if uuid:
+        try:
+            det = api.connectapi(f'/adhocchallenge-service/adHocChallenge/{uuid}') or ch
+        except Exception as e:
+            print('チャレンジの中身を読めませんでした:', str(e)[:120])
+    players = _list(det.get('players') if isinstance(det, dict) else None) or _list(det)
+    print('参加者', len(players), sorted(players[0].keys())[:40] if players else '')
+    out['challenge'] = {'name': det.get('adHocChallengeName') or det.get('name'), 'start': str(det.get('startDate') or '')[:10],
+                        'end': str(det.get('endDate') or '')[:10]}
+    for p in players:
+        dn = p.get('displayName') or p.get('userDisplayName')
+        nm = p.get('fullName') or p.get('displayName') or ''
+        score = p.get('score') if p.get('score') is not None else p.get('value')
+        person = {'name': nm, 'me': dn == my_name, 'score': score, 'runs': []}
+        if dn and dn != my_name:
+            try:
+                acts = _list(api.connectapi(f'/activitylist-service/activities/{dn}', params={'start': 0, 'limit': 30}))
+                if acts:
+                    print('仲間のラン', len(acts), '件', sorted(acts[0].keys())[:12])
+                for a in acts:
+                    kind = ((a.get('activityType') or {}).get('typeKey') or '').lower()
+                    if 'run' not in kind:
+                        continue
+                    km = round((a.get('distance') or 0) / 1000, 2); sec = int(round(a.get('duration') or 0))
+                    if km <= 0 or sec <= 0:
+                        continue
+                    person['runs'].append({'d': (a.get('startTimeLocal') or '')[:10], 'km': km, 'sec': sec,
+                                           'hr': int(round(a.get('averageHR') or 0)), 'vo2': a.get('vO2MaxValue') or 0})
+            except Exception as e:
+                print('仲間のランを読めませんでした:', str(e)[:120])
+        out['people'].append(person)
+    return out
+
+
 def main():
     tok = http('POST', SB_URL + '/auth/v1/token?grant_type=password',
                {'email': os.environ['SB_EMAIL'], 'password': os.environ['SB_PASSWORD']})
@@ -90,6 +151,15 @@ def main():
     if pred and runs:
         last = max(runs, key=lambda r: (r['date'], r['id']))   # 一番新しいランに今の予想を付ける
         last['note'] += f'｜Garmin予想フル {pred}'
+    try:
+        my_dn = getattr(api, 'display_name', None) or getattr(getattr(api, 'garth', None), 'profile', {}).get('displayName')
+        fr = friends(api, my_dn)
+        if fr:
+            rows.append({'id': FRIENDS_ID, 'date': '2000-01-01', 'cat': 'run', 'exercises': [], 'run_dist': 0, 'run_time': 0,
+                         'run_pace_min': 0, 'run_pace_sec': 0, 'run_hr': 0, 'run_cal': 0, 'walk_dist': 0, 'walk_time': 0,
+                         'note': '[FRIENDS]' + json.dumps(fr, ensure_ascii=False)})
+    except Exception as e:
+        print('仲間の記録でエラー:', str(e)[:160])
     if rows:
         http('POST', SB_URL + '/rest/v1/training_logs', rows, {**auth, 'Prefer': 'resolution=merge-duplicates'})
     print(f'Garmin: {len(acts)}件を確認、{len(rows)}件を記録（{start}〜）')

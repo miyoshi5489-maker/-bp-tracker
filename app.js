@@ -61,9 +61,12 @@ async function getRecs(force){
       const r=await fetch(SUPABASE_URL+'/rest/v1/training_logs?order=date.desc',{headers:await authHeaders()});
       if(!r.ok)throw new Error(r.status);
       list=(await r.json()).map(mapRow);
+      // 仲間（Garminチャレンジ）のまとめ行は記録に混ぜず、ランのページ用に取っておく
+      const fr=list.find(z=>z.note.startsWith('[FRIENDS]'));if(fr){try{window.RUN_FRIENDS_LIVE=JSON.parse(fr.note.slice(9));localStorage.setItem('yohei_run_friends_live',fr.note.slice(9));}catch{}}list=list.filter(z=>!z.note.startsWith('[FRIENDS]'));
       try{localStorage.setItem('yohei_bp_cache',JSON.stringify(list));}catch(e){}
       if(pendCount())setTimeout(flushPend,0);
     }catch(e){
+      try{window.RUN_FRIENDS_LIVE=window.RUN_FRIENDS_LIVE||JSON.parse(localStorage.getItem('yohei_run_friends_live')||'null');}catch{}
       try{list=JSON.parse(localStorage.getItem('yohei_bp_cache')||localStorage.getItem('yohei_bp_v3')||'[]').map(r=>r&&r.date?{...r,exercises:cleanEx(r.exercises)}:null).filter(Boolean);}catch{list=[];}
     }
     CACHE=mergePend(list);pendBadge();return CACHE;
