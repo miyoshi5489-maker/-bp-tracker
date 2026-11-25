@@ -109,7 +109,7 @@ window.renderRunStats=async function(){
       <div>直近7日：<b class="num">${f.w7n}回・${km1(f.w7km)}km</b>　今月：<b class="num">${km1(f.month)}km</b>　6週の最長：<b class="num">${km1(f.longest)}km</b></div>
       <div>フルの予想：<b class="num">${f.pred?fmtT(f.pred):'情報なし'}</b>${f.predRun?`<span class="text-muted">（${md(f.predRun.d)}の${km1(f.predRun.km)}km・${paceStr(f.predRun.sec/f.predRun.km)}/kmから）</span>`:'<span class="text-muted">（直近6週に5km以上のランなし）</span>'}${f.vo2?`　VO2max ${f.vo2}（${fmtT(f.vPred)}）`:''}</div>
       ${f.recent.length?`<div class="mt-1 text-[12px] text-muted">${f.recent.map(r=>`${md(r.d)} ${km1(r.km)}km ${paceStr(r.sec/r.km)}/km${r.hr?'・心拍'+r.hr:''}`).join('<br>')}</div>`:''}</div>`;}).join('')}
-    <p class="text-[11px] text-muted">GarminのランニングチャレンジとSNS（ニュースフィード）から1時間ごとに自動で更新（${md(FL.at)}）。予想は直近6週で一番良い5km以上のランからの目安。</p>`
+    <p class="text-[11px] text-muted">Garminのランニングチャレンジと2人のランから1時間ごとに自動で更新（${md(FL.at.slice(0,10))} ${FL.at.slice(11)||''}）。予想は直近6週で一番良い5km以上のランからの目安。</p>`
     :'<div class="card p-4 text-[13px] text-muted">Garminのチャレンジをまだ読み込めていません（1時間ごとに自動で読みます）。</div>'):''}
   </div>
 

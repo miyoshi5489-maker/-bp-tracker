@@ -46,7 +46,8 @@ def _list(x):
 def friends(api, my_name, my_full=''):
     """Garminのランニングチャレンジに入っている仲間の、今の距離と最近のランを集める。
     公開リポジトリのログに他人のデータを出さないよう、print は件数とキーの名前だけ。"""
-    out = {'at': date.today().isoformat(), 'challenge': None, 'people': []}
+    from datetime import datetime, timezone
+    out = {'at': datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M'), 'challenge': None, 'people': []}
     try:
         chs = _list(api.get_active_adhoc_challenges())
     except Exception as e:
