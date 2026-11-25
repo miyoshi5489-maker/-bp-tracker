@@ -16,7 +16,7 @@ const gpOf=r=>{const m=(r.note||'').match(/Garmin予想フル (\d+):(\d\d):(\d\d
 const vdotMarathon=v=>{const f=t=>{const vel=42195/t;return (-4.6+0.182258*vel+0.000104*vel*vel)/(0.8+0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t))-v;};let a=100,b=500;for(let i=0;i<60;i++){const m=(a+b)/2;if(f(m)>0)a=m;else b=m;}return (a+b)/2*60;};
 // 一緒に篠山を走る仲間（Garminのランニングチャレンジ）。Garmin自動取り込みが1時間ごとに RUN_FRIENDS_LIVE を作る
 const FRIEND_NAMES={'西田勇貴':'勇貴くん','大喜多佑介':'大喜多佑介くん'};
-const friendView=(p,t)=>{const R=(p.runs||[]).filter(r=>r.km>0&&r.sec>0).sort((a,b)=>a.d<b.d?1:-1);const P=r=>r.sec/r.km;
+const friendView=(p,t)=>{const R=(p.runs||[]).filter(r=>r.km>=0.2&&r.sec>0).sort((a,b)=>a.d<b.d?1:-1);const P=r=>r.sec/r.km;
   const okr=R.filter(r=>r.km>=5&&r.d>=addDays(t,-41)&&P(r)>=210&&P(r)<=600);const b=okr.sort((x,y)=>x.sec*Math.pow(42.195/x.km,1.06)-y.sec*Math.pow(42.195/y.km,1.06))[0];
   const v=(R.find(r=>r.vo2)||{}).vo2||0;const w7=R.filter(r=>r.d>=addDays(t,-6));const ym=t.slice(0,7);
   return {name:FRIEND_NAMES[p.name]||p.name,score:p.score,month:R.filter(r=>r.d.startsWith(ym)).reduce((x,r)=>x+r.km,0),last:R[0],w7n:w7.length,w7km:w7.reduce((x,r)=>x+r.km,0),
@@ -103,7 +103,7 @@ window.renderRunStats=async function(){
   <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">仲間と篠山（ランニングチャレンジ）</h2><button class="chip" onclick="toggleRunFriends()">${fShow?'隠す':'表示する'}</button></div>
     ${fShow?(FL&&FL.people&&FL.people.length?`
     <div class="card overflow-hidden"><table class="w-full text-[13px]"><thead><tr class="text-[11px] text-muted"><th class="px-3 py-2 text-left">${FL.challenge&&FL.challenge.end?`〜${md(FL.challenge.end)}`:''}</th><th class="py-2 text-right">チャレンジ</th><th class="px-3 py-2 text-right">フルの予想</th></tr></thead><tbody>
-      ${FL.people.slice().sort((a,b)=>(+b.score||0)-(+a.score||0)).map((p,i)=>{const f=p.me?null:friendView(p,t);return `<tr class="border-t border-line ${p.me?'font-bold':''}"><td class="px-3 py-2">${i+1}. ${p.me?'洋平さん':esc(f.name)}</td><td class="num py-2 text-right">${p.score!=null?km1(+p.score>1000?+p.score/100000:+p.score)+'km':'—'}</td><td class="num px-3 py-2 text-right">${p.me?(main?fmtT(main):'—'):(f.pred?fmtT(f.pred):'<span class="text-muted">情報なし</span>')}</td></tr>`;}).join('')}
+      ${FL.people.slice().sort((a,b)=>(+b.score||0)-(+a.score||0)).map((p,i)=>{const f=p.me?null:friendView(p,t);return `<tr class="border-t border-line ${p.me?'font-bold':''}"><td class="px-3 py-2">${i+1}. ${p.me?'洋平さん':esc(f.name)}</td><td class="num py-2 text-right">${p.score!=null?km1(+p.score/1000)+'km':'—'}</td><td class="num px-3 py-2 text-right">${p.me?(main?fmtT(main):'—'):(f.pred?fmtT(f.pred):'<span class="text-muted">情報なし</span>')}</td></tr>`;}).join('')}
     </tbody></table></div>
     ${FL.people.filter(p=>!p.me).map(p=>{const f=friendView(p,t);return `<div class="card p-4 text-[13px] leading-relaxed"><div class="mb-1 flex items-baseline justify-between"><b class="text-[15px]">${esc(f.name)}</b><span class="text-[11px] text-muted">${f.last?'最後のラン '+md(f.last.d):'最近のランなし'}</span></div>
       <div>直近7日：<b class="num">${f.w7n}回・${km1(f.w7km)}km</b>　今月：<b class="num">${km1(f.month)}km</b>　6週の最長：<b class="num">${km1(f.longest)}km</b></div>
