@@ -19,4 +19,4 @@
 
 ## ラン（篠山マラソン）
 - Garmin自動取り込み（scripts/garmin_sync.py）が、ランのメモに「｜VO2max N」と、一番新しいランに「｜Garmin予想フル H:MM:SS」を付ける。runstats.js がそれを読んで予想タイムを出す（練習のたびに自動更新）。
-- 仲間（勇貴くん・沖田雄介くん）の月間距離と予想は runstats.js の RUN_FRIENDS に手で入れる（months: {'2026-11': 距離km}、pred: '3:45:00'、predFrom: 出どころ）。わからない所は null＝「情報なし」。
+- 仲間（西田勇貴＝勇貴くん・大喜多佑介くん）はGarminのランニングチャレンジ（月ごと）から自動。garmin_sync.py の friends() が date 2000-01-01・id 900000000000000001 の行のメモ「[FRIENDS]{json}」に入れ、app.js の getRecs が記録から外して window.RUN_FRIENDS_LIVE に入れる。公開リポジトリなので、Actionsのログに2人の数字を出さない。
