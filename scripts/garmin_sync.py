@@ -75,7 +75,7 @@ def friends(api, my_name, my_full=''):
         person = {'name': nm, 'me': me, 'score': score, 'today': p.get('todayNumber'), 'runs': []}
         if dn and not me:
             try:
-                acts = _list(api.connectapi(f'/activitylist-service/activities/{dn}', params={'start': 0, 'limit': 30}))
+                acts = _list(api.connectapi(f'/activitylist-service/activities/{dn}', params={'start': 0, 'limit': 120}))
                 if acts:
                     print('仲間のラン', len(acts), '件', sorted(acts[0].keys())[:12])
                 for a in acts:
