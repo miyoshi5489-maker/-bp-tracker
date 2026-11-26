@@ -227,7 +227,8 @@ function drawYardageBook(){
   requestAnimationFrame(()=>{const y0=el.scrollTop;el.classList.add('yb-measure');if(mob)el.classList.remove('yb-m');const sc=[...el.querySelectorAll('.yb-screen .yb-txt')];const fs=sc.map(t=>{let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}return f;});
     const pr=[...el.querySelectorAll('.yb-print .yb-card')];const idx=sheets.flatMap((c,s)=>[0,1,2,3].map(p=>p*S+s));
     const scards=[...el.querySelectorAll('.yb-screen .yb-card')];
-    pr.forEach((c,i)=>{const t=c.querySelector('.yb-txt');const ci=idx[i];const st=scards[ci]&&scards[ci].querySelector('.yb-txt');if(t&&st)t.style.fontSize=st.style.fontSize;});
+    pr.forEach((c,i)=>{const t=c.querySelector('.yb-txt');const ci=idx[i];const sci=ci<=1?0:ci-1; // 画面は表紙と作戦が1枚（combo）なので1つずれる
+      const st=scards[sci]&&scards[sci].querySelector('.yb-txt');if(t&&st)t.style.fontSize=st.style.fontSize;});
     el.classList.remove('yb-measure');if(mob){el.classList.add('yb-m');const s2=el.querySelector('.yb-screen');s2.style.zoom='';s2.scrollLeft=keepX;}el.scrollTop=y0;});
   if(YB&&YB.hole){const i=order.findIndex(h=>h[0]===YB.hole);const sc=el.querySelector('.yb-screen');if(i>=0&&sc)requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mob){sc.scrollLeft=(i+1)*sc.clientWidth;el.scrollTop=0;}else{const c=sc.querySelectorAll(':scope>.yb-card')[i+1];c&&c.scrollIntoView({block:'start'});}}));}
 }
