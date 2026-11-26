@@ -354,6 +354,7 @@ function drawHoleMap(){
   if(pv0)return;
   if(gv){const sv=$('gsvg');sv.addEventListener('click',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
       let px=q.x,py=-q.y;const k=(px/(g.w/2))**2+(py/(g.d/2))**2;if(k>1){px/=Math.sqrt(k);py/=Math.sqrt(k);}setPin(HM.date,HM.no,{x:Math.round(px*2)/2,y:Math.round(py*2)/2});drawHoleMap();});return;}
+  if(typeof hzLoad==='function'&&IL&&typeof HZ_CACHE!=='undefined'&&!HZ_CACHE[hzKey(x.mapKey,h[0])]){const k0=HM.date+':'+h[0];hzLoad(x.mapKey,h[0]).then(()=>{if(HM&&HM.date+':'+HM.no===k0&&$('holemap'))drawHoleMap();}).catch(()=>{});}
   if(side)hmSideSetup();const sc=$('hm-scroll');const vb=IL?{width:IL.w,height:IH}:sc.querySelector('svg').viewBox.baseVal;HM.vb={width:vb.width,height:vb.height};HM.base=Math.min((IL?sc.clientWidth-2*hzGut():sc.clientWidth),(sc.clientHeight-10)*vb.width/vb.height);
   const inn0=$('hm-in');inn0.classList.remove('mx-auto','my-1');const pad=document.createElement('div');pad.id='hm-pad';pad.style.cssText=`display:inline-block;vertical-align:top;padding:${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;inn0.replaceWith(pad);pad.appendChild(inn0);
   inn0.style.width=HM.base*HM.z+'px';hmGestures(sc);hmDrag(sc);if(IL){HM.L=0;HM.IL=IL;HM.ctx={IL,hi:IL.holes[h[0]],m,opt:{hz:{key:x.mapKey,n:h[0]},pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]],obr:(OB_RANGE[x.mapKey]||{})[h[0]],dt:teeShift(x.mapKey,h[0])}};hmOverlay();}
@@ -434,13 +435,16 @@ function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='cl
    ${PH?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">${h[0]}番ホール（ティーからの景色）</div><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" referrerpolicy="no-referrer"><figcaption ${W}>写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`
      :''}
    ${boxed?'':holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
+   ${typeof ybCard==='function'&&hmWide()&&(ILLUS[x.mapKey]||[]).length?hmYbPage(x,h):''}
    ${v.drone?`<a class="btn-sm justify-self-start !border-white !bg-transparent !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
-   ${typeof openYardageBook==='function'&&(ILLUS[x.mapKey]||[]).length?(hmWide()&&typeof ybCard==='function'?hmYbPage(x,h):'')+`<button class="btn-sm justify-self-start !border-white !bg-white !text-[#1b5e20]" onclick="openYardageBook('${x.date}',${h[0]})">📒 ${hmWide()?'ヤーデージブック全体を開く（印刷もここから）':h[0]+'番のヤーデージブックを開く'}</button>`:''}
+   ${typeof openYardageBook==='function'&&(ILLUS[x.mapKey]||[]).length?`<button class="btn-sm justify-self-start !border-white !bg-white !text-[#1b5e20]" onclick="openYardageBook('${x.date}',${h[0]})">📒 ${hmWide()?'ヤーデージブック全体を開く（印刷もここから）':h[0]+'番のヤーデージブックを開く'}</button>`:''}
   </div>`;}
 // PCでは動画の下に、そのホールのヤーデージブックのページをそのまま出す（洋平さんの指示）。幅に合わせて拡大・縮小
-function hmYbPage(x,h){try{return `<div class="grid gap-1"><div class="text-[13px] font-bold text-white">📒 ${h[0]}番のヤーデージブック</div><div id="hm-yb" class="overflow-hidden rounded-lg"><div id="hm-yb-in" style="width:105mm;transform-origin:0 0">${ybCard(x,h,null)}</div></div></div>`;}catch(e){return '';}}
-function hmYbFit(){const o=$('hm-yb'),i=$('hm-yb-in');if(!o||!i)return;const c=i.firstElementChild;if(!c)return;i.style.transform='';const w=c.offsetWidth,hh=c.offsetHeight;if(!w)return;
-  const k=o.clientWidth/w;i.style.transform=`scale(${k})`;o.style.height=hh*k+'px';}
+// 景色の欄を上下2つに分ける：上＝動画（今の大きさのまま）、下＝ヤーデージブックのページ（残りの高さにちょうど収まる大きさ）
+function hmYbPage(x,h){try{return `<div id="hm-ybw" class="w-full"><div id="hm-yb" class="mx-auto overflow-hidden rounded-lg shadow-lg"><div id="hm-yb-in" style="width:105mm;transform-origin:0 0">${ybCard(x,h,null)}</div></div></div>`;}catch(e){return '';}}
+function hmYbFit(){const wr=$('hm-ybw'),o=$('hm-yb'),i=$('hm-yb-in'),sd=$('hm-side');if(!wr||!o||!i||!sd)return;const c=i.firstElementChild;if(!c)return;i.style.transform='';const w=c.offsetWidth,hh=c.offsetHeight;if(!w)return;
+  const top=wr.getBoundingClientRect().top-sd.getBoundingClientRect().top+sd.scrollTop;const avail=sd.clientHeight-top-12;
+  const k=Math.max(.5,Math.min(wr.clientWidth/w,avail>150?avail/hh:9));i.style.transform=`scale(${k})`;o.style.width=w*k+'px';o.style.height=hh*k+'px';}
 
 // 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
 function hmSideOn(){try{return localStorage.getItem('hm:side')==='1';}catch{return false;}}
@@ -498,7 +502,7 @@ function hmBoxHTML(x,h){const v=hmVid(x.mapKey,h[0]);
 function hmBoxClamp(save){const b=$('hm-box'),sd=$('hm-side');if(!b||!sd)return;const W=sd.clientWidth,H=sd.clientHeight;
   let w=Math.max(Math.min(200,W-8),Math.min(b.offsetWidth,W-8));b.style.width=w+'px';const bh=b.offsetHeight;
   b.style.left=Math.max(4,Math.min(b.offsetLeft,W-w-4))+'px';b.style.top=Math.max(4,Math.min(b.offsetTop,Math.max(4,H-bh-4)))+'px';
-  if(save)try{localStorage.setItem('hm:boxpos',JSON.stringify({l:b.offsetLeft/W,t:b.offsetTop,w:w/W}));}catch{}}
+  if(typeof hmYbFit==='function')requestAnimationFrame(hmYbFit);if(save)try{localStorage.setItem('hm:boxpos',JSON.stringify({l:b.offsetLeft/W,t:b.offsetTop,w:w/W}));}catch{}}
 function hmBoxSetup(){const b=$('hm-box'),sd=$('hm-side'),bar=$('hm-bbar'),rs=$('hm-bres');if(!b||!sd)return;const ifr=b.querySelector('iframe');const sp=$('hm-vspace');
   let v=null;try{v=JSON.parse(localStorage.getItem('hm:boxpos')||'null');}catch{}
   const W=sd.clientWidth;const m=W<300?4:12;if(v&&hmWide()){b.style.width=(v.w*W)+'px';b.style.left=(v.l*W)+'px';b.style.top=v.t+'px';}else{b.style.width=(W-2*m)+'px';b.style.left=m+'px';b.style.top=m+'px';}
