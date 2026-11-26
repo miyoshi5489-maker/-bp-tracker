@@ -282,3 +282,6 @@
 
 /* ホールマップ（PC）の動画の下のヤーデージブック：図にバンカーの札・すき間の線を出さない（距離は下の文字） */
 #hm-yb .hzi,#hm-yb .hzo{display:none!important}
+/* 動画の下のヤーデージブック（文字だけ）：はみ出しで切らない */
+.yb-mini{overflow:visible!important;gap:4px;line-height:1.45}.yb-mini .yb-cad li.yb-k{color:#111}
+#hm-yb .hzt{font-size:.95em}#hm-yb .yb-tm{margin-top:6px;font-size:.85em;color:#666}

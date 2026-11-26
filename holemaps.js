@@ -441,24 +441,23 @@ function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='cl
   </div>`;}
 // PCでは動画の下に、そのホールのヤーデージブックのページをそのまま出す（洋平さんの指示）。幅に合わせて拡大・縮小
 // 景色の欄を上下2つに分ける：上＝動画（今の大きさのまま）、下＝ヤーデージブックのページ（残りの高さにちょうど収まる大きさ）
-function hmYbPage(x,h,lk){try{return `<div id="hm-ybw" class="grid w-full content-start gap-2" style="scrollbar-width:thin"><div class="sticky top-0 z-10 flex items-center justify-end gap-1"><span class="mr-auto rounded bg-black/40 px-2 py-0.5 text-[11px] font-bold text-white">📒 ${h[0]}番のヤーデージブック</span>${[['−','-1','小さく'],['＋','1','大きく']].map(([t,a,tt])=>`<button class="rounded-full bg-white px-2.5 py-0.5 text-[12px] font-bold text-[#1b5e20] shadow" title="${tt}" aria-label="ヤーデージブックを${tt}" onclick="hmYbZoom(${a})">${t}</button>`).join('')}</div><div id="hm-yb" class="justify-self-center overflow-hidden rounded-lg shadow-lg"><div id="hm-yb-in" style="width:105mm;transform-origin:0 0">${hmYbCardHtml(x,h)}</div></div>${hmYbHz(x,h)}${lk||''}</div>`;}catch(e){return lk||'';}}
-// 通常のヤーデージブックと同じ仕上げ（番手を日本語に：8I→8番アイアン など）
-function hmYbCardHtml(x,h){const html=ybCard(x,h,null);if(typeof jpWalk!=='function')return html;try{const d=document.createElement('div');d.innerHTML=html;jpWalk(d);return d.innerHTML;}catch(e){return html;}}
-// この画面のヤーデージブックは、図にバンカーの札を出さない（図が隠れるため）。距離は図の下に文字で（洋平さんの指示）。通常のヤーデージブックは今まで通り
+// 動画の下：そのホールのヤーデージブックの中身を文字だけで（図なし・見出しは番号だけ・小さめの字）。通常のブックと内容が同じかを確かめる用（洋平さんの指示）
+function hmYbPage(x,h,lk){try{const d=document.createElement('div');d.innerHTML=ybCard(x,h,null);if(typeof jpWalk==='function')jpWalk(d);
+  const t=d.querySelector('.yb-txt'),tm=d.querySelector('.yb-tm');if(!t)return lk||'';
+  return `<div id="hm-ybw" class="grid w-full content-start gap-2" style="scrollbar-width:thin"><div id="hm-yb" class="rounded-lg bg-white px-3 py-2 text-[#111]" style="font-size:${hmYbFs()}px">
+    <div class="mb-1 flex items-center gap-1.5"><span class="rounded bg-[#1b5e20] px-1.5 text-[1.1em] font-bold leading-snug text-white">${h[0]}</span><span class="text-[.85em] font-bold text-[#666]">📒 ヤーデージブックの内容</span>
+     <span class="ml-auto flex gap-1">${[['−',-1,'小さく'],['＋',1,'大きく']].map(([c,a,tt])=>`<button class="rounded-full border border-[#1b5e20] px-2 text-[12px] font-bold leading-5 text-[#1b5e20]" aria-label="文字を${tt}" onclick="hmYbZoom(${a})">${c}</button>`).join('')}</span></div>
+    <div class="yb-txt yb-mini">${t.innerHTML}</div>${hmYbHz(x,h)}${tm?tm.outerHTML:''}</div>${lk||''}</div>`;}catch(e){return lk||'';}}
+// バンカー・池の距離（図のラベルと同じ中身を文字で）
 function hmYbHz(x,h){if(typeof hzLabelText!=='function')return '';const t=hzLabelText(x.mapKey,h[0],typeof teeShift==='function'?teeShift(x.mapKey,h[0]):0);if(!t)return '';
-  return `<div class="rounded-lg bg-white px-3 py-2 text-[13px] leading-snug text-[#111] shadow-lg"><div class="mb-1 font-bold text-[#0d47a1]">バンカー・池の距離</div>${t}</div>`;}
-// 下のヤーデージブックの大きさ（幅いっぱい＝1）。−／＋で変えて覚えておく
-function hmYbZ(){try{return Math.max(.3,Math.min(1,+localStorage.getItem('hm:ybz')||1));}catch{return 1;}}
-function hmYbZoom(a){let z=hmYbZ();const o=$('hm-yb'),i=$('hm-yb-in'),wr=$('hm-ybw');
-  z=Math.max(.3,Math.min(1,Math.round((z+a*.1)*100)/100));
-  try{localStorage.setItem('hm:ybz',String(z));}catch{}hmYbFit();}
-function hmYbFit(){const wr=$('hm-ybw'),o=$('hm-yb'),i=$('hm-yb-in'),sd=$('hm-side');if(!wr||!o||!i||!sd)return;const c=i.firstElementChild;if(!c)return;i.style.transform='';
-  // 文字があふれる時は通常のヤーデージブックと同じく文字を小さくする（9pt から 0.2pt ずつ）
-  {const t=c.querySelector('.yb-txt');if(t&&!t.dataset.fs){let f=9;t.style.fontSize=f+'pt';while(t.scrollHeight>t.clientHeight+1&&f>4.6){f-=.2;t.style.fontSize=f+'pt';}t.dataset.fs=f;}}const w=c.offsetWidth,hh=c.offsetHeight;if(!w)return;
+  return `<div class="mt-2 border-t border-dashed border-[#bbb] pt-1.5"><div class="mb-0.5 font-bold text-[#0d47a1]">バンカー・池の距離</div>${t}</div>`;}
+// 文字の大きさ（px）。−／＋で変えて覚えておく
+function hmYbFs(){try{return Math.max(9,Math.min(16,+localStorage.getItem('hm:ybfs')||12));}catch{return 12;}}
+function hmYbZoom(a){const f=Math.max(9,Math.min(16,hmYbFs()+a));try{localStorage.setItem('hm:ybfs',String(f));}catch{}const o=$('hm-yb');if(o)o.style.fontSize=f+'px';}
+// 下の区画は自分だけスクロール（動画は上に残る）
+function hmYbFit(){const wr=$('hm-ybw'),sd=$('hm-side');if(!wr||!sd)return;
   const top=wr.getBoundingClientRect().top-sd.getBoundingClientRect().top+sd.scrollTop;const avail=sd.clientHeight-top-12;
-  // 下の区画は自分だけスクロール（動画は上に残る）。ページは区画の幅いっぱいで読みやすく
-  wr.style.height=avail>200?avail+'px':'';wr.style.overflowY=avail>200?'auto':'';wr.style.borderRadius='8px';
-  const kw=wr.clientWidth/w,kh=avail>200?(avail-40)/hh:kw;const z=hmYbZ();const k=Math.max(.3,kw*z);i.style.transform=`scale(${k})`;o.style.width=w*k+'px';o.style.height=hh*k+'px';}
+  wr.style.height=avail>200?avail+'px':'';wr.style.overflowY=avail>200?'auto':'';wr.style.borderRadius='8px';}
 
 // 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
 function hmSideOn(){try{return localStorage.getItem('hm:side')==='1';}catch{return false;}}
