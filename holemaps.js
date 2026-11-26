@@ -172,6 +172,15 @@ const pinKey=(d,n)=>`pin:${d}:${n}`;
 //    ラウンド当日にピンシートの写真をもらって、ここに入れる（またはアプリの「ピンシート入力」で入れる）。日付で自動に切り替わる。
 const PIN_SHEETS={
 };
+// その日のグリーンの速さ（フィート）。当日、受付・スタート室の掲示やピンシートの写真をもらって Claude がここに入れる
+//   例：'2026-11-29':{ft:9.5,src:'スタート室の掲示'}。いつもの速さは GREEN_USUAL（コース情報）
+const GREEN_SPEED_DAY={
+};
+const GREEN_USUAL={taka:{ft:9,src:'GDO：9〜11月の晴天時の平均'}};
+function greenSpeedNote(d,key){const g=GREEN_SPEED_DAY[d];if(!g)return '';const u=(GREEN_USUAL[key]||{}).ft;const df=u?g.ft-u:0;
+  return `今日のグリーン ${g.ft}フィート`+(u?`（いつもは約${u}）`:'')+'。'+(df>=0.5?'いつもより速い：下りは触るだけ、強く打たない':df<=-0.5?'いつもより遅い：カップを30cm過ぎる強さで':'いつもどおりの強さで');}
+// ピンシートが入っているか（写真から入れた PIN_SHEETS か、アプリで入れた値）
+function hasPinSheet(d,n){try{if(localStorage.getItem(pinKey(d,n)))return true;}catch{}return !!pinSheetOf(d,n);}
 function pinSheetOf(d,n){const k=pinKey(d,n);try{const v=JSON.parse(localStorage.getItem('pinsheet:'+d)||'null');if(v&&v[n])return v[n];}catch{}return (PIN_SHEETS[d]||{})[n]||null;}
 function pinOf(d,n){try{const v=JSON.parse(localStorage.getItem(pinKey(d,n))||'null');if(v)return v;}catch{}
   const ps=pinSheetOf(d,n);if(ps&&typeof ROUND_BASE==='function'){try{const x=ROUND_BASE(d);const g=greenOf(x.mapKey,n);return {x:ps.x||0,y:Math.max(-g.d/2,Math.min(g.d/2,(ps.f||0)-g.d/2)),sheet:1};}catch{}}
@@ -200,6 +209,7 @@ const DW_WHY={"arima": {"1": ["使う", "右OB・左セーフ（ゴリゴル動�
 function caddie(x,h,m){
   const G=m.c[m.c.length-1],g=greenOf(x.mapKey,h[0]),pin=pinOf(x.date,h[0]);const P=[G[0]+pin.x,G[1]+pin.y];
   const T=m.t||[];const out=[];
+  const gsn=greenSpeedNote(x.date,x.mapKey);if(gsn)out.push(`<b>${esc(gsn)}</b>`);
   const sd0=(HOLE_SIDES[x.mapKey]||{})[h[0]];if(sd0){out.push(`<span class="${sideCls(sd0.L)}">左 ${sideMark(sd0.L)} ${esc(sd0.L)}</span>`);out.push(`<span class="${sideCls(sd0.R)}">右 ${sideMark(sd0.R)} ${esc(sd0.R)}</span>`);if(sd0.F)out.push(`<span class="text-warn">前 ✕ ${esc(sd0.F)}</span>`);if(sd0.B)out.push(`<span class="text-warn">奥 ✕ ${esc(sd0.B)}</span>`);}
   {const el=elevLine(x.mapKey,h[0]);if(el)out.push(el);}
   const st=(HOLE_STATS[x.mapKey]||{})[h[0]];if(st)out.push(`<span class="text-muted">同じレベル（96〜105）の平均 <b class="text-fg">${st.avg.toFixed(2)}</b>・難易度${st.rank}位・OB率${Math.round(st.ob)}%${h[1]>3?`・FWキープ${Math.round(st.fw)}%`:''}（GDO）</span>`);

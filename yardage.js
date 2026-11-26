@@ -19,7 +19,7 @@ function ybSvg(I,hi,m,o){
   const r=hi.r,s=hi.s,IH=hi.h||I.h,K=o.k;const G=r[r.length-1];const DT=o.dt||0;const T=m.t||[];
   const T0=DT>=0?routeAt(r,DT*s).p:(()=>{const u=routeAt(r,0).u;return [r[0][0]+u[0]*DT*s,r[0][1]+u[1]*DT*s];})();
   const toPx=(x,y)=>{const a=routeAt(r,y*s);return [a.p[0]-a.u[1]*x*s,a.p[1]+a.u[0]*x*s];};
-  const last=routeAt(r,1e9).u;const P=G;
+  const last=routeAt(r,1e9).u;const P=ybPinPx(r,s,o.pin);
   let v=`<svg viewBox="0 0 ${I.w} ${IH}" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible" font-family="sans-serif">`;
   const cl=o.club;
   if(cl&&cl.side!=null&&T[0]){const a=routeAt(r,(cl.total||cl.carry)*s);const c=[a.p[0]-a.u[1]*cl.side*s,a.p[1]+a.u[0]*cl.side*s];const ang=Math.atan2(a.u[0],-a.u[1])*180/Math.PI;
@@ -56,7 +56,8 @@ function ybTap(ev,el){if(el.closest('.yb-print'))return;const key=el.dataset.k,n
    +`<text x="${lx+2.5*u}" y="${ly+6*u}" font-size="${4.4*u}" font-weight="bold" fill="#1565c0">ティー ${a}y</text><text x="${lx+2.5*u}" y="${ly+11.6*u}" font-size="${4.4*u}" font-weight="bold" fill="#7b1fa2">G中央 ${b}y</text>`;
   svg.appendChild(g);}
 // 1打ごとの距離（ティー→落とし所、落とし所→ピン）
-function ybShots(I,hi,m,dt){const r=hi.r,s=hi.s,G=r[r.length-1];const T=m.t||[];
+function ybPinPx(r,s,pin){const G=r[r.length-1];if(!pin)return G;const u=routeAt(r,1e9).u;return [G[0]-u[1]*pin.x*s+u[0]*pin.y*s,G[1]+u[0]*pin.x*s+u[1]*pin.y*s];}
+function ybShots(I,hi,m,dt,pin){const r=hi.r,s=hi.s,G=ybPinPx(r,s,pin);const T=m.t||[];
   const T0=dt>=0?routeAt(r,dt*s).p:(()=>{const u=routeAt(r,0).u;return [r[0][0]+u[0]*dt*s,r[0][1]+u[1]*dt*s];})();
   const toPx=(x,y)=>{const a=routeAt(r,y*s);return [a.p[0]-a.u[1]*x*s,a.p[1]+a.u[0]*x*s];};
   let pv=[0,0];return T.map((t,i)=>{const q=toPx(t[0],t[1]);const d=i===0?Math.round(Math.hypot(q[0]-T0[0],q[1]-T0[1])/s):Math.round(Math.hypot(t[0]-pv[0],t[1]-pv[1]));pv=t;
@@ -79,15 +80,17 @@ function ybCard(x,h,x2){
   const yd=TEES[key]?TEES[key][teeIdx(key)][1][h[0]-1]:h[2];const teeName=TEES[key]?TEES[key][teeIdx(key)][0]:'';
   const dt=teeShift(key,h[0]);const sides=(HOLE_SIDES[key]||{})[h[0]];
   let fig='';let shots=[];
+  // その日のピン位置（ピンシートが入っている時だけ）。図の旗と「残り」がピンまでになる
+  const PIN=typeof hasPinSheet==='function'&&hasPinSheet(x.date,h[0])?pinOf(x.date,h[0]):null;
   if(IL){const hi=IL.holes[h[0]];const IH=hi.h||IL.h;let hmm=YB_IMG_H,wmm=hmm*IL.w/IH;if(wmm>YB_IMG_MAXW){wmm=YB_IMG_MAXW;hmm=wmm*IH/IL.w;}const k=IH/hmm;
-    fig=`<div class="yb-fig" data-k="${key}" data-n="${h[0]}" data-dt="${dt}" data-u="${k}" onclick="ybTap(event,this)" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH};--hr:${(IH/IL.w).toFixed(3)}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
-    shots=ybShots(IL,hi,m,dt);}
-  const cad0=caddie(x,h,m).filter(t=>!/^<span class="[^"]*">(左|右|前|奥) [？◯△✕] /.test(t));{const sl=ybSideLine(sides);if(sl)cad0.unshift(sl);} // 左右前奥は1行にまとめる
-  const cad1=cad0.filter(t=>!/同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
+    fig=`<div class="yb-fig" data-k="${key}" data-n="${h[0]}" data-dt="${dt}" data-u="${k}" onclick="ybTap(event,this)" style="width:${wmm}mm;height:${hmm}mm;--ar:${IL.w}/${IH};--hr:${(IH/IL.w).toFixed(3)}"><img src="${IL.base}${IL.ext(h[0])}" alt="${h[0]}番ホール図" referrerpolicy="no-referrer">${ybSvg(IL,hi,m,{pin:PIN,hzk:key,n:h[0],k,dt,club,sides,obr:(OB_RANGE[key]||{})[h[0]]})}</div>`;
+    shots=ybShots(IL,hi,m,dt,PIN);}
+  const cad0=caddie(x,h,m).filter(t=>!/^<span class="[^"]*">(左|右|前|奥) [？◯△✕] /.test(t));{const sl=ybSideLine(sides);if(sl)cad0.unshift(sl);}if(PIN){const g=greenOf(key,h[0]);const f=Math.round(g.d/2+PIN.y),lx=Math.round(PIN.x);cad0.push(`グリーン：今日のピン 手前から${f}y（奥行き${Math.round(g.d)}y）・${lx?(lx>0?'右':'左')+Math.abs(lx)+'y':'まん中'}`);} // 左右前奥は1行にまとめる
+  const cad1=cad0.filter(t=>!/^<b>今日のグリーン|同じレベル|打ち出しが平均で|^<b>1打目|^<b>(\d+打目|ティーショット)<\/b>：ピンまで/.test(t));
   const cad=ybDedupe(cad1,h[6]); // 同じページで「狙い」と同じ文は書かない（洋平さんの指示：重複なし・シンプルに）
   const st=(HOLE_STATS[key]||{})[h[0]];
   const shotLines=shots.map(s=>{const cc=liveClub(s.club)||(clubCode(s.club)&&MYCLUBS[clubCode(s.club)]);
-    return `<div class="yb-shot"><span class="yb-no">${s.n}</span><b>${esc(s.club||'')}</b> ${s.d}y${cc&&s.n===1?`<span class="yb-mut">（キャリー${Math.round(cc.carry)}・トータル${Math.round(cc.total||cc.carry)}）</span>`:''} → 残り<b>${s.rest}y</b></div>`;}).join('');
+    return `<div class="yb-shot"><span class="yb-no">${s.n}</span><b>${esc(s.club||'')}</b> ${s.d}y${cc&&s.n===1?`<span class="yb-mut">（キャリー${Math.round(cc.carry)}・トータル${Math.round(cc.total||cc.carry)}）</span>`:''} → ${PIN?'ピンまで':'残り'}<b>${s.rest}y</b></div>`;}).join('');
   const aim=''; // ずれの文は出さない（図の楕円で見る）
   const other=x2?x2.holes.find(r=>r[0]===h[0]):null;
   const col=h[7]==='hard'?'#c62828':h[7]==='mid'?'#b7791f':'#2e7d32';
@@ -177,6 +180,7 @@ function ybCover(x){
    <div class="yb-mut">${+x.date.slice(5,7)}/${+x.date.slice(8)}（${'日月火水木金土'[new Date(x.date+'T00:00').getDay()]}）${esc(x.time||'')}・${esc(x.tee||'')}</div>
    ${x.result&&x.result.score?`<div class="yb-big" style="border:.4mm solid #111;border-radius:1.5mm;padding:1mm 2mm">結果 <b style="color:#c62828">${x.result.score}</b><span class="yb-mut">${x.result.out?`（OUT ${x.result.out}・IN ${x.result.in}）`:''}</span></div>`:''}<div class="yb-big">${esc(x.planName)}プラン 目標 <b>${x.target}</b><span class="yb-mut">（OUT ${sum(out,4)}・IN ${sum(inn,4)}・上限 ${x.limit||99}）</span></div>
    ${(()=>{if(typeof SWING_LOG==='undefined')return '';const L=SWING_LOG.filter(c=>c.date<=x.date&&/秋野コーチ/.test((c.src||'')+(c.title||''))).sort((a,b)=>a.date<b.date?1:-1)[0];if(!L)return '';return `<div class="yb-sec">コーチの今の課題（${+L.date.slice(5,7)}/${+L.date.slice(8)}）</div><ul style="margin:0;padding-left:4mm">${(L.fix||[]).slice(0,3).map(f=>`<li>${esc(f.t)}</li>`).join('')}</ul>${L.drill?`<div class="yb-mut">${esc(String(L.drill).slice(0,90))}</div>`:''}`;})()}
+   ${typeof greenSpeedNote==='function'&&greenSpeedNote(x.date,x.mapKey)?`<div class="yb-sec">今日のグリーン</div><div class="yb-txt"><b>${esc(greenSpeedNote(x.date,x.mapKey))}</b></div>`:''}
    ${x.rules?`<div class="yb-sec">当日の約束</div><ol>${x.rules.map(r=>`<li><b>${esc(r[0])}</b></li>`).join('')}</ol>`:''}
    ${typeof dwGroups==='function'?(()=>{const g=dwGroups(x);return `<div class="yb-sec">ドライバーの使い分け</div><table class="yb-tbl">${DW_LABEL.map(([k,l,s2,c])=>g[k].length?`<tr><th style="color:${c};width:22%">${l}</th><td style="text-align:left;font-weight:bold">${g[k].join('・')}番</td><td style="width:18%">${g[k].length}回</td></tr>`:'').join('')}</table>`;})():''}
    ${typeof COURSE_YARDS!=='undefined'?`<div class="yb-sec">コースの番手表（${+COURSE_YARDS.date.slice(5,7)}/${+COURSE_YARDS.date.slice(8)}）</div><table class="yb-tbl"><tr>${COURSE_YARDS.rows.map(r=>`<th>${r[0]}</th>`).join('')}</tr><tr>${COURSE_YARDS.rows.map(r=>`<td>${r[1]===0?'〜'+r[2]:r[2]>=999?r[1]+'〜':r[1]+'〜'+r[2]}</td>`).join('')}</tr></table>`:''}
