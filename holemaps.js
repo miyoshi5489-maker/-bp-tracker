@@ -305,7 +305,8 @@ function teeCodeOf(x,h){const v=(x.teeBy&&x.teeBy[h[0]])||(x.teeClub&&h[1]>3?x.t
 function drawHoleMap(){
   const x=ROUND_BASE(HM.date);const h=x.holes.find(r=>r[0]===HM.no);let m=HOLE_MAPS[x.mapKey][HM.no];{const tc=teeCodeOf(x,h);if(tc&&h[1]>3&&m.t&&m.t[0])m={...m,t:[[m.t[0][0],m.t[0][1],tc,m.t[0][3]],...m.t.slice(1)]};}
   const g=greenOf(x.mapKey,h[0]),pin=pinOf(HM.date,h[0]);
-  m=tmAdjust(m);const code=m.t&&m.t[0]?(clubCode(m.t[0][2])||clubCode(h[5])):null;const club=typeof MYCLUBS!=='undefined'&&code&&MYCLUBS[code]&&MYCLUBS[code].src!=='仮'?MYCLUBS[code]:null;
+  m=tmAdjust(m);if(typeof ybShotsAdj==='function')m=ybShotsAdj(x.mapKey,h[0],m); // 2打目の位置もヤーデージブックと同じ
+  const code=m.t&&m.t[0]?(clubCode(m.t[0][2])||clubCode(h[5])):null;const club=typeof MYCLUBS!=='undefined'&&code&&MYCLUBS[code]&&MYCLUBS[code].src!=='仮'?MYCLUBS[code]:null;
   const VW=(ILLUS[x.mapKey]||[]).filter(v=>v.holes[h[0]]);if(HM.src>=VW.length)HM.src=0;const IL=VW[HM.src||0]||null;const IH=IL?(IL.holes[h[0]].h||IL.h):0;const PH=(PHOTOS[x.mapKey]||{})[h[0]];
   const i=HM.order.indexOf(HM.no);const pv=HM.order[i-1],nx=HM.order[i+1];
   let el=$('holemap');if(!el){el=document.createElement('div');el.id='holemap';el.className='fixed inset-0 z-40 flex flex-col bg-bg';document.body.appendChild(el);document.body.style.overflow='hidden';}

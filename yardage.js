@@ -67,14 +67,15 @@ function ybShots(I,hi,m,dt,pin){const r=hi.r,s=hi.s,G=ybPinPx(r,s,pin);const T=m
 function ybScore(x,n){const r=x.result;return r&&r.holes&&r.holes[n-1]?r.holes[n-1]:null;}
 function ybDiffCol(d){return d<=0?'#1b5e20':d===1?'#a8740f':'#c62828';}
 const YB_CARD_W=105,YB_CARD_H=148.5,YB_IMG_H=98,YB_IMG_MAXW=46;
+// 2打目以降も、自分のトータル飛距離の位置に置き直す（グリーンの20y手前まで）。ヤーデージブックとホールマップで共通
+function ybShotsAdj(key,n,m){const IL0=(ILLUS[key]||[]).find(v=>v.holes[n]);const T=m.t||[];if(IL0&&T.length>1&&typeof MYCLUBS!=='undefined'){const hi=IL0.holes[n];const Lr=hi.r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-hi.r[i-1][0],q[1]-hi.r[i-1][1]):0,0)/hi.s;
+    const nt=[T[0]];for(let i=1;i<T.length;i++){const c=MYCLUBS[clubCode(T[i][2])];const py=nt[i-1][1];if(c&&c.src!=='仮'){const y=Math.min(py+(c.total||c.carry),Lr-20);nt.push([T[i][0],Math.max(py+5,y),T[i][2]]);}else nt.push(T[i]);}
+    return {...m,t:nt};}return m;}
 function ybCard(x,h,x2){
   const key=x.mapKey;const IL=(ILLUS[key]||[]).find(v=>v.holes[h[0]]);
   let m=HOLE_MAPS[key][h[0]];{const tc=teeCodeOf(x,h);if(tc&&h[1]>3&&m.t&&m.t[0])m={...m,t:[[m.t[0][0],m.t[0][1],tc,m.t[0][3]],...m.t.slice(1)]};}
   m=tmAdjust(m);
-  // 2打目以降も、自分のトータル飛距離の位置に置き直す（グリーンの20y手前まで）
-  {const IL0=(ILLUS[key]||[]).find(v=>v.holes[h[0]]);const T=m.t||[];if(IL0&&T.length>1&&typeof MYCLUBS!=='undefined'){const hi=IL0.holes[h[0]];const Lr=hi.r.reduce((t,q,i)=>i?t+Math.hypot(q[0]-hi.r[i-1][0],q[1]-hi.r[i-1][1]):0,0)/hi.s;
-    const nt=[T[0]];for(let i=1;i<T.length;i++){const c=MYCLUBS[clubCode(T[i][2])];const py=nt[i-1][1];if(c&&c.src!=='仮'){const y=Math.min(py+(c.total||c.carry),Lr-20);nt.push([T[i][0],Math.max(py+5,y),T[i][2]]);}else nt.push(T[i]);}
-    m={...m,t:nt};}}
+  m=ybShotsAdj(key,h[0],m); // 2打目以降も自分のトータル飛距離の位置に（ホールマップと共通）
   const code=m.t&&m.t[0]?(clubCode(m.t[0][2])||clubCode(h[5])):null;
   const club=typeof MYCLUBS!=='undefined'&&code&&MYCLUBS[code]&&MYCLUBS[code].src!=='仮'?MYCLUBS[code]:null;
   const yd=TEES[key]?TEES[key][teeIdx(key)][1][h[0]-1]:h[2];const teeName=TEES[key]?TEES[key][teeIdx(key)][0]:'';
