@@ -444,8 +444,8 @@ function hmYbPage(x,h,lk){try{return `<div id="hm-ybw" class="grid w-full conten
 // 通常のヤーデージブックと同じ仕上げ（番手を日本語に：8I→8番アイアン など）
 function hmYbCardHtml(x,h){const html=ybCard(x,h,null);if(typeof jpWalk!=='function')return html;try{const d=document.createElement('div');d.innerHTML=html;jpWalk(d);return d.innerHTML;}catch(e){return html;}}
 // この画面のヤーデージブックは、図にバンカーの札を出さない（図が隠れるため）。距離は図の下に文字で（洋平さんの指示）。通常のヤーデージブックは今まで通り
-function hmYbHz(x,h){if(typeof hzLines!=='function'||typeof hzHtml!=='function')return '';const z=hzLines(x.mapKey,h[0],typeof teeShift==='function'?teeShift(x.mapKey,h[0]):0);if(!z)return '';
-  return `<div class="rounded-lg bg-white px-3 py-2 text-[13px] leading-snug text-[#111] shadow-lg"><div class="mb-1 font-bold text-[#0d47a1]">バンカー・池の距離</div>${hzHtml(z)}</div>`;}
+function hmYbHz(x,h){if(typeof hzLabelText!=='function')return '';const t=hzLabelText(x.mapKey,h[0],typeof teeShift==='function'?teeShift(x.mapKey,h[0]):0);if(!t)return '';
+  return `<div class="rounded-lg bg-white px-3 py-2 text-[13px] leading-snug text-[#111] shadow-lg"><div class="mb-1 font-bold text-[#0d47a1]">バンカー・池の距離（図のラベルと同じ）</div>${t}</div>`;}
 // 下のヤーデージブックの大きさ（幅いっぱい＝1）。−／＋で変えて覚えておく
 function hmYbZ(){try{return Math.max(.3,Math.min(1,+localStorage.getItem('hm:ybz')||1));}catch{return 1;}}
 function hmYbZoom(a){let z=hmYbZ();const o=$('hm-yb'),i=$('hm-yb-in'),wr=$('hm-ybw');

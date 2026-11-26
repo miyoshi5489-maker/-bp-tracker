@@ -90,14 +90,26 @@ function hzHtml(z){if(!z)return '';const nm=t=>t==='b'?'バンカー':'池',ic=t
   return `<table class="hzt"><thead><tr><th></th><th>ティーから（y）</th><th>グリーン中央まで（y）</th></tr></thead><tbody>${body}${(z.grows||[]).length?`<tr class="hzt-sec"><td colspan="3">グリーン周り</td></tr>${z.grows.map(tr).join('')}`:''}</tbody></table>`;}
 
 // 図の上のラベル：バンカー・池の横に「手前〜越える」ヤード（グリーン周りは除く）
-function hzSvg(key,n,dt,u,wrap,W,mode,H){
-  // mode 'out'：図の外の余白にラベルを出して、線でバンカー・池を指す（図が隠れない）
-  const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;const out=mode==='out';
+// 図のラベルと同じ中身（バンカー・池ごとに ティーから f〜c、G中央まで N）。図のラベルと文字の表で同じものを使う
+function hzBaseItems(key,n,dt){const L=HZ_CACHE[hzKey(key,n)];dt=dt||0;if(!L)return {items:[],gl:0};
   const src=hzSrc(key,n);const items=[];const gl=(L.find(h=>h.gl)||{}).gl||0;const gm=hzGMatch(L,src,gl);
   L.forEach(h0=>{if(h0.cx==null)return;const col=h0.t==='b'?'#8d6e00':'#1565c0';
     if(h0.g){const z=gm.get(h0);const f=Math.max(0,Math.round((z?z.f:h0.f)-dt)),c=Math.round((z?z.c:h0.c)-dt);items.push({h:h0,txt:`${f}〜${c}`,sub:`G中央まで${h0.ge}`,col,f,c});return;}
     const z=src.filter(z=>z.t===h0.t&&z.c>=h0.f-20&&z.f<=h0.c+20).sort((a,b)=>Math.abs(a.f+a.c-h0.f-h0.c)+Math.abs(a.x-h0.x)/2-Math.abs(b.f+b.c-h0.f-h0.c)-Math.abs(b.x-h0.x)/2)[0];if(!z&&h0.c<60)return;const h=z?{...h0,f:z.f,c:z.c}:h0;const f=Math.max(0,Math.round(h.f-dt)),c=Math.round(h.c-dt);if(c<=0)return;
     items.push({h,txt:`${f}〜${c}`,sub:gl?`G中央まで${Math.max(0,Math.round(gl-(h.f+h.c)/2))}`:'',col,f,c});}); // バンカーのまん中からグリーン中央まで（洋平さんの指示）
+  return {items,gl};}
+// ラベルと同じ内容を文字だけで（ホールマップのPC表示の動画の下で使う）。ティーから近い順、すき間はラベルと同じ色
+function hzLabelText(key,n,dt){const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;const {items}=hzBaseItems(key,n,dt);
+  const nm=o=>(o.h.t==='b'?'⛱ ':'💧 ')+hzSide(o.h.x||0)+(o.h.t==='b'?'バンカー':'池');
+  const rows=items.map(o=>({f:o.f,html:`<tr><td>${nm(o)}</td><td><b>${o.f}</b>〜<b>${o.c}</b></td><td>${o.sub?o.sub.replace(/G中央まで(\d+)/,'中央まで <b>$1</b>'):''}</td></tr>`}));
+  const GAPC=[['#00acc1','#e0f7fa','#006064'],['#d81b60','#fce4ec','#880e4f'],['#8e24aa','#f3e5f5','#4a148c'],['#f57c00','#fff3e0','#e65100']];
+  const z=typeof hzLines==='function'?hzLines(key,n,dt):null;(z&&z.rows||[]).filter(g=>g.k==='gap').forEach((g,gi)=>{const c=GAPC[gi%4];rows.push({f:g.f+.5,html:`<tr style="background:${c[1]}"><td style="color:${c[2]};font-weight:bold">すき間 <b style="color:${c[0]}">${g.w}</b>y</td><td>${g.f}〜${g.c}</td><td></td></tr>`});});
+  rows.sort((a,b)=>a.f-b.f);if(!rows.length)return '<div>グリーンまでバンカー・池なし</div>';
+  return `<table class="hzt"><thead><tr><th></th><th>ティーから（y）</th><th>グリーン中央まで（y）</th></tr></thead><tbody>${rows.map(r=>r.html).join('')}</tbody></table>`;}
+function hzSvg(key,n,dt,u,wrap,W,mode,H){
+  // mode 'out'：図の外の余白にラベルを出して、線でバンカー・池を指す（図が隠れない）
+  const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt=dt||0;u=u||1;W=W||200;const out=mode==='out';
+  const B0=hzBaseItems(key,n,dt);const items=B0.items,gl=B0.gl;
   const cw=t=>[...t].reduce((s,ch)=>s+(/[\x00-\x7f]/.test(ch)?2.9:4.6),0);
   const H1=8.4*u,H2=13*u;let v='';
   const lab=(o,x,y,w,hh)=>o.gap?`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="${o.gc[1]}" stroke="${o.gc[0]}" stroke-width="${1*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.2*u}" font-weight="bold" fill="${o.gc[2]}" text-anchor="middle">すき間<tspan fill="${o.gc[0]}">${o.w}</tspan>y</text><text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="${o.gc[2]}" text-anchor="middle">${o.sub}</text>`:`<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="${2*u}" fill="#fff" fill-opacity="${out?1:.93}" stroke="${o.col}" stroke-width="${.5*u}"/><text x="${x+w/2}" y="${y+H1*.69}" font-size="${4.6*u}" font-weight="bold" fill="${o.col}" text-anchor="middle">${o.txt}</text>${o.sub?`<text x="${x+w/2}" y="${y+H1*.69+4.6*u}" font-size="${3.6*u}" font-weight="bold" fill="#455a64" text-anchor="middle">${o.sub}</text>`:''}`;
