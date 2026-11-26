@@ -103,7 +103,8 @@ function hzLabelText(key,n,dt){const L=HZ_CACHE[hzKey(key,n)];if(!L)return '';dt
   const nm=o=>(o.h.t==='b'?'⛱ ':'💧 ')+hzSide(o.h.x||0)+(o.h.t==='b'?'バンカー':'池');
   const rows=items.map(o=>({f:o.f,html:`<tr><td>${nm(o)}</td><td><b>${o.f}</b>〜<b>${o.c}</b></td><td>${o.sub?o.sub.replace(/G中央まで(\d+)/,'中央まで <b>$1</b>'):''}</td></tr>`}));
   const GAPC=[['#00acc1','#e0f7fa','#006064'],['#d81b60','#fce4ec','#880e4f'],['#8e24aa','#f3e5f5','#4a148c'],['#f57c00','#fff3e0','#e65100']];
-  const z=typeof hzLines==='function'?hzLines(key,n,dt):null;(z&&z.rows||[]).filter(g=>g.k==='gap').forEach((g,gi)=>{const c=GAPC[gi%4];rows.push({f:g.f+.5,html:`<tr style="background:${c[1]}"><td style="color:${c[2]};font-weight:bold">すき間 <b style="color:${c[0]}">${g.w}</b>y</td><td>${g.f}〜${g.c}</td><td></td></tr>`});});
+  const z=typeof hzLines==='function'&&items.some(o=>!o.h.g&&o.f!=null)?hzLines(key,n,dt):null; // 図と同じ：グリーン周り以外のバンカー・池がない時は、すき間を出さない
+  (z&&z.rows||[]).filter(g=>g.k==='gap').forEach((g,gi)=>{const c=GAPC[gi%4];rows.push({f:g.f+.5,html:`<tr style="background:${c[1]}"><td style="color:${c[2]};font-weight:bold">すき間 <b style="color:${c[0]}">${g.w}</b>y</td><td>${g.f}〜${g.c}</td><td></td></tr>`});});
   rows.sort((a,b)=>a.f-b.f);if(!rows.length)return '<div>グリーンまでバンカー・池なし</div>';
   return `<table class="hzt"><thead><tr><th></th><th>ティーから（y）</th><th>グリーン中央まで（y）</th></tr></thead><tbody>${rows.map(r=>r.html).join('')}</tbody></table>`;}
 function hzSvg(key,n,dt,u,wrap,W,mode,H){
