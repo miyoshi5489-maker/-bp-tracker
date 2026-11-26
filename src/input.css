@@ -285,3 +285,16 @@
 /* 動画の下のヤーデージブック（文字だけ）：はみ出しで切らない */
 .yb-mini{overflow:visible!important;gap:4px;line-height:1.45}.yb-mini .yb-cad li.yb-k{color:#111}
 #hm-yb .hzt{font-size:.95em}#hm-yb .yb-tm{margin-top:6px;font-size:.85em;color:#666}
+/* 覚え方（似ている打ち方の比較）ページ */
+.yb-m-cmp .yb-mt{color:#4a148c}.yb-m-cmp .yb-mbtn{background:#6a1b9a;color:#fff}
+.yb-screen .yb-g-cmp .yb-ctitle{background:#6a1b9a;color:#fff;border:0;border-radius:6px;padding:2mm 3mm}
+#yb.yb-m .yb-g-cmp .yb-ctitle{padding:10px 14px;font-size:22px}
+.yb-cmp-sub{font-weight:bold;color:#4a148c}
+.yb-cmp{width:100%;border-collapse:collapse;font-size:.95em;line-height:1.4}
+.yb-cmp th,.yb-cmp td{border:.2mm solid #d1c4e9;padding:.6mm 1mm;vertical-align:top;text-align:left}
+.yb-cmp thead th{background:#ede7f6;color:#4a148c;font-weight:bold}
+.yb-cmp tbody th{background:#f6f2fb;color:#4a148c;white-space:nowrap;font-weight:bold}
+.yb-cmp-memo{background:#fff8e1;border-left:1.2mm solid #f9a825;border-radius:1mm;padding:1mm 1.6mm;line-height:1.5}
+.yb-g-cmp .yb-gbase li b,.yb-cmp b,.yb-cmp-memo b{font-weight:800}
+#yb.yb-m .yb-cmp{font-size:14px}#yb.yb-m .yb-cmp th,#yb.yb-m .yb-cmp td{padding:6px 6px;border-width:1px}
+#yb.yb-m .yb-cmp-sub{font-size:16px}#yb.yb-m .yb-cmp-memo{font-size:16px;padding:10px 12px;border-left-width:5px;border-radius:10px}

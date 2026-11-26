@@ -114,6 +114,37 @@ const SLOPE_GUIDE=[
      '「バンカー＝オープン」ではない。左足体重で打ち込みたいので、バンカーでもクローズ',
      '<b>手順</b>：いつもの構え → ボールを少し中（右）へ → 少しずつクローズ → 体を起こして近づく → ハンドアップ → フェースはスクエア → 振り切らずに「ドン」']}]},
 ];
+// 覚え方：似ている打ち方を表で比べる（同じところ／違うところ／覚え方）。中身は上の SLOPE_GUIDE（秋野コーチの動画）から。洋平さんの指示 11/26
+const SLOPE_COMPARE=[
+ {a:'硬い砂',b:'左足下がり',kind:'バンカー',sub:'どちらも「左足体重・クローズ」',
+  same:['フェースは開かない（まっすぐ）','<b>クローズ</b>に構える（硬い砂の動画でも「左足下がりくらい」のクローズと言っていた）','<b>左足体重</b>','<b>振り切らずに止める</b>','「バンカー＝オープン」にしない'],
+  diff:[['ボールとの距離','<b>近づく</b>','<b>近づかない</b>（左足を少し前に出すだけ）'],['手元','<b>ハンドアップ</b>（体を起こす）','下げない・上げない（下げるとシャンク）'],['ボール','少し中（右）','真ん中'],['振り方','普段のアプローチの感覚で「ドン」','足の向きに対して<b>クロス（カット）</b>に振る'],['打ち込み','少し<b>刺しに行っていい</b>','自分で打ち込まない（クローズ＋クロスで勝手に上から入る）']],
+  memo:'「左足体重・クローズ・フェースそのまま・止める」は同じ。<br>硬い砂は＋<b>近づいて手元を上げる</b>、左足下がりは＋<b>近づかずにクロスに振る</b>'},
+ {a:'柔らかい砂',b:'左足上がり',kind:'バンカー',sub:'どちらも「離れて手元を下げる」',
+  same:['<b>ボールから離れて、その分手元を下げる</b>（左足上がりは「ロブショットのイメージ」）','しっかり振る（柔らかい砂は爆発させる・左足上がりはある程度振り切る）'],
+  diff:[['スタンス','<b>スクエア</b>（体はオープンにしない）','<b>オープン</b>（おへそはそのまま、足だけ開く）'],['フェース','<b>開く</b>（ハンドレートでいい）','<b>ピンにまっすぐ</b>（足がオープンなので体に対しては自然に開いている。それ以上開かない）'],['ボール','左寄り','真ん中（左に置かない）'],['体重','情報なし','傾斜なりの右7：左3のまま。左足だけグリグリ']],
+  memo:'「離れて手元を下げる」は同じ。<br>柔らかい砂は<b>足スクエア＋フェースを開く</b>、左足上がりは<b>足オープン＋フェースはピン</b>'},
+ {a:'ショット',b:'バンカー',kind:'つま先上がり',sub:'どちらも「近づいて体を起こす・左に出る」',
+  same:['<b>左に出る</b>','ボールに<b>近づいて体を起こす</b>','左ひざに体重（バンカーの動画で「ショットと共通」と言っていた）'],
+  diff:[['ボール','少し右足寄り','真ん中'],['持ち方・足幅','<b>短く持つ</b>・足幅は思っているより<b>狭く</b>','情報なし'],['振り方','スイングは変えない（左に行く構えだと知っておく）','<b>インサイドから</b>入れる。無理なら右足を後ろに引いてクローズ']],
+  memo:'「近づいて体を起こす・左に出る」は同じ。<br>ショットは<b>短く持って足幅を狭く</b>、バンカーは<b>インサイドから入れる</b>'},
+ {a:'ショット',b:'バンカー',kind:'つま先下がり',sub:'どちらも「離れて手元を下げる・左体重」',
+  same:['ボールから<b>離れて手元を下げる</b>','<b>左体重</b>'],
+  diff:[['スタンス','足幅を<b>広く</b>、重心を<b>深く</b>（しっかり股を割る）','<b>オープンスタンス</b>（左のお尻が動くくらい）'],['向き','左を向きすぎない','フェースはピンに向けたまま'],['振り方','スイングは変えない','足の向きに振って、<b>振り切らずに止める</b>（カット）'],['出やすいミス','右へ行く','球が上がりにくい']],
+  memo:'「離れて手元を下げる・左体重」は同じ。<br>ショットは<b>足幅広く重心深く</b>、バンカーは<b>オープンで振り切らない</b>'},
+];
+function slopeCompareCards(){if(typeof SLOPE_COMPARE==='undefined')return [];
+  return SLOPE_COMPARE.map(c=>`<div class="yb-card yb-cover yb-guide yb-g-cmp"><div class="yb-ctitle"><small>覚え方（${c.kind}）</small>${c.a} と ${c.b}</div>
+   <div class="yb-txt">
+    <div class="yb-cmp-sub">${c.sub}</div>
+    <div class="yb-sec">✅ 同じところ</div>
+    <ul class="yb-gbase">${c.same.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <div class="yb-sec">↔ 違うところ</div>
+    <table class="yb-cmp"><thead><tr><th></th><th>${c.a}</th><th>${c.b}</th></tr></thead><tbody>${c.diff.map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>
+    <div class="yb-cmp-memo"><b>🧠 覚え方</b><br>${c.memo}</div>
+    <div class="yb-scr yb-gbtns"><button class="yb-gback" onclick="ybGo(0)">← 表紙のメニューへ</button></div>
+   </div>
+   <div class="yb-foot">出典：ブルックGolf（秋野コーチ）の動画<span>覚え方</span></div></div>`);}
 function slopeTab(g,p){const t=/^左足上/.test(p.h)?'左足上がり':/^左足下/.test(p.h)?'左足下がり':/^つま先上/.test(p.h)?'つま先上がり':/^柔らか/.test(p.h)?'柔らかい砂':/^硬/.test(p.h)?'硬い砂':'つま先下がり';return t;}
 function slopeKind(g){return g.key.startsWith('shot')?'shot':'sand';}
 // 表紙のいちばん下：タップでそのページへ飛ぶメニュー（画面だけ。印刷には出さない）
@@ -126,6 +157,7 @@ function slopeGuideMenu(base,scoreIdx){
     <div class="yb-mh">打ち方ガイド<span>タップで開く</span></div>
     <div class="yb-mg yb-m-shot"><div class="yb-mt">⛳ 傾斜からのショット</div><div class="yb-mgrid">${shot.map(btn).join('')}</div></div>
     <div class="yb-mg yb-m-sand"><div class="yb-mt">🏖 バンカー</div><div class="yb-mgrid">${sand.map(btn).join('')}</div></div>
+    ${typeof SLOPE_COMPARE!=='undefined'&&SLOPE_COMPARE.length?`<div class="yb-mg yb-m-cmp"><div class="yb-mt">🧠 覚え方（似ている打ち方の比較）</div><div class="yb-mgrid">${SLOPE_COMPARE.map(c=>`<button class="yb-mbtn" onclick="ybGo(${k++})"><b>${c.a}⇔${c.b}</b><span>${c.kind}</span></button>`).join('')}</div></div>`:''}
     <button class="yb-mbtn yb-m-score" onclick="ybGo(${scoreIdx})"><b>📝 スコアカード</b></button>
   </div>`;
 }
@@ -141,6 +173,8 @@ function gFmt(s){let lab='',body=s;const m=s.match(/^<b>([^<]{1,14})<\/b>：/);i
   return (lab?`<span class="gl">${lab}</span>`:'')+out.map(x=>`<span class="gs">${x.replace(/（([^（）<>]{2,})）/g,'<span class="gp">（$1）</span>')}</span>`).join('');}
 function slopeGuideCards(){
   if(typeof SLOPE_GUIDE==='undefined')return [];
+  return [...slopeGuideCards0(),...slopeCompareCards()];}
+function slopeGuideCards0(){
   return SLOPE_GUIDE.flatMap(g=>g.parts.map(p=>{const kd=slopeKind(g),nm=kd==='shot'?'傾斜':'バンカー';
    return `<div class="yb-card yb-cover yb-guide yb-g-${kd}"><div class="yb-ctitle"><small>${nm}</small>${p.h}</div>
    <div class="yb-txt">
