@@ -441,16 +441,12 @@ function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='cl
   </div>`;}
 // PCでは動画の下に、そのホールのヤーデージブックのページをそのまま出す（洋平さんの指示）。幅に合わせて拡大・縮小
 // 景色の欄を上下2つに分ける：上＝動画（今の大きさのまま）、下＝ヤーデージブックのページ（残りの高さにちょうど収まる大きさ）
-// 動画の下：そのホールのヤーデージブックの中身を文字だけで（図なし・見出しは番号だけ・小さめの字）。通常のブックと内容が同じかを確かめる用（洋平さんの指示）
-function hmYbPage(x,h,lk){try{const d=document.createElement('div');d.innerHTML=ybCard(x,h,null);if(typeof jpWalk==='function')jpWalk(d);
-  const t=d.querySelector('.yb-txt'),tm=d.querySelector('.yb-tm');if(!t)return lk||'';
+// 動画の下：バンカー・池の距離だけ（文章は左と同じなので出さない。洋平さんの指示）。図のラベルと同じ中身を文字で
+function hmYbPage(x,h,lk){try{const t=typeof hzLabelText==='function'?hzLabelText(x.mapKey,h[0],typeof teeShift==='function'?teeShift(x.mapKey,h[0]):0):'';if(!t)return lk||'';
   return `<div id="hm-ybw" class="grid w-full content-start gap-2" style="scrollbar-width:thin"><div id="hm-yb" class="rounded-lg bg-white px-3 py-2 text-[#111]" style="font-size:${hmYbFs()}px">
-    <div class="mb-1 flex items-center gap-1.5"><span class="rounded bg-[#1b5e20] px-1.5 text-[1.1em] font-bold leading-snug text-white">${h[0]}</span><span class="text-[.85em] font-bold text-[#666]">📒 ヤーデージブックの内容</span>
+    <div class="mb-1 flex items-center gap-1.5"><span class="rounded bg-[#1b5e20] px-1.5 text-[1.1em] font-bold leading-snug text-white">${h[0]}</span><span class="font-bold text-[#0d47a1]">バンカー・池の距離</span>
      <span class="ml-auto flex gap-1">${[['−',-1,'小さく'],['＋',1,'大きく']].map(([c,a,tt])=>`<button class="rounded-full border border-[#1b5e20] px-2 text-[12px] font-bold leading-5 text-[#1b5e20]" aria-label="文字を${tt}" onclick="hmYbZoom(${a})">${c}</button>`).join('')}</span></div>
-    <div class="yb-txt yb-mini">${t.innerHTML}</div>${hmYbHz(x,h)}${tm?tm.outerHTML:''}</div>${lk||''}</div>`;}catch(e){return lk||'';}}
-// バンカー・池の距離（図のラベルと同じ中身を文字で）
-function hmYbHz(x,h){if(typeof hzLabelText!=='function')return '';const t=hzLabelText(x.mapKey,h[0],typeof teeShift==='function'?teeShift(x.mapKey,h[0]):0);if(!t)return '';
-  return `<div class="mt-2 border-t border-dashed border-[#bbb] pt-1.5"><div class="mb-0.5 font-bold text-[#0d47a1]">バンカー・池の距離</div>${t}</div>`;}
+    ${t}</div>${lk||''}</div>`;}catch(e){return lk||'';}}
 // 文字の大きさ（px）。−／＋で変えて覚えておく
 function hmYbFs(){try{return Math.max(9,Math.min(16,+localStorage.getItem('hm:ybfs')||12));}catch{return 12;}}
 function hmYbZoom(a){const f=Math.max(9,Math.min(16,hmYbFs()+a));try{localStorage.setItem('hm:ybfs',String(f));}catch{}const o=$('hm-yb');if(o)o.style.fontSize=f+'px';}
