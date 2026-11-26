@@ -120,6 +120,12 @@ setInterval(flushPend,60000);
 const gymEx=r=>(r.exercises||[]).filter(e=>!e.kind&&(e.sets||[]).length);
 const isGolf=r=>r.cat==='golf'||(r.note||'').startsWith('[ゴルフ]');
 const byDate=recs=>{const m={};recs.forEach(r=>{(m[r.date]=m[r.date]||[]).push(r);});return m;};
+// その日にやったことのマーク：🏃ラン（km）・🏌️打ちっぱなし／トラックマン・⛳ラウンド・💪筋トレ
+function dayMarks(list){list=list||[];const ex=list.flatMap(r=>r.exercises||[]);const a=dayActual(list);
+  const range=ex.some(e=>e.kind==='range'||e.kind==='tm')||list.some(r=>/トラックマン|打ちっぱなし|練習場/.test(r.note||''));
+  const round=ex.some(e=>e.kind==='round');
+  return {run:a.run,range,round,gym:a.gym.length>0,any:a.run>0||range||round||a.gym.length>0};}
+function marksHtml(m,big){const s=big?'text-[15px]':'text-[12px]';return `${m.run>0?`<div class="${s} leading-tight">🏃<span class="num text-[11px] font-bold text-sky">${km1(m.run)}</span></div>`:''}${m.range||m.round||m.gym?`<div class="${s} leading-tight">${m.round?'⛳':''}${m.range?'🏌️':''}${m.gym?'💪':''}</div>`:''}`;}
 function dayActual(list){
   list=(list||[]).filter(r=>!(r.exercises||[]).some(e=>['study','roundplan','tm','clubs'].includes(e.kind)));
   const run=list.reduce((s,r)=>s+(r.runDist||0),0);
@@ -148,8 +154,8 @@ const KIND_LABEL={genie:'ジーニー',goltore:'ゴルトレ',run:'ラン',gym:'
 const KIND_DOT={genie:'var(--accent)',goltore:'var(--sand)',run:'var(--sky)',gym:'var(--fg)',pilates:'var(--plum)',off:'var(--line)',event:'var(--warn)',prep:'var(--warn)'};
 
 // ── ルーター（下のメニュー5つ＋ページ内の切り替え） ──
-const PAGES=['today','golf','runstats','marathon'];
-const GROUPS={today:[['today','今日']],golf:[['golf','ゴルフ']],run:[['runstats','3時間半']]};
+const PAGES=['today','month','golf','runstats','marathon'];
+const GROUPS={today:[['today','今日'],['month','カレンダー']],golf:[['golf','ゴルフ']],run:[['runstats','3時間半']]};
 const groupOf=p=>Object.keys(GROUPS).find(g=>GROUPS[g].some(([k])=>k===p))||'today';
 const LAST_IN={};
 let CUR='today';
@@ -227,7 +233,8 @@ async function renderToday(){
   ${m>=0?`<div class="card flex items-center gap-3 p-3.5"><div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sky-soft text-xl">🏅</div><div class="min-w-0 flex-1"><div class="lbl">篠山マラソン 3/7（日）</div><div class="text-[12px] text-muted">目標 3時間30分切り</div></div><div class="text-right"><span class="num text-3xl font-semibold text-sky">${m}</span><span class="text-sm text-muted"> 日</span></div></div>`:''}
   ${p.phase?`<div class="rounded-xl bg-accent-soft px-4 py-2.5 text-sm"><b class="text-accent">${esc(p.phase.name)}</b>　${esc(p.phase.sub)}</div>`:''}
   <div class="grid gap-2"><div class="flex items-center justify-between"><h2 class="h2">今週</h2><button class="btn-sm" onclick="show('runstats')">ランを見る</button></div>
-    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const aa=dayActual(bd[d]);const done=aa.any;return `<button onclick="show('runstats')" class="grid gap-1 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="flex justify-center gap-0.5">${pp.items.filter(i=>i.kind!=='off'&&!i.week).slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')||'<span class="dot" style="background:var(--line)"></span>'}</div><div class="h-4 text-xs font-bold ${done?'text-accent':'text-muted'}">${done?'✓':(d<t&&pp.items.some(i=>i.kind!=='off')?'・':'')}</div></button>`;}).join('')}</div></div>`;
+    <div class="card grid grid-cols-7 gap-1 p-3 text-center">${days.map(d=>{const pp=planFor(d);const mk=dayMarks(bd[d]);return `<button onclick="MONTH='${d.slice(0,7)}';MSEL='${d}';show('month')" class="grid content-start gap-0.5 rounded-2xl py-1.5 ${d===t?'today-tile':''}"><div class="text-[11px] text-muted">${DOW[parse(d).getDay()]}</div><div class="num text-sm font-semibold">${parse(d).getDate()}</div><div class="grid min-h-[34px] content-start justify-items-center gap-0.5">${mk.any?marksHtml(mk,1):`<div class="flex justify-center gap-0.5 pt-1 opacity-50">${pp.items.filter(i=>i.kind!=='off'&&!i.week).slice(0,3).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')}</div>`}</div></button>`;}).join('')}</div>
+    <div class="flex flex-wrap justify-center gap-x-3 text-[11px] text-muted"><span>🏃 ラン（km）</span><span>🏌️ 打ちっぱなし・トラックマン</span><span>⛳ ラウンド</span><span>💪 筋トレ</span><span>タップで月のカレンダー</span></div></div>`;
 }
 
 // ── ゴルフ ──
@@ -398,12 +405,12 @@ async function renderMonth(){
   <div class="card overflow-hidden">
     <div class="grid grid-cols-7 border-b border-line text-center text-[11px] text-muted">${['月','火','水','木','金','土','日'].map(w=>`<div class="py-1.5">${w}</div>`).join('')}</div>
     <div class="grid grid-cols-7">${cells.map(c=>{const inM=c.startsWith(MONTH);const pp=planFor(c);const aa=dayActual(bd[c]);const ev=pp.items.find(i=>i.kind==='event');const k=pp.items.reduce((a,i)=>a+(i.km&&i.kind!=='event'?i.km:0),0);const done=aa.any;return `<button onclick="MSEL='${c}';renderMonth()" class="grid min-h-[64px] content-start gap-0.5 border-b border-r border-line p-1 text-left ${inM?'':'opacity-40'} ${c===MSEL?'bg-accent-soft':''} ${ev?'bg-warn-soft':''}">
-      <div class="flex items-center justify-between"><span class="num text-xs font-semibold ${c===t?'rounded bg-fg px-1 text-bg':''}">${parse(c).getDate()}</span><span class="text-[11px] font-bold text-accent">${done?'✓':''}</span></div>
-      <div class="flex flex-wrap gap-0.5">${pp.items.filter(i=>i.kind!=='off'&&!i.week).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')}</div>
-      ${ev?`<div class="text-[10px] font-bold leading-tight text-warn">${ev.label.slice(0,6)}</div>`:(k?`<div class="num text-[10px] text-sky">${k}km</div>`:'')}
+      <div class="flex items-center justify-between"><span class="num text-xs font-semibold ${c===t?'rounded bg-fg px-1 text-bg':''}">${parse(c).getDate()}</span></div>
+      ${(m=>m.any?marksHtml(m,0):`<div class="flex flex-wrap gap-0.5 opacity-50">${pp.items.filter(i=>i.kind!=='off'&&!i.week).map(i=>`<span class="dot" style="background:${KIND_DOT[i.kind]}"></span>`).join('')}</div>`)(dayMarks(bd[c]))}
+      ${ev?`<div class="text-[10px] font-bold leading-tight text-warn">${ev.label.slice(0,6)}</div>`:''}
     </button>`;}).join('')}</div>
   </div>
-  <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted">${['genie','goltore','run','gym','pilates','event'].map(k=>`<span class="inline-flex items-center gap-1"><span class="dot" style="background:${KIND_DOT[k]}"></span>${KIND_LABEL[k]}</span>`).join('')}<span>✓ 記録あり</span></div>
+  <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted"><span>🏃 ラン（km）</span><span>🏌️ 打ちっぱなし・トラックマン</span><span>⛳ ラウンド</span><span>💪 筋トレ</span><span>うすい点＝予定</span></div>
   ${dayCard(MSEL,dayActual(bd[MSEL]),{action:MSEL>=t})}
   <div class="card grid gap-3 p-4">
     <div><div class="mb-1 flex justify-between text-[13px]"><span class="text-muted">今月のラン</span><span class="num"><b>${km1(run)}</b> / 計画 ${plan}km</span></div>${bar(run,plan,'var(--sky)')}</div>
