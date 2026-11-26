@@ -3,16 +3,16 @@
 let YB=null;
 const YB_ORDER=['1W','5W','4H','5I','6I','7I','8I','9I','PW','52°','58°'];
 function ybPlan(date,k){const old=ROUND_PLAN[date];ROUND_PLAN[date]=k;try{return ROUND_BASE(date);}finally{ROUND_PLAN[date]=old;}}
-function openYardageBook(date){
+function openYardageBook(date,hole){
   const x=ROUND_BASE(date);if(!x||!x.mapKey)return;
-  YB={date,plan:x.planKey||''};
+  YB={date,plan:x.planKey||'',hole:hole||null}; // hole：開いたらそのホールのページへ（ホールマップの動画の下のボタンから）
   const go=()=>{if(YB)drawYardageBook();};
   const hz=typeof hzLoadAll==='function'?hzLoadAll(x.mapKey,x.holes.map(h=>h[0])).catch(()=>{}):Promise.resolve();
   const cl=typeof buildClubs==='function'&&typeof getRecs==='function'?getRecs().then(r=>{buildClubs(r);}).catch(()=>{}):Promise.resolve();
-  go();Promise.all([hz,cl]).then(go,go);
+  go();Promise.all([hz,cl]).then(go,go).then(()=>{if(YB)YB.hole=null;});
 }
 function ybGo(i){const el=document.getElementById('yb');const sc=el&&el.querySelector('.yb-screen');if(!sc)return;if(el.classList.contains('yb-m')){el.scrollTo({top:0});sc.scrollTo({left:i*sc.clientWidth,behavior:'smooth'});}else{const c=sc.querySelectorAll(':scope>.yb-card')[i];c&&c.scrollIntoView({behavior:'smooth',block:'start'});}}
-function closeYardageBook(){const el=$('yb');if(el)el.remove();document.body.style.overflow='';document.body.classList.remove('yb-open');YB=null;}
+function closeYardageBook(){const el=$('yb');if(el)el.remove();document.body.style.overflow=$('holemap')?'hidden':'';document.body.classList.remove('yb-open');YB=null;}
 
 // 図の上の印：ルート・落とし所（番号）・ブレの範囲・OBライン・ピン
 function ybSvg(I,hi,m,o){
@@ -229,6 +229,7 @@ function drawYardageBook(){
     const scards=[...el.querySelectorAll('.yb-screen .yb-card')];
     pr.forEach((c,i)=>{const t=c.querySelector('.yb-txt');const ci=idx[i];const st=scards[ci]&&scards[ci].querySelector('.yb-txt');if(t&&st)t.style.fontSize=st.style.fontSize;});
     el.classList.remove('yb-measure');if(mob){el.classList.add('yb-m');const s2=el.querySelector('.yb-screen');s2.style.zoom='';s2.scrollLeft=keepX;}el.scrollTop=y0;});
+  if(YB&&YB.hole){const i=order.findIndex(h=>h[0]===YB.hole);const sc=el.querySelector('.yb-screen');if(i>=0&&sc)requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mob){sc.scrollLeft=(i+1)*sc.clientWidth;el.scrollTop=0;}else{const c=sc.querySelectorAll(':scope>.yb-card')[i+1];c&&c.scrollIntoView({block:'start'});}}));}
 }
 
 // 狙いの文章を読みやすく：見出し → 1文ずつ行に分ける → 「→」の流れは段に分ける → （カッコの補足）は小さく

@@ -345,14 +345,8 @@ function drawHoleMap(){
     ${x.plans?`<div class="grid grid-cols-2 gap-1 rounded-xl bg-line p-1">${[['','100切り',ROUND_DEFS.find(r=>r.date===x.date).target],...Object.entries(x.plans).map(([k,P])=>[k,P.name,P.target])].map(([k,n,t])=>`<button class="min-h-[40px] rounded-lg text-[13px] font-bold" style="${(x.planKey||'')===k?'background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.1)':'color:var(--muted)'}" onclick="setPlan('${x.date}','${k}')">${n}プラン（目標${t}）</button>`).join('')}</div>`:''}
     ${TEES[x.mapKey]?`<div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-bold text-muted">ティー</span>${TEES[x.mapKey].map((t,k)=>`<button class="rounded-full px-2.5 py-1 text-[12px] font-bold" style="${k===teeIdx(x.mapKey)?'background:var(--fg);color:var(--bg)':'border:1px solid var(--line);color:var(--muted)'}" onclick="setTee('${x.mapKey}',${k})">${t[0]} ${t[1][h[0]-1]}y</button>`).join('')}</div>`:''}
     <div class="grid grid-cols-9 gap-1">${HM.order.map(n=>{const hh=x.holes.find(r=>r[0]===n);const c=hh[7]==='hard'?'var(--warn)':hh[7]==='mid'?'var(--sand)':'var(--accent)';const on=n===HM.no;return `<button class="grid h-11 place-items-center content-center rounded-lg font-mono text-[14px] font-bold leading-none" style="${on?`background:${c};color:var(--surface)`:`border:1.5px solid ${c};color:${c}`}" onclick="HM.no=${n};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()" aria-label="${n}番ホール・${PAR_NAME(hh[1])}">${n}<span class="mt-0.5 block font-sans text-[8px] font-bold">${PAR_NAME(hh[1])}</span></button>`;}).join('')}</div>
-    <div class="rounded-lg bg-accent-soft px-2.5 py-2 text-[13px] leading-snug"><div class="mb-0.5 font-bold text-accent">🧢 キャディ</div><ul class="grid gap-1">${caddie(x,h,m).map(t=>`<li>${t}</li>`).join('')}</ul></div>
+    ${hmYbText(x,h)||`<div class="rounded-lg bg-accent-soft px-2.5 py-2 text-[13px] leading-snug"><div class="mb-0.5 font-bold text-accent">🧢 キャディ</div><ul class="grid gap-1">${caddie(x,h,m).map(t=>`<li>${t}</li>`).join('')}</ul></div><div class="text-[13px] leading-snug"><b class="text-accent">狙い</b>　${esc(h[6])}</div>`}
     ${PH?`<figure class="grid gap-1"><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[10px] text-muted">写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`:''}
-    <div class="text-[13px] leading-snug"><b class="text-accent">狙い</b>　${esc(h[6])}</div>
-    ${m.n?`<div class="text-[12px] leading-snug text-muted"><b>コース</b>　${esc(m.n)}</div>`:''}
-    ${IL?`<div class="text-[11px] text-muted">下の距離は${x.mapKey==='arima'?'動画で言っていた距離（グリーン周りは情報なし）':'ショットナビの図からの目安'}。ホール図をタップして測る方が正確です。</div>`:''}
-    ${(()=>{const z=typeof hzLines==='function'?hzLines(x.mapKey,h[0],teeShift(x.mapKey,h[0])):null;if(!z){if(typeof hzLoad==='function'&&(ILLUS[x.mapKey]||[]).length){const d0=HM.date,n0=HM.no;hzLoad(x.mapKey,h[0]).then(L=>{if(L&&L.length&&HM&&HM.date===d0&&HM.no===n0)drawHoleMap();});}return '';}
-      if(!z.tee.length&&!z.grn.length&&!z.sec.length)return '';return `<div class="rounded-xl bg-field px-3 py-2 text-[13px] leading-6 ring-1 ring-line"><div class="text-[11px] text-muted">バンカー・池の距離（手前〜越える所・ホール図から自動で測った目安）</div>${hzHtml(z)}</div>`;})()}
-    <div class="flex flex-wrap gap-1">${hazList(m,TEES[x.mapKey]?TEES[x.mapKey][teeIdx(x.mapKey)][1][h[0]-1]:h[2],teeShift(x.mapKey,h[0])).map(t=>`<span class="rounded-md bg-field px-1.5 py-0.5 text-[11px] ring-1 ring-line">${t}</span>`).join('')}</div>
     <div class="flex gap-2"><button class="btn-sub flex-1 !py-2" ${pv?`onclick="HM.no=${pv};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>‹ ${pv?pv+'番':''}</button><button class="btn-sub flex-1 !py-2" ${nx?`onclick="HM.no=${nx};HM.z=1;HM.tap=null;HM.L=0;drawHoleMap()"`:'disabled style="opacity:.4"'}>${nx?nx+'番':''} ›</button></div>
    </div>
    </div>`;
@@ -422,6 +416,11 @@ function holeVideo(key,n,big){const V=(HOLE_VIDEOS[key]||{});const t=V.t&&V.t[n]
 const COURSE_VIEW={
   taka:{q:'宝塚クラシックゴルフ倶楽部',pano:['https://image.gora.golf.rakuten.co.jp/img/golf/drone/panorama/280079.jpg','ゴルフ場全景写真（楽天GORA）'],drone:['https://booking.gora.golf.rakuten.co.jp/guide/course_info/drone/disp/c_id/280079','楽天GORAのドローン空撮動画を見る']},
   tojo:{q:'東条湖カントリー倶楽部'}};
+// マップの説明はヤーデージブックと同じ文（同じ並び・同じまとめ方）を出す（洋平さんの指示：説明を統一）
+function hmYbText(x,h){if(typeof ybCard!=='function'||!(ILLUS[x.mapKey]||[]).length)return '';
+  try{const doc=new DOMParser().parseFromString(ybCard(x,h,null),'text/html');const t=doc.querySelector('.yb-txt');if(!t)return '';const tm=doc.querySelector('.yb-tm');
+    if(typeof jpWalk==='function')jpWalk(t);
+    return `<div class="yb-txt yb-embed">${t.innerHTML}${tm?tm.outerHTML:''}</div>`;}catch(e){return '';}}
 function courseView(x){const v=COURSE_VIEW[x.mapKey];if(!v)return '';const ph=(typeof PHOTOS!=='undefined'&&PHOTOS[x.mapKey])||{};if(!Object.keys(ph).length&&!v.drone)return '';
   return `<details class="rounded-xl border border-line" open><summary class="cursor-pointer list-none px-3 py-2 font-bold">📷 コースの様子（公式のホール写真）<span class="ml-1 text-[11px] font-normal text-muted">タップで閉じる</span></summary><div class="grid gap-2 px-3 pb-3">
    ${Object.keys(ph).length?`<div class="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1">${Object.entries(ph).map(([n,u])=>`<figure class="w-[78%] shrink-0 snap-center"><img src="${u}" alt="${n}番ホールの写真" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"><figcaption class="text-[11px] font-bold">${n}番ホール<span class="font-normal text-muted">（公式サイトの写真）</span></figcaption></figure>`).join('')}</div>`:''}
@@ -436,6 +435,7 @@ function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='cl
      :''}
    ${boxed?'':holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
    ${v.drone?`<a class="btn-sm justify-self-start !border-white !bg-transparent !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
+   ${typeof openYardageBook==='function'&&(ILLUS[x.mapKey]||[]).length?`<button class="btn-sm justify-self-start !border-white !bg-white !text-[#1b5e20]" onclick="openYardageBook('${x.date}',${h[0]})">📒 ${h[0]}番のヤーデージブックを開く</button>`:''}
   </div>`;}
 
 // 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
