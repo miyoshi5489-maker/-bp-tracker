@@ -435,16 +435,17 @@ function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='cl
    ${PH?`<figure class="grid gap-1"><div class="text-[13px] font-bold text-white">${h[0]}番ホール（ティーからの景色）</div><img src="${PH}" alt="${h[0]}番ホールの写真" class="w-full rounded-lg" referrerpolicy="no-referrer"><figcaption ${W}>写真：宝塚クラシックゴルフ倶楽部 公式サイト</figcaption></figure>`
      :''}
    ${boxed?'':holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
-   ${typeof ybCard==='function'&&hmWide()&&(ILLUS[x.mapKey]||[]).length?hmYbPage(x,h):''}
-   ${v.drone?`<a class="btn-sm justify-self-start !border-white !bg-transparent !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
-   ${typeof openYardageBook==='function'&&(ILLUS[x.mapKey]||[]).length?`<button class="btn-sm justify-self-start !border-white !bg-white !text-[#1b5e20]" onclick="openYardageBook('${x.date}',${h[0]})">📒 ${hmWide()?'ヤーデージブック全体を開く（印刷もここから）':h[0]+'番のヤーデージブックを開く'}</button>`:''}
+   ${(()=>{const lk=`<div class="flex flex-wrap gap-2">${v.drone?`<a class="btn-sm !border-white !bg-transparent !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}${typeof openYardageBook==='function'&&(ILLUS[x.mapKey]||[]).length?`<button class="btn-sm !border-white !bg-white !text-[#1b5e20]" onclick="openYardageBook('${x.date}',${h[0]})">📒 ${hmWide()?'ヤーデージブック全体を開く（印刷もここから）':h[0]+'番のヤーデージブックを開く'}</button>`:''}</div>`;
+     return typeof ybCard==='function'&&hmWide()&&(ILLUS[x.mapKey]||[]).length?hmYbPage(x,h,lk):lk;})()}
   </div>`;}
 // PCでは動画の下に、そのホールのヤーデージブックのページをそのまま出す（洋平さんの指示）。幅に合わせて拡大・縮小
 // 景色の欄を上下2つに分ける：上＝動画（今の大きさのまま）、下＝ヤーデージブックのページ（残りの高さにちょうど収まる大きさ）
-function hmYbPage(x,h){try{return `<div id="hm-ybw" class="w-full"><div id="hm-yb" class="mx-auto overflow-hidden rounded-lg shadow-lg"><div id="hm-yb-in" style="width:105mm;transform-origin:0 0">${ybCard(x,h,null)}</div></div></div>`;}catch(e){return '';}}
+function hmYbPage(x,h,lk){try{return `<div id="hm-ybw" class="grid w-full content-start gap-2" style="scrollbar-width:thin"><div id="hm-yb" class="overflow-hidden rounded-lg shadow-lg"><div id="hm-yb-in" style="width:105mm;transform-origin:0 0">${ybCard(x,h,null)}</div></div>${lk||''}</div>`;}catch(e){return lk||'';}}
 function hmYbFit(){const wr=$('hm-ybw'),o=$('hm-yb'),i=$('hm-yb-in'),sd=$('hm-side');if(!wr||!o||!i||!sd)return;const c=i.firstElementChild;if(!c)return;i.style.transform='';const w=c.offsetWidth,hh=c.offsetHeight;if(!w)return;
   const top=wr.getBoundingClientRect().top-sd.getBoundingClientRect().top+sd.scrollTop;const avail=sd.clientHeight-top-12;
-  const k=Math.max(.5,Math.min(wr.clientWidth/w,avail>150?avail/hh:9));i.style.transform=`scale(${k})`;o.style.width=w*k+'px';o.style.height=hh*k+'px';}
+  // 下の区画は自分だけスクロール（動画は上に残る）。ページは区画の幅いっぱいで読みやすく
+  wr.style.height=avail>200?avail+'px':'';wr.style.overflowY=avail>200?'auto':'';wr.style.borderRadius='8px';
+  const k=Math.max(.5,(wr.clientWidth-(wr.scrollHeight>wr.clientHeight?0:0))/w);i.style.transform=`scale(${k})`;o.style.width=w*k+'px';o.style.height=hh*k+'px';}
 
 // 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
 function hmSideOn(){try{return localStorage.getItem('hm:side')==='1';}catch{return false;}}
