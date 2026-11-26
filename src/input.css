@@ -279,3 +279,6 @@
 .hzt-sec td{font-weight:bold;font-size:.8em;color:#8d6e00;padding-top:.45em;border-top:2px solid rgba(141,110,0,.35)}
 .yb-fig{cursor:crosshair}
 .yb-embed{overflow:visible!important;font-size:14px;gap:6px;color:var(--fg)}.yb-embed .yb-tm{font-size:11px}.yb-embed .yb-cad li.yb-k{color:#111}
+
+/* ホールマップ（PC）の動画の下のヤーデージブック：図にバンカーの札・すき間の線を出さない（距離は下の文字） */
+#hm-yb .hzi,#hm-yb .hzo{display:none!important}
