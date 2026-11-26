@@ -326,9 +326,9 @@ function drawHoleMap(){
        :`<div id="hm-in" class="mx-auto py-1">${holeSVG(m,h[1],h[2],{g,pin,club,sides:(HOLE_SIDES[x.mapKey]||{})[h[0]]})}</div>`)}
     </div>
     ${gv||!IL?'':`${VW.length>1?`<div class="absolute left-3 top-3 z-10 flex gap-1">${VW.map((v,k)=>`<button class="rounded-full px-3 py-1 text-[12px] font-bold " style="${k===(HM.src||0)?'background:#fff;color:#111':'background:rgba(0,0,0,.45);color:#fff'}" onclick="HM.src=${k};HM.tap=null;HM.L=0;drawHoleMap()">${v.name}</button>`).join('')}</div>`:''}`}
-    ${gv?'':`<div class="absolute right-3 top-3 z-10 grid gap-2">
-     <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
-     <button class="grid h-11 w-11 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
+    ${gv?'':`<div class="absolute bottom-3 right-3 z-10 grid gap-2 opacity-90">
+     <button class="grid h-10 w-10 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(1)" aria-label="拡大">＋</button>
+     <button class="grid h-10 w-10 place-items-center rounded-full bg-surface text-xl font-bold shadow-lg" onclick="zoomHoleMap(-1)" aria-label="縮小">－</button>
     </div>`}
    </div>${side?`<div id="hm-div" role="separator"${vid?' style="display:none"':''} aria-label="マップと景色の幅を変える" title="ドラッグで幅を変える" class="flex w-3 shrink-0 cursor-col-resize touch-none items-center justify-center bg-[#1b3a20] hover:bg-[#2e6b2a]"><span class="block h-12 w-1 rounded bg-white/70"></span></div><div id="hm-side" class="w-[36%] shrink-0 overflow-y-auto border-l border-white/20 bg-[#24492a] md:w-[44%] relative">${hmVid(x.mapKey,h[0])?hmBoxHTML(x,h):''}${hmPhotoView(x,h,PH,!!hmVid(x.mapKey,h[0]))}</div>`:''}</div>
    <div class="grid max-h-[34vh] content-start gap-2 overflow-y-auto border-t border-line bg-surface p-3 lg:max-h-none lg:w-[420px] lg:border-r lg:border-t-0" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
