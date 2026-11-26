@@ -440,12 +440,17 @@ function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='cl
   </div>`;}
 // PCでは動画の下に、そのホールのヤーデージブックのページをそのまま出す（洋平さんの指示）。幅に合わせて拡大・縮小
 // 景色の欄を上下2つに分ける：上＝動画（今の大きさのまま）、下＝ヤーデージブックのページ（残りの高さにちょうど収まる大きさ）
-function hmYbPage(x,h,lk){try{return `<div id="hm-ybw" class="grid w-full content-start gap-2" style="scrollbar-width:thin"><div id="hm-yb" class="overflow-hidden rounded-lg shadow-lg"><div id="hm-yb-in" style="width:105mm;transform-origin:0 0">${ybCard(x,h,null)}</div></div>${lk||''}</div>`;}catch(e){return lk||'';}}
+function hmYbPage(x,h,lk){try{return `<div id="hm-ybw" class="grid w-full content-start gap-2" style="scrollbar-width:thin"><div class="sticky top-0 z-10 flex items-center justify-end gap-1"><span class="mr-auto rounded bg-black/40 px-2 py-0.5 text-[11px] font-bold text-white">📒 ${h[0]}番のヤーデージブック</span>${[['−','-1','小さく'],['＋','1','大きく'],['ぴったり','0','区画の高さにページ全体を収める'],['幅いっぱい','9','区画の幅いっぱい']].map(([t,a,tt])=>`<button class="rounded-full bg-white px-2.5 py-0.5 text-[12px] font-bold text-[#1b5e20] shadow" title="${tt}" aria-label="ヤーデージブックを${tt}" onclick="hmYbZoom(${a})">${t}</button>`).join('')}</div><div id="hm-yb" class="justify-self-center overflow-hidden rounded-lg shadow-lg"><div id="hm-yb-in" style="width:105mm;transform-origin:0 0">${ybCard(x,h,null)}</div></div>${lk||''}</div>`;}catch(e){return lk||'';}}
+// 下のヤーデージブックの大きさ（幅いっぱい＝1、ぴったり＝'fit'）。−／＋で変えて覚えておく
+function hmYbZ(){try{const v=localStorage.getItem('hm:ybz');return v==='fit'?'fit':(+v||1);}catch{return 1;}}
+function hmYbZoom(a){let z=hmYbZ();const o=$('hm-yb'),i=$('hm-yb-in'),wr=$('hm-ybw');
+  if(a===0)z='fit';else if(a===9)z=1;else{if(z==='fit'){const c=i&&i.firstElementChild;z=c&&wr?(o.offsetWidth/(wr.clientWidth)):1;}z=Math.max(.3,Math.min(1,Math.round((z+a*.1)*100)/100));}
+  try{localStorage.setItem('hm:ybz',String(z));}catch{}hmYbFit();}
 function hmYbFit(){const wr=$('hm-ybw'),o=$('hm-yb'),i=$('hm-yb-in'),sd=$('hm-side');if(!wr||!o||!i||!sd)return;const c=i.firstElementChild;if(!c)return;i.style.transform='';const w=c.offsetWidth,hh=c.offsetHeight;if(!w)return;
   const top=wr.getBoundingClientRect().top-sd.getBoundingClientRect().top+sd.scrollTop;const avail=sd.clientHeight-top-12;
   // 下の区画は自分だけスクロール（動画は上に残る）。ページは区画の幅いっぱいで読みやすく
   wr.style.height=avail>200?avail+'px':'';wr.style.overflowY=avail>200?'auto':'';wr.style.borderRadius='8px';
-  const k=Math.max(.5,(wr.clientWidth-(wr.scrollHeight>wr.clientHeight?0:0))/w);i.style.transform=`scale(${k})`;o.style.width=w*k+'px';o.style.height=hh*k+'px';}
+  const kw=wr.clientWidth/w,kh=avail>200?(avail-40)/hh:kw;const z=hmYbZ();const k=Math.max(.3,z==='fit'?Math.min(kw,kh):Math.min(kw,kw*z));i.style.transform=`scale(${k})`;o.style.width=w*k+'px';o.style.height=hh*k+'px';}
 
 // 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
 function hmSideOn(){try{return localStorage.getItem('hm:side')==='1';}catch{return false;}}
