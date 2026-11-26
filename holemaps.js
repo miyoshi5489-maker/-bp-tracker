@@ -435,8 +435,12 @@ function hmPhotoView(x,h,PH,boxed){const v=COURSE_VIEW[x.mapKey]||{};const W='cl
      :''}
    ${boxed?'':holeVideo(x.mapKey,h[0],1)||(PH?'':`<div class="rounded-lg bg-black/30 px-3 py-2 text-[12px] text-white">${h[0]}番ホールの写真・動画：情報なし</div>`)}
    ${v.drone?`<a class="btn-sm justify-self-start !border-white !bg-transparent !text-white" href="${v.drone[0]}" target="_blank" rel="noopener">🎥 ${esc(v.drone[1])}</a>`:''}
-   ${typeof openYardageBook==='function'&&(ILLUS[x.mapKey]||[]).length?`<button class="btn-sm justify-self-start !border-white !bg-white !text-[#1b5e20]" onclick="openYardageBook('${x.date}',${h[0]})">📒 ${h[0]}番のヤーデージブックを開く</button>`:''}
+   ${typeof openYardageBook==='function'&&(ILLUS[x.mapKey]||[]).length?(hmWide()&&typeof ybCard==='function'?hmYbPage(x,h):'')+`<button class="btn-sm justify-self-start !border-white !bg-white !text-[#1b5e20]" onclick="openYardageBook('${x.date}',${h[0]})">📒 ${hmWide()?'ヤーデージブック全体を開く（印刷もここから）':h[0]+'番のヤーデージブックを開く'}</button>`:''}
   </div>`;}
+// PCでは動画の下に、そのホールのヤーデージブックのページをそのまま出す（洋平さんの指示）。幅に合わせて拡大・縮小
+function hmYbPage(x,h){try{return `<div class="grid gap-1"><div class="text-[13px] font-bold text-white">📒 ${h[0]}番のヤーデージブック</div><div id="hm-yb" class="overflow-hidden rounded-lg"><div id="hm-yb-in" style="width:105mm;transform-origin:0 0">${ybCard(x,h,null)}</div></div></div>`;}catch(e){return '';}}
+function hmYbFit(){const o=$('hm-yb'),i=$('hm-yb-in');if(!o||!i)return;const c=i.firstElementChild;if(!c)return;i.style.transform='';const w=c.offsetWidth,hh=c.offsetHeight;if(!w)return;
+  const k=o.clientWidth/w;i.style.transform=`scale(${k})`;o.style.height=hh*k+'px';}
 
 // 景色（写真・動画）をマップの右に並べて表示：オン／オフを覚えておく
 function hmSideOn(){try{return localStorage.getItem('hm:side')==='1';}catch{return false;}}
@@ -451,7 +455,7 @@ function hmRefit(){const sc=$('hm-scroll'),inn=$('hm-in'),pad=$('hm-pad');if(!sc
   HM.base=Math.min((HM.IL?sc.clientWidth-2*hzGut():sc.clientWidth),(sc.clientHeight-10)*HM.vb.width/HM.vb.height);inn.style.width=HM.base*HM.z+'px';
   if(pad)pad.style.padding=`${Math.max(0,sc.clientHeight-60)}px ${Math.max(0,sc.clientWidth-60)}px`;if(HM.IL&&typeof hmOverlay==='function')hmOverlay();
   requestAnimationFrame(()=>{sc.scrollLeft=(pad?pad.offsetLeft:0)+inn.offsetLeft+fx*inn.offsetWidth-sc.clientWidth/2;sc.scrollTop=(pad?pad.offsetTop:0)+inn.offsetTop+fy*inn.offsetHeight-sc.clientHeight/2;});}
-function hmSideSetup(){hmSideApply();hmBoxSetup();const dv=$('hm-div'),sd=$('hm-side'),sp=$('hm-split');if(!dv||!sd||!sp)return;
+function hmSideSetup(){hmSideApply();hmBoxSetup();hmYbFit();if(!window._hmYbR){window._hmYbR=1;addEventListener('resize',()=>hmYbFit());}if(window.ResizeObserver&&$('hm-yb')){new ResizeObserver(()=>hmYbFit()).observe($('hm-yb'));}const dv=$('hm-div'),sd=$('hm-side'),sp=$('hm-split');if(!dv||!sd||!sp)return;
   const save=()=>{let v={};try{v=JSON.parse(localStorage.getItem('hm:sidesz')||'{}')||{};}catch{}const r=sp.getBoundingClientRect(),q=sd.getBoundingClientRect();
     v[hmWide()?'w':'wn']=Math.round(q.width/r.width*100);try{localStorage.setItem('hm:sidesz',JSON.stringify(v));}catch{}};
   let drag=false;
