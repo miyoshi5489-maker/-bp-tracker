@@ -145,7 +145,7 @@ window.renderRunStats=async function(){
 
   <div class="grid gap-2"><h2 class="h2">週の距離（計画と実際）</h2>
     <div class="card p-3">${weekChart(wk,curIdx)}
-      <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted"><span><i class="mr-1 inline-block h-2.5 w-3 rounded-sm align-middle" style="background:var(--accent-soft);outline:1px dashed var(--accent)"></i>計画</span><span><i class="mr-1 inline-block h-2.5 w-3 rounded-sm align-middle" style="background:var(--accent)"></i>走った距離</span><span>直近6週の最長 <b class="num text-fg">${km1(longest)}km</b>（本番前に32km）</span></div></div></div>
+      <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted"><span><i class="mr-1 inline-block h-2.5 w-3 rounded-sm align-middle" style="background:var(--accent-soft);outline:1px dashed var(--accent)"></i>計画</span><span><i class="mr-1 inline-block h-2.5 w-3 rounded-sm align-middle" style="background:var(--accent)"></i>走った距離</span><span>直近6週の最長 <b class="num text-fg">${km1(longest)}km</b>（本番前に36km）</span></div></div></div>
 
   <div class="grid gap-2"><h2 class="h2">今の練習ペース</h2>
     <div class="card px-4"><div class="py-2.5 text-[12px] font-bold text-accent">${esc(P.name)}<span class="ml-1 font-normal text-muted">${esc(P.why)}</span></div>
