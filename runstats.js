@@ -165,6 +165,30 @@ window.renderRunStats=async function(){
 
   <div class="grid gap-2"><h2 class="h2">最近のラン</h2>
     <div class="card overflow-hidden"><table class="w-full text-[13px]"><tbody>${runs.slice(-8).reverse().map(r=>`<tr class="border-t border-line first:border-0"><td class="px-3 py-2">${md(r.date)}</td><td class="num py-2 text-right font-bold">${km1(r.runDist)}km</td><td class="num py-2 text-right">${fmtT(r.runTime)}</td><td class="num py-2 text-right">${paceStr(pace(r))}</td><td class="num px-3 py-2 text-right">${r.runHr||'—'}</td></tr>`).join('')}</tbody></table></div>
-    <p class="text-[11px] text-muted">Garminで走ると自動で入ります（1〜2時間かかることがあります）。</p></div>`;
+    <p class="text-[11px] text-muted">Garminで走ると自動で入ります。このページを開くと、Garminの取り込みもすぐ始めます（1〜2分）。</p></div>`;
+  el.insertAdjacentHTML('afterbegin',gsBar());gsAuto();
 };
+// ── Garminの取り込みを「今すぐ」動かす（GitHubの自動実行は数時間おくれることがあるため）。
+//    GitHubの鍵（この端末だけに保存・Actionsの実行だけできるもの）でワークフローを動かし、1〜2分後に記録を読み直す
+const GS_REPO='miyoshi5489-maker/-bp-tracker',GS_KEY='yohei_gh_token',GS_LAST='yohei_gs_last';
+let GS={busy:false,msg:''};
+const gsTok=()=>{try{return localStorage.getItem(GS_KEY)||'';}catch{return '';}};
+function gsBar(){const FL=window.RUN_FRIENDS_LIVE;const at=FL&&FL.at?FL.at.slice(5).replace('-','/'):'';
+  return `<div id="gs-bar" class="card flex flex-wrap items-center gap-2 px-3 py-2 text-[12px]"><span class="text-muted">Garmin 最終取り込み：<b>${at||'情報なし'}</b></span>
+   <span id="gs-msg" class="text-[#1b5e20]">${GS.msg}</span>
+   <button class="btn-sm ml-auto" ${GS.busy?'disabled':''} onclick="gsRun(true)">🔄 今すぐ取り込む</button>
+   <div id="gs-set" class="hidden w-full grid gap-1.5"><p class="text-[11px] text-muted">はじめに1回だけ：GitHubの「Fine-grained token」（このリポジトリだけ・Actions：Read and write）を作って貼り付けてください。鍵はこの端末にだけ保存します。</p>
+    <div class="flex gap-1.5"><input id="gs-in" type="password" autocomplete="off" class="inp flex-1 px-2 py-2" placeholder="github_pat_…"><button class="btn-sm" onclick="gsSave()">保存</button></div></div></div>`;}
+window.gsSave=function(){const v=($('gs-in')||{}).value||'';if(!v.trim())return;try{localStorage.setItem(GS_KEY,v.trim());}catch{}$('gs-set').classList.add('hidden');gsRun(true);};
+window.gsRun=async function(manual){const tk=gsTok();if(!tk){if(manual){const b=$('gs-set');if(b)b.classList.remove('hidden');}return;}
+  if(GS.busy)return;GS.busy=true;gsMsg('Garminから取り込み中…（1〜2分）');try{localStorage.setItem(GS_LAST,String(Date.now()));}catch{}
+  try{const r=await fetch(`https://api.github.com/repos/${GS_REPO}/actions/workflows/garmin.yml/dispatches`,{method:'POST',headers:{Authorization:'Bearer '+tk,Accept:'application/vnd.github+json'},body:JSON.stringify({ref:'main'})});
+    if(!r.ok){GS.busy=false;gsMsg(r.status===401||r.status===403||r.status===404?'鍵が使えません（期限切れ・権限不足）。貼り直してください':'取り込みを始められませんでした（'+r.status+'）');if(r.status===401||r.status===403||r.status===404){const b=$('gs-set');if(b)b.classList.remove('hidden');}return;}
+  }catch(e){GS.busy=false;gsMsg('通信できませんでした');return;}
+  const before=(window.RUN_FRIENDS_LIVE||{}).at;
+  for(const w of [45,30,30,30,30,30]){await new Promise(r=>setTimeout(r,w*1000));await getRecs(true);const now=(window.RUN_FRIENDS_LIVE||{}).at;if(now&&now!==before){GS.busy=false;GS.msg='取り込みました';if(typeof CUR!=='undefined'&&CUR==='runstats')window.renderRunStats();setTimeout(()=>{GS.msg='';},8000);return;}}
+  GS.busy=false;gsMsg('まだ終わっていません。少ししてから開き直してください');};
+function gsMsg(m){GS.msg=m;const e=$('gs-msg');if(e)e.textContent=m;}
+// ページを開いた時：前の取り込みから20分以上たっていたら、自動で今すぐ取り込む（鍵がある時だけ）
+function gsAuto(){if(!gsTok()||GS.busy)return;let last=0;try{last=+localStorage.getItem(GS_LAST)||0;}catch{}if(Date.now()-last>20*60*1000)gsRun(false);}
 })();
