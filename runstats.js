@@ -66,11 +66,11 @@ window.renderRunStats=async function(){
   // 関門
   const runOn=(d,sp,fast)=>runs.filter(r=>(sp?(r.date>=addDays(d,sp[0])&&r.date<=addDays(d,sp[1])):r.date===d)&&(!fast||r.runDist>=9.5)).sort((a,b)=>fast?(a.runTime/a.runDist-b.runTime/b.runDist):(b.runDist-a.runDist))[0]; // fast：10km本気走は、一番速いペースの9.5km以上のラン
   const gates=[
-    {d:'2026-12-13',t:'10km本気走（12/7〜13のどこか）',goal:'全力で走って今の力を測る（予想タイムが正確になる）',dist:10,span:[-6,0],fast:1},
-    {d:'2026-12-27',t:'ハーフをレースペースで（12/26土か27日）',goal:'1時間44分50秒以内',lim:6290,dist:21.0975,span:[-1,0]},
-    {d:'2027-01-10',t:'30km走①（1/9土か10日）',goal:'ゆっくり入って、最後まで歩かずに走りきる',dist:30,span:[-1,0]},
-    {d:'2027-01-24',t:'30km走②（1/23土か24日）',goal:"最後の10kmを5'05\"/km",dist:30,span:[-1,0]},
-    {d:'2027-02-14',t:'レースペースで36km（2/13土か14日）',goal:'2時間58分48秒以内',lim:10728,dist:36,span:[-1,0]},
+    {d:'2026-12-10',t:'10km本気走（12/9水の夜か10木の朝）',goal:'全力で走って今の力を測る（予想タイムが正確になる）',dist:10,span:[-3,3],fast:1},
+    {d:'2026-12-24',t:'ハーフをレースペースで（12/23水の夜か24木の朝）',goal:'1時間44分50秒以内',lim:6290,dist:21.0975,span:[-1,0]},
+    {d:'2027-01-07',t:'30km走①（1/6水の夜か7木の朝）',goal:'ゆっくり入って、最後まで歩かずに走りきる',dist:30,span:[-1,0]},
+    {d:'2027-01-21',t:'30km走②（1/20水の夜か21木の朝）',goal:"最後の10kmを5'05\"/km",dist:30,span:[-1,0]},
+    {d:'2027-02-11',t:'レースペースで36km（2/10水の夜か11木・祝の朝）',goal:'2時間58分48秒以内',lim:10728,dist:36,span:[-1,0]},
     {d:RACE,t:'篠山マラソン',goal:'3時間30分切り',lim:GOAL,dist:42.195},
   ]  .map(g=>({...g,goal:g.lim?`${g.goal}　＝ 1km ${paceStr(Math.floor(g.lim/g.dist))} より速く`:g.goal}))
   .map(g=>{const r=g.d<=t||(g.span&&addDays(g.d,g.span[0])<=t)?runOn(g.d,g.span,g.fast):null;let res='',st='';
