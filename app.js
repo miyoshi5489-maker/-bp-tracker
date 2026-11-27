@@ -122,7 +122,7 @@ const isGolf=r=>r.cat==='golf'||(r.note||'').startsWith('[ゴルフ]');
 const byDate=recs=>{const m={};recs.forEach(r=>{(m[r.date]=m[r.date]||[]).push(r);});return m;};
 // その日にやったことのマーク：🏃ラン（km）・🏌️打ちっぱなし／トラックマン・⛳ラウンド・💪筋トレ
 function dayMarks(list,d){list=list||[];const ex=list.flatMap(r=>r.exercises||[]);const a=dayActual(list);
-  const range=ex.some(e=>e.kind==='range'||e.kind==='tm')||list.some(r=>/トラックマン|打ちっぱなし|練習場/.test(r.note||''))||(typeof TM_BUILTIN!=='undefined'&&TM_BUILTIN.date===d);
+  const range=ex.some(e=>e.kind==='range'||e.kind==='tm')||list.some(r=>/トラックマン|打ちっぱなし|練習場/.test(r.note||''))||(typeof TM_BUILTIN!=='undefined'&&(TM_BUILTIN.date===d||TM_BUILTIN.clubs.some(c=>c.date===d)))||(typeof D300_LOG!=='undefined'&&D300_LOG.some(x=>x.d===d));
   const round=ex.some(e=>e.kind==='round');
   return {run:a.run,range,round,gym:a.gym.length>0,any:a.run>0||range||round||a.gym.length>0};}
 function marksHtml(m,big){const s=big?'text-[15px]':'text-[12px]';return `${m.run>0?`<div class="${s} leading-tight">🏃<span class="num text-[11px] font-bold text-sky">${km1(m.run)}</span></div>`:''}${m.range||m.round||m.gym?`<div class="${s} leading-tight">${m.round?'⛳':''}${m.range?'🏌️':''}${m.gym?'💪':''}</div>`:''}`;}

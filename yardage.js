@@ -155,7 +155,7 @@ function ybDateOnce(html){const d=typeof TM_BUILTIN!=='undefined'&&TM_BUILTIN.da
   let t=html.replace(new RegExp(`（${D}の(?:当たりの良い|良かった)球で`,'g'),'（').replace(new RegExp(`${D}の(?:当たりの良い|良かった)球(?:のトータル|はトータル)`,'g'),'トータル')
     .replace(new RegExp(`${D}の(?:当たりの良い|良かった)球(?:でも|で|は|の)?`,'g'),'').replace(new RegExp(`${D}の番手表`,'g'),'番手表').replace(new RegExp(`${D}[はの]`,'g'),'');
   const src=new Set();t=ybSrcOut(t,src);
-  return t.replace('<!--YBTM-->',`<div class="yb-tm">クラブの距離・球すじは${md}の練習（トラックマンの当たりの良い球）から${src.size?`<br>出典：${[...src].join('・')}`:''}</div>`);}
+  return t.replace('<!--YBTM-->',`<div class="yb-tm">クラブの距離・球すじは${md}の練習${(()=>{const w=(TM_BUILTIN.clubs.find(c=>c.c==='1W')||{}).date;return w&&w!==d?`（ドライバーは${+w.slice(5,7)}/${+w.slice(8)}）`:'';})()}（トラックマンの当たりの良い球）から${src.size?`<br>出典：${[...src].join('・')}`:''}</div>`);}
 // 出典（ショットナビ・じゃらんゴルフなど）は文の途中から外して、ページのいちばん下にまとめる（洋平さんの指示）
 function ybSrcOut(html,src){const SR=/^(?:古い)?(ショットナビ|じゃらんゴルフ|じゃらん|GDOゴルフ場予約|GDOの記事|GDO|ゴリゴル動画|ゴリゴルチャンネル|公式|プレー記|楽天GORA|GORA)/;
   const nm=x=>({'じゃらん':'じゃらんゴルフ','GDOの記事':'GDO','GDOゴルフ場予約':'GDO','GORA':'楽天GORA','ゴリゴルチャンネル':'ゴリゴル動画'}[x]||x);
